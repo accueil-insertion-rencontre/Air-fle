@@ -313,10 +313,10 @@ export class StudentWizardComponent implements OnInit {
       : this.studentService.createStudent(rawStudentData);
 
     apiCall.subscribe({
-      next: (response) => {
+      next: () => {
         this.router.navigate(['/dashboard/apprenants']);
       },
-      error: (error) => {
+      error: () => {
         this.error = this.isEditMode 
           ? 'Erreur lors de la mise à jour de l\'apprenant'
           : 'Erreur lors de la création de l\'apprenant';

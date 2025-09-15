@@ -12,7 +12,7 @@ import { StudentFilters } from '@core/models';
 })
 export class StudentSearchComponent {
   @Input() maxHistoryItems = 5;
-  @Output() search = new EventEmitter<string>();
+  @Output() searchChange = new EventEmitter<string>();
   @Output() filtersChange = new EventEmitter<StudentFilters>();
 
   searchValue = '';
@@ -28,7 +28,7 @@ export class StudentSearchComponent {
   };
 
   onSearchChange(value: string): void {
-    this.search.emit(value);
+    this.searchChange.emit(value);
     if (value.trim()) {
       this.addToHistory(value.trim());
     }
@@ -65,7 +65,7 @@ export class StudentSearchComponent {
 
   applyHistoryTerm(term: string): void {
     this.searchValue = term;
-    this.search.emit(term);
+    this.searchChange.emit(term);
   }
 
   removeFromHistory(term: string, event: Event): void {

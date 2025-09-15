@@ -50,7 +50,9 @@ export class GroupListComponent implements OnInit, AfterViewInit {
     this.loadSessions();
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void {
+    // View initialization complete
+  }
 
   // Méthode pour obtenir le label de session
   getSessionLabel(session: any): string {

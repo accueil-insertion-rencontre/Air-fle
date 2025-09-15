@@ -7,7 +7,6 @@ import { ReferenceDataService } from '@core/services';
 import { ExamService } from '@core/services';
 // StudentAbsenceHistoryComponent retiré (non utilisé)
 import { Student } from '@core/models';
-import { Level } from '@core/models';
 // Exam affichage pour récupérer les notes
 
 @Component({
@@ -92,8 +91,8 @@ export class StudentProfileComponent implements OnInit {
         this.loadStudentNotes();
         this.loadRecentAbsences(); // Charger les absences récentes
       },
-      error: err => {
-        console.error('❌ Erreur lors du chargement:', err);
+      error: () => {
+        console.error('❌ Erreur lors du chargement');
         this.error = "Erreur lors du chargement du profil de l'étudiant";
         this.loading = false;
       },
@@ -118,7 +117,7 @@ export class StudentProfileComponent implements OnInit {
           if (exam.students && Array.isArray(exam.students)) {
             const me = exam.students.find((s: any) => s.student_uuid === this.student?.student_uuid);
             score = me?.exam_score;
-            status = me?.exam_status;
+            // status = me?.exam_status;
           } else if (exam.student_uuid && (exam.exam_score !== undefined || exam.exam_status !== undefined)) {
             // structure plate
             score = exam.exam_score;
@@ -134,8 +133,8 @@ export class StudentProfileComponent implements OnInit {
         this.recentNotes = notes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         this.loadingNotes = false;
       },
-      error: (err) => {
-        console.error('❌ Erreur chargement notes:', err);
+      error: () => {
+        console.error('❌ Erreur chargement notes:');
         this.notesError = 'Impossible de charger les notes';
         this.loadingNotes = false;
       }
@@ -333,14 +332,8 @@ export class StudentProfileComponent implements OnInit {
         console.log('✅ Suppression réussie:', response);
         this.router.navigate(['/dashboard/apprenants']);
       },
-      error: (err) => {
-        console.error('❌ Erreur lors de la suppression:', err);
-        console.error('❌ Détails erreur:', {
-          status: err.status,
-          statusText: err.statusText,
-          message: err.message,
-          error: err.error
-        });
+      error: () => {
+        console.error('❌ Erreur lors de la suppression');
         alert('Erreur lors de la suppression de l\'étudiant');
       }
     });
@@ -386,8 +379,8 @@ export class StudentProfileComponent implements OnInit {
         this.recentAbsences = sorted.slice(0, 5);
         this.loadingAbsences = false;
       },
-      error: (err) => {
-        console.error('❌ Erreur chargement absences:', err);
+      error: () => {
+        console.error('❌ Erreur chargement absences:');
         this.absencesError = 'Impossible de charger les absences';
         this.loadingAbsences = false;
       }

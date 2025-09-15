@@ -1,8 +1,6 @@
 import {
   AlertService,
-  AttendanceRecord,
   AttendanceService,
-  AttendanceStatus,
   AuthService,
   CourseService,
   GroupService,
@@ -10,11 +8,9 @@ import {
   UserService,
 } from '@core/services';
 
-import { Course, Group, Session, Student, User, UserDisplayInfo } from '@core/models';
+import { Course, Group, Session, Student, UserDisplayInfo } from '@core/models';
 
-import { environment } from '@environments/environment';
-
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -23,8 +19,6 @@ import {
   Validators,
   FormsModule,
 } from '@angular/forms';
-
-declare let bootstrap: any;
 
 interface WeekDay {
   date: Date;
