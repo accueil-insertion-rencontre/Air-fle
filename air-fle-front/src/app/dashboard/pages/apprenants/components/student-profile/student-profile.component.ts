@@ -110,7 +110,7 @@ export class StudentProfileComponent implements OnInit {
         exams.forEach((exam: any) => {
           // récupérer les données étudiant pour cet examen
           let score: string | undefined;
-          let status: string | undefined;
+          // let status: string | undefined;
           const date: string | Date | undefined = exam.exam?.exam_taked_at || exam.exam_taked_at || exam.taken_at;
           const label = exam.exam?.exam_label || exam.exam_label || 'Examen';
 
@@ -193,7 +193,7 @@ export class StudentProfileComponent implements OnInit {
           return firstNationality.nationality.nationality_label;
         }
       }
-    } catch (error) {
+    } catch {
       // Erreur silencieuse en production
     }
 

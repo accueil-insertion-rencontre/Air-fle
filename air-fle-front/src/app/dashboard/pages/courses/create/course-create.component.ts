@@ -88,7 +88,7 @@ export class CourseCreateComponent implements OnInit {
         this.sessions = sessions;
         this.loading = false;
       },
-      error: err => {
+      error: () => {
         this.error = 'Impossible de charger les sessions. Veuillez réessayer plus tard.';
         this.loading = false;
       },
@@ -100,7 +100,7 @@ export class CourseCreateComponent implements OnInit {
       next: teachers => {
         this.teachers = teachers;
       },
-      error: err => {
+      error: () => {
         this.error = 'Impossible de charger les professeurs. Veuillez réessayer plus tard.';
       },
     });
@@ -121,7 +121,7 @@ export class CourseCreateComponent implements OnInit {
 
         this.loading = false;
       },
-      error: err => {
+      error: () => {
         this.error = 'Impossible de charger les détails du cours. Veuillez réessayer plus tard.';
         this.loading = false;
       },

@@ -371,7 +371,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
       this.selectedExam.exam_uuid,
       payload
     ).subscribe({
-      next: _ => {
+      next: () => {
         // mettre à jour localement pour feedback instantané
         const idx = this.detailsStudents.findIndex(d => d.student_uuid === student.student_uuid);
         if (idx > -1) {
@@ -385,8 +385,8 @@ export class ExamensComponent implements OnInit, OnDestroy {
         this.alertService.success('Note mise à jour');
         this.editingStudentUuid = null;
       },
-      error: err => {
-        console.error('❌ Erreur maj note:', err);
+      error: () => {
+        console.error('❌ Erreur maj note');
         this.alertService.error('Impossible de mettre à jour la note');
       }
     });
@@ -396,7 +396,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
     if (!this.selectedExam) return;
     this.examService.removeStudentFromExam(student.student_uuid, this.selectedExam.exam_uuid)
       .subscribe({
-        next: _ => {
+        next: () => {
           this.detailsStudents = this.detailsStudents.filter(d => d.student_uuid !== student.student_uuid);
           this.detailsTotal = Math.max(0, this.detailsTotal - 1);
           // Mettre à jour la source de vérité locale pour l'examen courant
@@ -405,8 +405,8 @@ export class ExamensComponent implements OnInit, OnDestroy {
           }
           this.alertService.success('Étudiant retiré de l\'examen');
         },
-        error: err => {
-          console.error('❌ Erreur suppression étudiant:', err);
+        error: () => {
+          console.error('❌ Erreur suppression étudiant');
           this.alertService.error('Impossible de retirer l\'étudiant de l\'examen');
         }
       });
@@ -442,7 +442,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
           this.detailsPage = res.meta?.page || this.detailsPage;
           this.detailsPageSize = res.meta?.pageSize || this.detailsPageSize;
         },
-        error: _ => {
+        error: () => {
           // En cas d'erreur API, on affiche une liste vide mais sans fallback local
           this.detailsStudents = [];
           this.detailsTotal = 0;
@@ -640,8 +640,8 @@ export class ExamensComponent implements OnInit, OnDestroy {
         formValue.default_score || undefined,
         formValue.default_status || undefined
       ).subscribe({
-        next: (response) => {
-          console.log('✅ ExamensComponent: Groupe ajouté avec succès:', response);
+        next: () => {
+          console.log('✅ ExamensComponent: Groupe ajouté avec succès');
           this.alertService.success('Groupe ajouté à l\'examen avec succès !');
           this.hideAddGroupForm();
           this.loadInitialData(); // Recharger les données
@@ -701,8 +701,8 @@ export class ExamensComponent implements OnInit, OnDestroy {
           exam_notes: formValue.exam_notes || undefined
         }
       ).subscribe({
-        next: (response) => {
-          console.log('✅ ExamensComponent: Note mise à jour avec succès:', response);
+        next: () => {
+          console.log('✅ ExamensComponent: Note mise à jour avec succès');
           this.alertService.success('Note de l\'étudiant mise à jour avec succès !');
           this.hideEditStudentScoreForm();
           this.loadInitialData(); // Recharger les données
@@ -1057,7 +1057,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
       };
 
       this.examService.addStudentToExam(examStudentData).subscribe({
-        next: (response) => {
+        next: () => {
           this.alertService.success('Étudiant ajouté à l\'examen avec succès !');
           this.addStudentForm.reset();
           // Recharger les données de l'examen

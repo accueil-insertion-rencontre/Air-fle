@@ -55,7 +55,7 @@ export class FrenchLevelsComponent implements OnInit {
         this.frenchLevels = levels;
         this.isLoading = false;
       },
-      error: error => {
+      error: () => {
         this.error = 'Erreur lors du chargement des niveaux de français';
         this.isLoading = false;
       },
@@ -121,8 +121,8 @@ export class FrenchLevelsComponent implements OnInit {
         this.frenchLevels.push(newLevel);
         this.closeCreateModal();
       },
-      error: error => {
-        console.error('Erreur lors de la création du niveau:', error);
+      error: () => {
+        console.error('Erreur lors de la création du niveau:');
         this.error = 'Erreur lors de la création du niveau de français';
       },
     });
@@ -144,8 +144,8 @@ export class FrenchLevelsComponent implements OnInit {
         }
         this.closeEditModal();
       },
-      error: error => {
-        console.error('Erreur lors de la mise à jour du niveau:', error);
+      error: () => {
+        console.error('Erreur lors de la mise à jour du niveau:');
         this.error = 'Erreur lors de la mise à jour du niveau de français';
       },
     });
@@ -157,8 +157,8 @@ export class FrenchLevelsComponent implements OnInit {
         next: () => {
           this.frenchLevels = this.frenchLevels.filter(l => l.id !== level.id);
         },
-        error: error => {
-          console.error('Erreur lors de la suppression du niveau:', error);
+        error: () => {
+          console.error('Erreur lors de la suppression du niveau:');
           this.error = 'Erreur lors de la suppression du niveau de français';
         },
       });

@@ -50,6 +50,8 @@
             class="day-column"
             [class.today]="day.isToday"
             (click)="onDayClick(day)"
+            (keyup.enter)="onDayClick(day)"
+            tabindex="0"
           >
             <!-- Cours pour ce jour -->
             <div

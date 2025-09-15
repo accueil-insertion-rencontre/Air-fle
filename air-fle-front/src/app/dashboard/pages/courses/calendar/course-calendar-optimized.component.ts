@@ -1,10 +1,8 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
-  FormGroup,
   ReactiveFormsModule,
-  Validators,
   FormsModule,
 } from '@angular/forms';
 
@@ -29,23 +27,10 @@ import {
   GroupService,
   UserService,
   AttendanceService,
-  AttendanceRecord,
-  AttendanceStatus,
   AlertService,
 } from '@core/services';
 
-import { Course, Session, Group, Student, User, UserDisplayInfo, Schedule } from '@core/models';
-
-import { environment } from '@environments/environment';
-
-declare let bootstrap: any;
-
-interface WeekDay {
-  date: Date;
-  dayName: string;
-  dayNumber: number;
-  isToday: boolean;
-}
+import { Group, Student } from '@core/models';
 
 @Component({
   selector: 'app-course-calendar-optimized',
@@ -54,7 +39,7 @@ interface WeekDay {
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
 })
-export class CourseCalendarOptimizedComponent implements OnInit {
+export class CourseCalendarOptimizedComponent {
   // Le reste du composant reste identique...
   // Cette version montre juste l'amélioration des imports
 
@@ -68,9 +53,6 @@ export class CourseCalendarOptimizedComponent implements OnInit {
     private alertService: AlertService
   ) {}
 
-  ngOnInit() {
-    // Implémentation...
-  }
 
   /**
    * TrackBy functions pour optimiser le rendu

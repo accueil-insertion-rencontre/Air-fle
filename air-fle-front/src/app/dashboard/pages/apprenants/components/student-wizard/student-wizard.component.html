@@ -12,6 +12,8 @@
         [class.completed]="step.isCompleted"
         [class.clickable]="step.isCompleted || step.id <= currentStep"
         (click)="goToStep(step.id)"
+        (keyup.enter)="goToStep(step.id)"
+        tabindex="0"
       >
         <div class="step-circle">
           <span class="step-icon">{{ getStepIcon(step) }}</span>

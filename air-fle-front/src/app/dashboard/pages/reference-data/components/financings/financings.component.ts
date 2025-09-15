@@ -47,8 +47,8 @@ export class FinancingsComponent implements OnInit {
         this.financings = financings;
         this.isLoading = false;
       },
-      error: error => {
-        console.error('Erreur lors du chargement des financements:', error);
+      error: () => {
+        console.error('Erreur lors du chargement des financements:');
         this.error = 'Erreur lors du chargement des financements';
         this.isLoading = false;
       },
@@ -96,8 +96,8 @@ export class FinancingsComponent implements OnInit {
         this.financings.push(newFinancing);
         this.closeCreateModal();
       },
-      error: error => {
-        console.error('Erreur lors de la création du financement:', error);
+      error: () => {
+        console.error('Erreur lors de la création du financement:');
         this.error = 'Erreur lors de la création du financement';
       },
     });
@@ -114,8 +114,8 @@ export class FinancingsComponent implements OnInit {
         }
         this.closeEditModal();
       },
-      error: error => {
-        console.error('Erreur lors de la mise à jour du financement:', error);
+      error: () => {
+        console.error('Erreur lors de la mise à jour du financement:');
         this.error = 'Erreur lors de la mise à jour du financement';
       },
     });
@@ -127,8 +127,8 @@ export class FinancingsComponent implements OnInit {
         next: () => {
           this.financings = this.financings.filter(f => f.id !== financing.id);
         },
-        error: error => {
-          console.error('Erreur lors de la suppression du financement:', error);
+        error: () => {
+          console.error('Erreur lors de la suppression du financement:');
           this.error = 'Erreur lors de la suppression du financement';
         },
       });

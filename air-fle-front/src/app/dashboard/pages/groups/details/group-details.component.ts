@@ -1,6 +1,6 @@
 import { AlertService, CourseService, GroupService, StudentService } from '@core/services';
 
-import { Course, Group, Student } from '@core/models';
+import { Group, Student } from '@core/models';
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';

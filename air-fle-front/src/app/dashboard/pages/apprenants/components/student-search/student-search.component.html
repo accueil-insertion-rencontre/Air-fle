@@ -50,6 +50,8 @@
         class="history-chip"
         *ngFor="let term of searchHistory"
         (click)="applyHistoryTerm(term)"
+        (keyup.enter)="applyHistoryTerm(term)"
+        tabindex="0"
       >
         {{ term }}
         <button class="remove-chip" (click)="removeFromHistory(term, $event)">×</button>

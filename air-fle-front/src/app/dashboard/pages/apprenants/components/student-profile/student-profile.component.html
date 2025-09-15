@@ -286,8 +286,8 @@
   
 
   <!-- Modal de confirmation de suppression -->
-  <div class="modal-overlay" *ngIf="showDeleteConfirmModal" (click)="cancelDelete()">
-    <div class="modal-content delete-confirm-modal" (click)="$event.stopPropagation()">
+  <div class="modal-overlay" *ngIf="showDeleteConfirmModal" (click)="cancelDelete()" (keyup.escape)="cancelDelete()" tabindex="0">
+    <div class="modal-content delete-confirm-modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
       <div class="modal-header">
         <h3>Confirmer la suppression</h3>
       </div>

@@ -14,7 +14,6 @@ import {
   TodolistService,
   TodoTask,
   CreateTodoWithSubtasksRequest,
-  TodoStats,
 } from '../../services/todolist.service';
 import { CreateTodoModalComponent } from '../../components/create-todo-modal/create-todo-modal.component';
 import { TodoItemComponent } from '../../components/todo-item/todo-item.component';
@@ -74,7 +73,7 @@ export class HomeOptimizedComponent implements OnInit, AfterViewInit {
   readonly todoError$ = this.todoErrorSubject.asObservable();
 
   // 🔥 Computed values avec combineLatest
-  readonly statCards$ = combineLatest([this.studentCount$, this.todoStats$]).pipe(
+  readonly statCards$: Observable<StatCard[]> = combineLatest([this.studentCount$, this.todoStats$]).pipe(
     map(([studentCount, stats]) => [
       {
         title: 'Total Étudiants',
@@ -210,7 +209,7 @@ export class HomeOptimizedComponent implements OnInit, AfterViewInit {
       });
   }
 
-  onTaskUpdated(updatedTask: TodoTask) {
+  onTaskUpdated() {
     // Le rechargement se fait automatiquement via l'observable todos$
   }
 

@@ -49,8 +49,8 @@ export class DisabilitiesComponent implements OnInit {
         this.disabilities = disabilities;
         this.isLoading = false;
       },
-      error: error => {
-        console.error('Erreur lors du chargement des handicaps:', error);
+      error: () => {
+        console.error('Erreur lors du chargement des handicaps:');
         this.error = 'Erreur lors du chargement des handicaps';
         this.isLoading = false;
       },
@@ -110,8 +110,8 @@ export class DisabilitiesComponent implements OnInit {
         this.disabilities.push(newDisability);
         this.closeCreateModal();
       },
-      error: error => {
-        console.error('Erreur lors de la création du handicap:', error);
+      error: () => {
+        console.error('Erreur lors de la création du handicap:');
         this.error = 'Erreur lors de la création du handicap';
       },
     });
@@ -133,8 +133,8 @@ export class DisabilitiesComponent implements OnInit {
           }
           this.closeEditModal();
         },
-        error: error => {
-          console.error('Erreur lors de la mise à jour du handicap:', error);
+        error: () => {
+          console.error('Erreur lors de la mise à jour du handicap:');
           this.error = 'Erreur lors de la mise à jour du handicap';
         },
       });
@@ -146,8 +146,8 @@ export class DisabilitiesComponent implements OnInit {
         next: () => {
           this.disabilities = this.disabilities.filter(d => d.id !== disability.id);
         },
-        error: error => {
-          console.error('Erreur lors de la suppression du handicap:', error);
+        error: () => {
+          console.error('Erreur lors de la suppression du handicap:');
           this.error = 'Erreur lors de la suppression du handicap';
         },
       });

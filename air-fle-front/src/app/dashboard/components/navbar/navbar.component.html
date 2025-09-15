@@ -35,7 +35,7 @@
     <button class="btn btn-primary" (click)="onOpenTicket()">OUVRIR UN TICKET</button>
 
     <!-- Menu utilisateur -->
-    <div class="nav-item user-profile" (click)="toggleUserMenu()">
+    <div class="nav-item user-profile" (click)="toggleUserMenu()" (keyup.enter)="toggleUserMenu()" tabindex="0">
       <span class="user-name">{{ userDisplayName }}</span>
       <i class="dropdown-icon" [class.open]="showUserMenu"></i>
 

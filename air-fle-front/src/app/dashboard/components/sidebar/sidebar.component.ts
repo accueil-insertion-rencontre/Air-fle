@@ -6,7 +6,6 @@ import {
   Input,
   Output,
   EventEmitter,
-  AfterViewChecked,
   NgZone,
   ChangeDetectorRef, OnDestroy,
 } from '@angular/core';
@@ -31,7 +30,7 @@ interface MenuItem {
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss'],
 })
-export class SidebarComponent implements OnInit, AfterViewChecked, OnDestroy {
+export class SidebarComponent implements OnInit, OnDestroy {
   @Input() isOpen: boolean = true;
   @Output() isOpenChange = new EventEmitter<boolean>();
 
@@ -136,9 +135,6 @@ export class SidebarComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
-  ngAfterViewChecked(): void {
-    // Hook lifecycle nécessaire pour la détection de changement
-  }
 
   // plus de réinitialisation Feather: icônes en SVG inline
   forceIconRefresh(): void {}

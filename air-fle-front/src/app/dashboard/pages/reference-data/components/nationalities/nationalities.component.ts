@@ -85,12 +85,12 @@ export class NationalitiesComponent implements OnInit {
       const formData: CreateNationalityDto = this.createForm.value;
 
       this.referenceDataService.createNationality(formData).subscribe({
-        next: response => {
+        next: () => {
           this.loadNationalities(); // Recharger la liste
           this.closeCreateModal();
         },
-        error: error => {
-          console.error('Erreur lors de la création:', error);
+        error: () => {
+          console.error('Erreur lors de la création');
           this.error = 'Erreur lors de la création de la nationalité';
         },
       });
@@ -119,12 +119,12 @@ export class NationalitiesComponent implements OnInit {
       const formData: CreateNationalityDto = this.editForm.value;
 
       this.referenceDataService.updateNationality(this.editingNationality.id, formData).subscribe({
-        next: response => {
+        next: () => {
           this.loadNationalities(); // Recharger la liste
           this.closeEditModal();
         },
-        error: error => {
-          console.error('Erreur lors de la modification:', error);
+        error: () => {
+          console.error('Erreur lors de la modification');
           this.error = 'Erreur lors de la modification de la nationalité';
         },
       });
@@ -138,8 +138,8 @@ export class NationalitiesComponent implements OnInit {
         next: () => {
           this.loadNationalities(); // Recharger la liste
         },
-        error: error => {
-          console.error('Erreur lors de la suppression:', error);
+        error: () => {
+          console.error('Erreur lors de la suppression');
           this.error = 'Erreur lors de la suppression de la nationalité';
         },
       });

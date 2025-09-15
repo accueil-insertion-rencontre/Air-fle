@@ -129,7 +129,7 @@ export class GroupCreateComponent implements OnInit {
     if (this.isEditMode && this.groupId) {
       // Mode édition
       this.groupService.updateGroup(this.groupId, formValue).subscribe({
-        next: updatedGroup => {
+        next: () => {
           // En mode édition, synchroniser les étudiants du groupe
           if (this.groupId !== undefined) {
             this.synchronizeGroupStudents(this.groupId)

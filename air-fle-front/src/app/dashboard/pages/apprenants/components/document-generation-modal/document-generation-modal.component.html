@@ -1,4 +1,4 @@
-<div *ngIf="isOpen" class="modal-overlay" (click)="onOverlayClick($event)">
+<div *ngIf="isOpen" class="modal-overlay" (click)="onOverlayClick($event)" (keyup.escape)="onOverlayClick($event)" tabindex="0">
   <div class="modal-container">
     <div class="modal-header">
       <h3>

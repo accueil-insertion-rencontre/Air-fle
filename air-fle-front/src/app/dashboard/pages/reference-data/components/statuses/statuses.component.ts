@@ -47,8 +47,8 @@ export class StatusesComponent implements OnInit {
         this.statuses = statuses;
         this.isLoading = false;
       },
-      error: error => {
-        console.error('Erreur lors du chargement des statuts:', error);
+      error: () => {
+        console.error('Erreur lors du chargement des statuts:');
         this.error = 'Erreur lors du chargement des statuts';
         this.isLoading = false;
       },
@@ -96,8 +96,8 @@ export class StatusesComponent implements OnInit {
         this.statuses.push(newStatus);
         this.closeCreateModal();
       },
-      error: error => {
-        console.error('Erreur lors de la création du statut:', error);
+      error: () => {
+        console.error('Erreur lors de la création du statut:');
         this.error = 'Erreur lors de la création du statut';
       },
     });
@@ -114,8 +114,8 @@ export class StatusesComponent implements OnInit {
         }
         this.closeEditModal();
       },
-      error: error => {
-        console.error('Erreur lors de la mise à jour du statut:', error);
+      error: () => {
+        console.error('Erreur lors de la mise à jour du statut:');
         this.error = 'Erreur lors de la mise à jour du statut';
       },
     });
@@ -127,8 +127,8 @@ export class StatusesComponent implements OnInit {
         next: () => {
           this.statuses = this.statuses.filter(s => s.id !== status.id);
         },
-        error: error => {
-          console.error('Erreur lors de la suppression du statut:', error);
+        error: () => {
+          console.error('Erreur lors de la suppression du statut:');
           this.error = 'Erreur lors de la suppression du statut';
         },
       });

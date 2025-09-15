@@ -49,8 +49,8 @@ export class OrientationsComponent implements OnInit {
         this.orientations = orientations;
         this.isLoading = false;
       },
-      error: error => {
-        console.error('Erreur lors du chargement des orientations:', error);
+      error: () => {
+        console.error('Erreur lors du chargement des orientations:');
         this.error = 'Erreur lors du chargement des orientations';
         this.isLoading = false;
       },
@@ -110,8 +110,8 @@ export class OrientationsComponent implements OnInit {
         this.orientations.push(newOrientation);
         this.closeCreateModal();
       },
-      error: error => {
-        console.error("Erreur lors de la création de l'orientation:", error);
+      error: () => {
+        console.error("Erreur lors de la création de l'orientation:");
         this.error = "Erreur lors de la création de l'orientation";
       },
     });
@@ -133,8 +133,8 @@ export class OrientationsComponent implements OnInit {
           }
           this.closeEditModal();
         },
-        error: error => {
-          console.error("Erreur lors de la mise à jour de l'orientation:", error);
+        error: () => {
+          console.error("Erreur lors de la mise à jour de l'orientation:");
           this.error = "Erreur lors de la mise à jour de l'orientation";
         },
       });
@@ -146,8 +146,8 @@ export class OrientationsComponent implements OnInit {
         next: () => {
           this.orientations = this.orientations.filter(o => o.id !== orientation.id);
         },
-        error: error => {
-          console.error("Erreur lors de la suppression de l'orientation:", error);
+        error: () => {
+          console.error("Erreur lors de la suppression de l'orientation:");
           this.error = "Erreur lors de la suppression de l'orientation";
         },
       });

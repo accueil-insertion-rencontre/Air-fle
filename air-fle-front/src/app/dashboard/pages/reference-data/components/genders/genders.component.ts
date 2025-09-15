@@ -53,8 +53,8 @@ export class GendersComponent implements OnInit {
         this.genders = genders;
         this.isLoading = false;
       },
-      error: error => {
-        console.error('Erreur lors du chargement des genres:', error);
+      error: () => {
+        console.error('Erreur lors du chargement des genres:');
         this.error = 'Erreur lors du chargement des genres';
         this.isLoading = false;
       },
@@ -112,8 +112,8 @@ export class GendersComponent implements OnInit {
         this.genders.push(newGender);
         this.closeCreateModal();
       },
-      error: error => {
-        console.error('Erreur lors de la création du genre:', error);
+      error: () => {
+        console.error('Erreur lors de la création du genre:');
         this.error = 'Erreur lors de la création du genre';
       },
     });
@@ -134,8 +134,8 @@ export class GendersComponent implements OnInit {
         }
         this.closeEditModal();
       },
-      error: error => {
-        console.error('Erreur lors de la mise à jour du genre:', error);
+      error: () => {
+        console.error('Erreur lors de la mise à jour du genre:');
         this.error = 'Erreur lors de la mise à jour du genre';
       },
     });
@@ -147,8 +147,8 @@ export class GendersComponent implements OnInit {
         next: () => {
           this.genders = this.genders.filter(g => g.id !== gender.id);
         },
-        error: error => {
-          console.error('Erreur lors de la suppression du genre:', error);
+        error: () => {
+          console.error('Erreur lors de la suppression du genre:');
           this.error = 'Erreur lors de la suppression du genre';
         },
       });

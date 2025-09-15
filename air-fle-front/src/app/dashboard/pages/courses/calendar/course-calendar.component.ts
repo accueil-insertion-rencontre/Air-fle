@@ -236,7 +236,7 @@ export class CourseCalendarComponent implements OnInit {
           this.loadCourses();
         }
       },
-      error: error => {
+      error: () => {
         this.error = 'Impossible de charger les sessions';
       },
     });
@@ -250,7 +250,7 @@ export class CourseCalendarComponent implements OnInit {
       next: teachers => {
         this.teachers = teachers;
       },
-      error: error => {
+      error: () => {
         this.error = 'Impossible de charger les professeurs';
       }
     });
@@ -333,7 +333,7 @@ export class CourseCalendarComponent implements OnInit {
         
         this.updateScheduleWithCourses();
       },
-      error: error => {
+      error: (error) => {
         console.error('❌ === ERREUR loadCourses() ===');
         console.error('❌ Erreur lors du chargement des cours:', error);
         console.error('❌ Status code:', error.status);
@@ -690,7 +690,7 @@ export class CourseCalendarComponent implements OnInit {
           next: course => {
             resolve(course);
           },
-          error: error => {
+          error: (error) => {
             console.error('❌ Erreur API lors de la création:', error);
             console.error('❌ Détails de l\'erreur:', {
               status: error.status,
@@ -1200,7 +1200,7 @@ export class CourseCalendarComponent implements OnInit {
     }
 
     this.courseService.updateCourse(courseId, courseData).subscribe({
-      next: (updatedCourse) => {
+      next: () => {
         this.loadCourses();
         this.onCancelEditCourse();
               this.editLoading = false;

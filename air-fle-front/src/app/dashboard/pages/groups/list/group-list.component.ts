@@ -2,7 +2,7 @@ import { AlertService, CourseService, GroupService, SessionService } from '@core
 
 import { Group, Session } from '@core/models';
 
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import {
@@ -23,7 +23,7 @@ import {
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule],
 })
-export class GroupListComponent implements OnInit, AfterViewInit {
+export class GroupListComponent implements OnInit {
   groups: Group[] = [];
   sessions: Session[] = [];
   loading = true;
@@ -50,9 +50,6 @@ export class GroupListComponent implements OnInit, AfterViewInit {
     this.loadSessions();
   }
 
-  ngAfterViewInit(): void {
-    // View initialization complete
-  }
 
   // Méthode pour obtenir le label de session
   getSessionLabel(session: any): string {

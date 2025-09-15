@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DocumentService, CertificateData } from '@core/services';
 
@@ -17,7 +17,7 @@ export interface DocumentType {
   templateUrl: './document-generation-modal.component.html',
   styleUrls: ['./document-generation-modal.component.scss']
 })
-export class DocumentGenerationModalComponent implements OnInit, OnChanges {
+export class DocumentGenerationModalComponent {
   @Input() isOpen = false;
   @Input() student_uuid!: string;
   @Input() studentName!: string;
@@ -53,13 +53,6 @@ export class DocumentGenerationModalComponent implements OnInit, OnChanges {
 
   constructor(private documentService: DocumentService) {}
 
-  ngOnInit(): void {
-    // Initialisation du composant
-  }
-
-  ngOnChanges(): void {
-    // Détection des changements d'inputs
-  }
 
   /**
    * Génère un document selon le type

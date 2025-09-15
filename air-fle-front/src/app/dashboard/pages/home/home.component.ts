@@ -7,7 +7,6 @@ import {
   StudentService,
   TodolistService,
   TodoTask,
-  CreateTodoRequest,
   TodoStats,
   CreateTodoWithSubtasksRequest,
   Subtask,

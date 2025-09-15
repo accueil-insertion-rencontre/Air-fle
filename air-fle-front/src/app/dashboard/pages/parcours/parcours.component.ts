@@ -8,7 +8,6 @@ import {
   Continuation, 
   CreateContinuationDto,
   UpdateContinuationDto,
-  ContinuationFilters,
   ContinuationStats
 } from '@core/models';
 import { 

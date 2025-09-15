@@ -180,7 +180,7 @@ export class StudentWizardComponent implements OnInit {
           disability_ids: [] // Pas de gestion des handicaps dans le modèle actuel
         });
       },
-      error: (error) => {
+      error: () => {
         this.error = 'Erreur lors du chargement des données de l\'apprenant';
       }
     });
