@@ -1,13 +1,22 @@
+import { JwtSignOptions } from '@nestjs/jwt';
+import { LoginDto } from '../dto/login.dto';
+import { ChangePasswordDto } from '../dto/change-password.dto';
+import { ResetPasswordConfirmDto } from '../dto/reset-password.dto';
+
 export interface IAuthenticationService {
-  login(loginDto: any, ip: string): Promise<AuthResult>;
+  login(loginDto: LoginDto, ip: string): Promise<AuthResult>;
   logout(token: string, userId: string, ip: string): Promise<void>;
-  validateUser(email: string, password: string): Promise<any>;
+  validateUser(email: string, password: string): Promise<ValidatedUser | null>;
 }
 
 export interface IPasswordService {
-  changePassword(userId: string, dto: any, ip: string): Promise<void>;
-  requestPasswordReset(dto: any, ip: string): Promise<void>;
-  confirmPasswordReset(dto: any, ip: string): Promise<void>;
+  changePassword(
+    userId: string,
+    dto: ChangePasswordDto,
+    ip: string,
+  ): Promise<void>;
+  requestPasswordReset(dto: { email: string }, ip: string): Promise<void>;
+  confirmPasswordReset(dto: ResetPasswordConfirmDto, ip: string): Promise<void>;
 }
 
 export interface ISecurityService {
@@ -42,9 +51,9 @@ export interface IAuditService {
 }
 
 export interface ITokenService {
-  sign(payload: any, options?: any): string;
-  verify(token: string): any;
-  decode(token: string): any;
+  sign(payload: string | Buffer | object, options?: JwtSignOptions): string;
+  verify<T extends object = Record<string, unknown>>(token: string): T;
+  decode<T = Record<string, unknown>>(token: string): T | null;
 }
 
 export interface ICacheService {
@@ -58,8 +67,16 @@ export interface ICacheService {
 export interface AuthResult {
   success: boolean;
   access_token?: string;
-  user?: any;
+  user?: ValidatedUser;
   message?: string;
+}
+
+export interface ValidatedUser {
+  id: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  [key: string]: unknown;
 }
 
 export type SecurityEvent =

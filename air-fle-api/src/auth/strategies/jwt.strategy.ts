@@ -26,7 +26,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(req: Request, payload: any) {
+  async validate(
+    req: Request,
+    payload: { sub: string; email: string; role: string; iat: number },
+  ) {
     if (!payload.sub || !payload.email || !payload.role) {
       return null;
     }
