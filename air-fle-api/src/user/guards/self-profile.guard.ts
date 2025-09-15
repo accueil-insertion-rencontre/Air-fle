@@ -5,10 +5,26 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 
+interface AuthenticatedUser {
+  user_uuid: string;
+  role?: {
+    role_name: string;
+  };
+  permissions?: string[];
+}
+
+interface RequestWithUser {
+  user: AuthenticatedUser;
+  params: {
+    id?: string;
+    user_uuid?: string;
+  };
+}
+
 @Injectable()
 export class SelfProfileGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
     const user = request.user;
     const params = request.params;
 

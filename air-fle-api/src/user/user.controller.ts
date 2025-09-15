@@ -8,7 +8,6 @@ import {
   Delete,
   Query,
   UseGuards,
-  Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Prisma } from '@prisma/client';
@@ -154,12 +153,8 @@ export class UserController {
       'Un administrateur ne peut pas supprimer son propre compte ou le dernier administrateur du système',
   })
   @ApiParam({ name: 'id', description: "ID de l'utilisateur" })
-  async remove(@Param('id') id: string, @Req() req: Request) {
+  async remove(@Param('id') id: string) {
     try {
-      // Extraire le token JWT de l'en-tête Authorization
-      const authHeader = req.headers.authorization;
-      const token = authHeader?.split(' ')[1]; // Format: "Bearer <token>"
-
       return await this.userService.remove(id);
     } catch (error) {
       if (error instanceof UnauthorizedException) {

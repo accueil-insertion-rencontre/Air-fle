@@ -5,24 +5,31 @@ import {
   UnauthorizedException,
   Logger,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, User, Role } from '@prisma/client';
 import { UserRepository } from './repositories/user.repository';
 import * as argon2 from 'argon2';
+import { getErrorMessage, getErrorStack } from '../common/types/error.types';
+
+// Types for User without password
+type UserWithRole = User & { role: Role | null };
+type SafeUser = Omit<UserWithRole, 'user_password'>;
+// type SafeUserUpdate = Omit<SafeUser, 'user_uuid' | 'user_created_at'>; // Currently unused
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
   constructor(private readonly userRepository: UserRepository) {}
 
-  async findByEmail(email: string) {
+  async findByEmail(email: string): Promise<SafeUser | null> {
     const user = await this.userRepository.findByEmail(email);
     if (!user) return null;
 
-    const { user_password, ...userWithoutPassword } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { user_password, ...userWithoutPassword } = user as UserWithRole;
     return userWithoutPassword;
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<SafeUser | null> {
     return this.userRepository.findWithoutPassword(id);
   }
 
@@ -63,7 +70,7 @@ export class UserService {
     role_uuid: string;
     user_isactive?: boolean;
     user_birthdate?: string;
-  }) {
+  }): Promise<SafeUser> {
     // Vérifier si l'utilisateur existe déjà
     const emailExists = await this.userRepository.emailExists(data.user_mail);
     if (emailExists) {
@@ -96,14 +103,15 @@ export class UserService {
     this.logger.log(
       JSON.stringify({
         event: 'user_created',
-        user_uuid: user.user_uuid,
-        email: user.user_mail,
+        user_uuid: (user as UserWithRole).user_uuid,
+        email: (user as UserWithRole).user_mail,
         role_uuid: data.role_uuid,
       }),
     );
 
     // Ne pas retourner le mot de passe
-    const { user_password, ...result } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { user_password, ...result } = user as UserWithRole;
     return result;
   }
 
@@ -117,7 +125,7 @@ export class UserService {
       role_uuid?: string;
       user_birthdate?: string;
     },
-  ) {
+  ): Promise<SafeUser> {
     try {
       // Vérifier que l'utilisateur existe
       const user = await this.userRepository.findById(id);
@@ -162,13 +170,14 @@ export class UserService {
       this.logger.log(
         JSON.stringify({
           event: 'user_updated',
-          user_uuid: updatedUser.user_uuid,
-          email: updatedUser.user_mail,
+          user_uuid: (updatedUser as UserWithRole).user_uuid,
+          email: (updatedUser as UserWithRole).user_mail,
         }),
       );
 
       // Ne pas retourner le mot de passe
-      const { user_password, ...result } = updatedUser;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { user_password, ...result } = updatedUser as UserWithRole;
       return result;
     } catch (error) {
       if (
@@ -177,22 +186,22 @@ export class UserService {
       ) {
         throw error;
       }
-      if (error.code === 'P2025') {
+      if ((error as { code?: string }).code === 'P2025') {
         throw new NotFoundException(`Utilisateur avec l'ID ${id} non trouvé`);
       }
       this.logger.error(
         JSON.stringify({
           event: 'user_update_failed',
           user_uuid: id,
-          error: error?.message,
-          stack: error?.stack,
+          error: getErrorMessage(error),
+          stack: getErrorStack(error),
         }),
       );
       throw error;
     }
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<SafeUser> {
     try {
       // Vérifier d'abord si l'utilisateur à supprimer existe
       const userToDelete = await this.userRepository.findById(id);
@@ -212,9 +221,13 @@ export class UserService {
         }
       }
 
+      const deletedUser = userToDelete;
       await this.userRepository.delete(id);
       this.logger.log(JSON.stringify({ event: 'user_deleted', user_uuid: id }));
-      return { success: true, message: 'Utilisateur supprimé avec succès' };
+      
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { user_password, ...result } = deletedUser as UserWithRole;
+      return result;
     } catch (error) {
       if (
         error instanceof UnauthorizedException ||
@@ -222,15 +235,15 @@ export class UserService {
       ) {
         throw error;
       }
-      if (error.code === 'P2025') {
+      if ((error as { code?: string }).code === 'P2025') {
         throw new NotFoundException(`Utilisateur avec l'ID ${id} non trouvé`);
       }
       this.logger.error(
         JSON.stringify({
           event: 'user_delete_failed',
           user_uuid: id,
-          error: error?.message,
-          stack: error?.stack,
+          error: getErrorMessage(error),
+          stack: getErrorStack(error),
         }),
       );
       throw error;
@@ -238,11 +251,11 @@ export class UserService {
   }
 
   // Méthodes utilitaires pour l'authentification
-  async findByEmailWithPassword(email: string) {
+  async findByEmailWithPassword(email: string): Promise<UserWithRole | null> {
     return this.userRepository.findByEmail(email);
   }
 
-  async findByIdWithPassword(id: string) {
+  async findByIdWithPassword(id: string): Promise<UserWithRole | null> {
     return this.userRepository.findById(id);
   }
 
@@ -251,7 +264,7 @@ export class UserService {
     await this.userRepository.update(userId, {});
   }
 
-  async updateUserStatus(id: string, isActive: boolean) {
+  async updateUserStatus(id: string, isActive: boolean): Promise<SafeUser> {
     try {
       // Vérifier que l'utilisateur existe
       const user = await this.userRepository.findById(id);
@@ -266,27 +279,28 @@ export class UserService {
       this.logger.log(
         JSON.stringify({
           event: 'user_status_updated',
-          user_uuid: updatedUser.user_uuid,
+          user_uuid: (updatedUser as UserWithRole).user_uuid,
           isActive,
         }),
       );
 
       // Ne pas retourner le mot de passe
-      const { user_password, ...result } = updatedUser;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { user_password, ...result } = updatedUser as UserWithRole;
       return result;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      if (error.code === 'P2025') {
+      if ((error as { code?: string }).code === 'P2025') {
         throw new NotFoundException(`Utilisateur avec l'ID ${id} non trouvé`);
       }
       this.logger.error(
         JSON.stringify({
           event: 'user_status_update_failed',
           user_uuid: id,
-          error: error?.message,
-          stack: error?.stack,
+          error: getErrorMessage(error),
+          stack: getErrorStack(error),
         }),
       );
       throw error;
