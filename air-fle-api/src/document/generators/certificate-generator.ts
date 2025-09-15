@@ -11,8 +11,9 @@ export interface CertificateData {
 }
 
 export class CertificateGenerator implements IDocumentGenerator {
-  async generate(data: CertificateData): Promise<Buffer> {
-    return this.createCertificatePDF(data);
+  async generate(data: Record<string, unknown>): Promise<Buffer> {
+    const certificateData = data as unknown as CertificateData;
+    return this.createCertificatePDF(certificateData);
   }
 
   private createCertificatePDF(data: CertificateData): Promise<Buffer> {
@@ -24,7 +25,7 @@ export class CertificateGenerator implements IDocumentGenerator {
         });
 
         const buffers: Buffer[] = [];
-        doc.on('data', buffers.push.bind(buffers));
+        doc.on('data', (buffer: Buffer) => buffers.push(buffer));
         doc.on('end', () => {
           const pdfBuffer = Buffer.concat(buffers);
           resolve(pdfBuffer);
@@ -230,7 +231,7 @@ export class CertificateGenerator implements IDocumentGenerator {
 
         doc.end();
       } catch (error) {
-        reject(error);
+        reject(new Error(String(error)));
       }
     });
   }

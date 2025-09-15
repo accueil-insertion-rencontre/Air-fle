@@ -6,7 +6,9 @@ export class LearnerHistoryAdapter {
   // Adapter désactivé: renvoie des données vides
   constructor() {}
 
-  async getAttendanceHistory(uuid: string): Promise<AttendanceRecord[]> {
-    return [];
+  getAttendanceHistory(uuid: string): Promise<AttendanceRecord[]> {
+    // uuid parameter is required but not used in this disabled adapter
+    void uuid;
+    return Promise.resolve([]);
   }
 }

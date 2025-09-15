@@ -16,13 +16,17 @@ export class StudentDataAdapter implements IStudentDataProvider {
       throw new Error(`Student with UUID ${uuid} not found`);
     }
 
+    const typedStudent = student as typeof student & {
+      nationality?: { nationality_name: string };
+    };
+
     return {
-      student_firstname: student.student_firstname,
-      student_lastname: student.student_lastname,
-      student_birthdate: student.student_birthdate,
-      nationality: student.nationality
+      student_firstname: typedStudent.student_firstname,
+      student_lastname: typedStudent.student_lastname,
+      student_birthdate: typedStudent.student_birthdate,
+      nationality: typedStudent.nationality
         ? {
-            nationality_name: student.nationality.nationality_name,
+            nationality_name: typedStudent.nationality.nationality_name,
           }
         : undefined,
     };

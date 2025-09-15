@@ -28,7 +28,7 @@ export class DocumentService {
    */
   async generateCertificate(student_uuid: string): Promise<Buffer> {
     const certificateData = await this.getCertificateData(student_uuid);
-    const pdf = await this.certificateGenerator.generate(certificateData);
+    const pdf = await this.certificateGenerator.generate(certificateData as unknown as Record<string, unknown>);
     this.logger.log(
       JSON.stringify({
         event: 'document_generated',
@@ -45,7 +45,7 @@ export class DocumentService {
   async getCertificateData(student_uuid: string): Promise<CertificateData> {
     const studentInfo =
       await this.studentDataProvider.getBasicInfo(student_uuid);
-    const attendanceHistory = [] as any[]; // Historique désactivé
+    const attendanceHistory = [] as Record<string, unknown>[]; // Historique désactivé
 
     const { startDate, endDate } =
       this.calculateFormationPeriod(attendanceHistory);
@@ -63,7 +63,9 @@ export class DocumentService {
   /**
    * Calcule la période de formation basée sur l'historique
    */
-  private calculateFormationPeriod(attendanceHistory: any[]): {
+  private calculateFormationPeriod(
+    attendanceHistory: Record<string, unknown>[],
+  ): {
     startDate: Date;
     endDate: Date;
   } {
@@ -76,7 +78,7 @@ export class DocumentService {
     }
 
     const dates = attendanceHistory
-      .map((h) => new Date(h.learner_history_date))
+      .map((h) => new Date(h.learner_history_date as string))
       .sort((a, b) => a.getTime() - b.getTime());
 
     return {

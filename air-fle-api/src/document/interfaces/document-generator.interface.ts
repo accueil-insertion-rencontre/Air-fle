@@ -1,7 +1,7 @@
 export const STUDENT_DATA_PROVIDER = Symbol('IStudentDataProvider');
 
 export interface IDocumentGenerator {
-  generate(data: any): Promise<Buffer>;
+  generate(data: Record<string, unknown>): Promise<Buffer>;
 }
 
 export interface IStudentDataProvider {

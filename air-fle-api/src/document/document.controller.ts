@@ -9,6 +9,7 @@ import {
   Query,
   Logger,
 } from '@nestjs/common';
+import { getErrorMessage } from '../common/types/error.types';
 import {
   ApiTags,
   ApiOperation,
@@ -166,10 +167,22 @@ export class DocumentController {
   ): Promise<void> {
     try {
       // Vérification manuelle du token JWT
-      const decoded = this.jwtService.verify(token);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const payload = this.jwtService.verify(token);
+      const decoded = payload as {
+        sub: string;
+        email: string;
+        role: string;
+        permissions: string[];
+        roles?: string[];
+      };
 
       // Vérification des rôles (remplace les guards)
-      if (!decoded.roles?.some((role) => ['admin', 'teacher'].includes(role))) {
+      if (
+        !decoded.roles?.some((role: string) =>
+          ['admin', 'teacher'].includes(role),
+        )
+      ) {
         res.status(HttpStatus.FORBIDDEN).json({
           statusCode: 403,
           message: 'Accès interdit - rôle insuffisant',
@@ -200,7 +213,7 @@ export class DocumentController {
           event: 'document_preview_token_denied',
           type: 'certificate',
           student_uuid,
-          reason: error?.message,
+          reason: getErrorMessage(error),
         }),
       );
     }
