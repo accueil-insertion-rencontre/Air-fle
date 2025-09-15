@@ -12,6 +12,23 @@ import {
   Param,
   Inject,
 } from '@nestjs/common';
+import { Request as ExpressRequest } from 'express';
+
+// Define authenticated user interface
+interface AuthenticatedUser {
+  user_uuid: string;
+  user_mail: string;
+  user_firstname: string;
+  user_lastname: string;
+  role: string;
+}
+
+interface AuthenticatedRequest extends ExpressRequest {
+  user: AuthenticatedUser;
+  headers: ExpressRequest['headers'] & {
+    authorization: string;
+  };
+}
 import { LoginDto } from '../dto/login.dto';
 import {
   ApiTags,
@@ -111,7 +128,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  async logout(@Request() req, @Ip() ip: string) {
+  async logout(@Request() req: AuthenticatedRequest, @Ip() ip: string) {
     const token = req.headers.authorization.split(' ')[1];
     await this.authService.logout(token, req.user.user_uuid, ip);
     return {
@@ -232,7 +249,7 @@ export class AuthController {
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   async changePassword(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Body() dto: ChangePasswordDto,
     @Ip() ip: string,
   ) {
@@ -270,7 +287,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  async getMyPermissions(@Request() req) {
+  async getMyPermissions(@Request() req: AuthenticatedRequest) {
     const userId = req.user.user_uuid;
     const permissions = await this.permissionService.getUserPermissions(userId);
     const resources = await this.permissionService.getResourcesForUser(userId);
@@ -304,7 +321,7 @@ export class AuthController {
   })
   @HttpCode(HttpStatus.OK)
   async checkPermission(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Param('permission') permission: string,
   ) {
     const userId = req.user.user_uuid;
@@ -340,7 +357,7 @@ export class AuthController {
   @Roles('admin')
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  async getAllPermissions() {
+  getAllPermissions() {
     const permissions = this.permissionService.getAllAvailablePermissions();
 
     return {
@@ -415,7 +432,7 @@ export class AuthController {
   @Roles('admin')
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  async getRolePermissions(@Param('roleName') roleName: string) {
+  getRolePermissions(@Param('roleName') roleName: string) {
     const permissions = this.permissionService.getPermissionsByRole(roleName);
 
     return {

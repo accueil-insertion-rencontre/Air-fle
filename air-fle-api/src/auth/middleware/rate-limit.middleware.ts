@@ -8,6 +8,7 @@ import {
 import { Request, Response, NextFunction } from 'express';
 import { Logger } from '@nestjs/common';
 import { ICacheService } from '../interfaces/auth.interface';
+import { getErrorMessage, getErrorStack } from '../../common/types/error.types';
 
 interface RateLimitOptions {
   windowMs: number; // Fenêtre de temps en millisecondes
@@ -86,8 +87,8 @@ export class RateLimitMiddleware implements NestMiddleware {
       }
       // En cas d'erreur du cache, laisser passer la requête
       this.logger.error(
-        `Erreur rate limiting: ${error?.message}`,
-        error?.stack,
+        `Erreur rate limiting: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
       next();
     }
@@ -103,7 +104,9 @@ export class RateLimitMiddleware implements NestMiddleware {
 
     // Récupérer les timestamps des requêtes dans la fenêtre
     const requests = await this.cacheService.get(key);
-    let timestamps: number[] = requests ? JSON.parse(requests) : [];
+    let timestamps: number[] = requests
+      ? (JSON.parse(requests) as number[])
+      : [];
 
     // Filtrer les requêtes dans la fenêtre de temps
     timestamps = timestamps.filter((timestamp) => timestamp > windowStart);
@@ -135,7 +138,9 @@ export class RateLimitMiddleware implements NestMiddleware {
     const windowStart = Date.now() - config.windowMs;
 
     const requests = await this.cacheService.get(key);
-    const timestamps: number[] = requests ? JSON.parse(requests) : [];
+    const timestamps: number[] = requests
+      ? (JSON.parse(requests) as number[])
+      : [];
 
     const validRequests = timestamps.filter(
       (timestamp) => timestamp > windowStart,
@@ -154,7 +159,7 @@ export class RateLimitMiddleware implements NestMiddleware {
       return 0;
     }
 
-    const timestamps: number[] = JSON.parse(requests);
+    const timestamps: number[] = JSON.parse(requests) as number[];
     if (timestamps.length === 0) {
       return 0;
     }
