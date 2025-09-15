@@ -159,7 +159,19 @@ export class TaskService {
   /**
    * Récupère les statistiques d'une tâche
    */
-  async getStatistics(id: string): Promise<any> {
+  async getStatistics(id: string): Promise<{
+    task: {
+      id: string;
+      title: string;
+      status: string;
+    };
+    subtasks: {
+      total: number;
+      completed: number;
+      pending: number;
+      completionPercentage: number;
+    };
+  }> {
     const task = await this.findOne(id);
     if (!task) {
       throw new NotFoundException('Tâche non trouvée');
@@ -180,7 +192,7 @@ export class TaskService {
       task: {
         id: task.task_uuid,
         title: task.task_title,
-        status: task.task_status,
+        status: task.task_status.toString(),
       },
       subtasks: {
         total: totalSubtasks,
@@ -194,7 +206,15 @@ export class TaskService {
   /**
    * Récupère toutes les tâches de l'utilisateur avec leurs statistiques
    */
-  async getAllTasksWithStats(userId: string): Promise<any> {
+  async getAllTasksWithStats(userId: string): Promise<{
+    tasks: unknown[];
+    statistics: {
+      total: number;
+      pending: number;
+      in_progress: number;
+      completed: number;
+    };
+  }> {
     const tasks = await this.findAll(userId);
 
     const tasksWithStats = await Promise.all(
@@ -203,7 +223,7 @@ export class TaskService {
         return {
           ...task,
           statistics: stats.subtasks,
-        };
+        } as unknown;
       }),
     );
 
@@ -221,13 +241,11 @@ export class TaskService {
 
     return {
       tasks: tasksWithStats,
-      globalStats: {
-        totalTasks,
-        completedTasks,
-        inProgressTasks,
-        pendingTasks,
-        completionPercentage:
-          totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+      statistics: {
+        total: totalTasks,
+        pending: pendingTasks,
+        in_progress: inProgressTasks,
+        completed: completedTasks,
       },
     };
   }

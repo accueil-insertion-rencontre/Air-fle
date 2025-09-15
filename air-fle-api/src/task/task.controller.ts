@@ -11,6 +11,29 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { Request as ExpressRequest } from 'express';
+
+// Define authenticated user interface
+interface AuthenticatedUser {
+  user_uuid: string;
+  user_mail: string;
+  user_firstname: string;
+  user_lastname: string;
+  role: string;
+}
+
+interface AuthenticatedRequest extends ExpressRequest {
+  user: AuthenticatedUser;
+}
+
+// Define task statistics interface
+interface TaskStatistics {
+  total_subtasks: number;
+  completed_subtasks: number;
+  completion_percentage: number;
+  created_at: Date;
+  updated_at: Date;
+}
 import { TaskService } from './task.service';
 import { SubtaskService, SubtaskWithRelations } from './subtask.service';
 import { Task } from '@prisma/client';
@@ -42,7 +65,10 @@ export class TaskController {
   @Post()
   @ApiOperation({ summary: 'Créer une nouvelle tâche' })
   @ApiResponse({ status: 201, description: 'Tâche créée avec succès' })
-  async create(@Request() req, @Body() createTaskDto: CreateTaskDto) {
+  async create(
+    @Request() req: AuthenticatedRequest,
+    @Body() createTaskDto: CreateTaskDto,
+  ) {
     return this.taskService.create(req.user.user_uuid, createTaskDto);
   }
 
@@ -54,7 +80,15 @@ export class TaskController {
     status: 200,
     description: 'Liste des tâches avec statistiques récupérée avec succès',
   })
-  async findAll(@Request() req) {
+  async findAll(@Request() req: AuthenticatedRequest): Promise<{
+    tasks: unknown[];
+    statistics: {
+      total: number;
+      pending: number;
+      in_progress: number;
+      completed: number;
+    };
+  }> {
     return this.taskService.getAllTasksWithStats(req.user.user_uuid);
   }
 
@@ -63,7 +97,7 @@ export class TaskController {
   @ApiResponse({ status: 200, description: 'Tâche récupérée avec succès' })
   @ApiParam({ name: 'id', description: 'ID de la tâche' })
   async findOneTask(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Param('id') id: string,
   ): Promise<Task | null> {
     const task = await this.taskService.findOne(id);
@@ -86,7 +120,7 @@ export class TaskController {
   @ApiResponse({ status: 200, description: 'Tâche mise à jour avec succès' })
   @ApiParam({ name: 'id', description: 'ID de la tâche' })
   async updateTask(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Param('id') id: string,
     @Body() updateTaskDto: UpdateTaskDto,
   ): Promise<Task> {
@@ -109,7 +143,10 @@ export class TaskController {
   @ApiOperation({ summary: 'Supprimer une tâche' })
   @ApiResponse({ status: 200, description: 'Tâche supprimée avec succès' })
   @ApiParam({ name: 'id', description: 'ID de la tâche' })
-  async deleteTask(@Request() req, @Param('id') id: string): Promise<Task> {
+  async deleteTask(
+    @Request() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ): Promise<Task> {
     // Vérifier que l'utilisateur est le propriétaire de la tâche
     const task = await this.taskService.findOne(id);
     if (!task) {
@@ -133,9 +170,9 @@ export class TaskController {
   })
   @ApiParam({ name: 'id', description: 'ID de la tâche' })
   async getTaskStatistics(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Param('id') id: string,
-  ): Promise<any> {
+  ): Promise<TaskStatistics> {
     // Vérifier que l'utilisateur est le propriétaire de la tâche
     const task = await this.taskService.findOne(id);
     if (!task) {
@@ -148,7 +185,14 @@ export class TaskController {
       );
     }
 
-    return this.taskService.getStatistics(id);
+    const stats = await this.taskService.getStatistics(id);
+    return {
+      total_subtasks: stats.subtasks.total,
+      completed_subtasks: stats.subtasks.completed,
+      completion_percentage: stats.subtasks.completionPercentage,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
   }
 
   // ===== SUBTASKS =====
@@ -161,7 +205,7 @@ export class TaskController {
   @ApiResponse({ status: 201, description: 'Sous-tâche créée avec succès' })
   @ApiParam({ name: 'taskId', description: 'ID de la tâche parent' })
   async createSubtask(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Param('taskId') taskId: string,
     @Body() createSubtaskDto: CreateSubtaskDto,
   ): Promise<SubtaskWithRelations> {
@@ -191,7 +235,7 @@ export class TaskController {
   })
   @ApiParam({ name: 'taskId', description: 'ID de la tâche' })
   async findAllSubtasks(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Param('taskId') taskId: string,
   ): Promise<SubtaskWithRelations[]> {
     // Vérifier que la tâche appartient à l'utilisateur
@@ -214,7 +258,7 @@ export class TaskController {
   @ApiResponse({ status: 200, description: 'Sous-tâche récupérée avec succès' })
   @ApiParam({ name: 'id', description: 'ID de la sous-tâche' })
   async findOneSubtask(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Param('id') id: string,
   ): Promise<SubtaskWithRelations | null> {
     const subtask = await this.subtaskService.findOne(id);
@@ -240,7 +284,7 @@ export class TaskController {
   })
   @ApiParam({ name: 'id', description: 'ID de la sous-tâche' })
   async updateSubtask(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Param('id') id: string,
     @Body() updateSubtaskDto: UpdateSubtaskDto,
   ): Promise<SubtaskWithRelations> {
@@ -264,7 +308,7 @@ export class TaskController {
   @ApiResponse({ status: 200, description: 'Sous-tâche supprimée avec succès' })
   @ApiParam({ name: 'id', description: 'ID de la sous-tâche' })
   async deleteSubtask(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Param('id') id: string,
   ): Promise<SubtaskWithRelations> {
     const subtask = await this.subtaskService.findOne(id);
@@ -290,7 +334,7 @@ export class TaskController {
   })
   @ApiParam({ name: 'id', description: 'ID de la sous-tâche' })
   async toggleSubtaskStatus(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Param('id') id: string,
   ): Promise<SubtaskWithRelations> {
     const subtask = await this.subtaskService.findOne(id);
