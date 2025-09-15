@@ -1,4 +1,4 @@
-import { Absence, AlertService, AttendanceRecord, AttendanceService } from '@core/services';
+import { Absence, AlertService, AttendanceService } from '@core/services';
 
 import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -62,16 +62,13 @@ export class StudentAbsenceHistoryComponent implements OnInit {
    * Méthode de fallback pour utiliser l'ancienne API d'attendance
    */
   private loadLegacyAttendanceHistory(): void {
-    const numericStudentId =
-      typeof this.studentId === 'string' ? parseInt(this.studentId) : this.studentId;
-
     this.attendanceService.getStudentAbsences(this.studentId.toString()).subscribe({
       next: (absences) => {
         this.absenceHistory = absences;
         this.calculateAbsenceStats();
         this.loading = false;
       },
-      error: (error) => {
+      error: () => {
         this.error = 'Erreur lors du chargement de l\'historique des absences';
         this.loading = false;
       }

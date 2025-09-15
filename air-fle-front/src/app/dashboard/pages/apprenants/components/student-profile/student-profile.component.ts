@@ -122,7 +122,7 @@ export class StudentProfileComponent implements OnInit {
           } else if (exam.student_uuid && (exam.exam_score !== undefined || exam.exam_status !== undefined)) {
             // structure plate
             score = exam.exam_score;
-            status = exam.exam_status;
+            // status = exam.exam_status;
           }
 
           if (score !== undefined) {
@@ -361,12 +361,12 @@ export class StudentProfileComponent implements OnInit {
     if (!this.student) return;
     
     const courseId = 'COURS_001'; // À remplacer par la vraie logique
-    const absenceData = {
-      student_id: this.student.student_uuid,
-      course_id: courseId,
-      date: new Date(),
-      reason: 'Non renseigné'
-    };
+    // const absenceData = {
+    //   student_id: this.student.student_uuid,
+    //   course_id: courseId,
+    //   date: new Date(),
+    //   reason: 'Non renseigné'
+    // };
     
     // Simuler une notification
     alert(`Absence ajoutée:\nÉtudiant: ${this.student.student_firstname} ${this.student.student_lastname}\nCours: ${courseId}\nDate: ${new Date().toLocaleDateString()}`);

@@ -60,7 +60,7 @@ export class TodoItemComponent {
           updatedSubtask: this.task
         });
       },
-      error: (error) => {
+      error: () => {
         // Gestion silencieuse de l'erreur en production
       }
     });

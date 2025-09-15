@@ -6,14 +6,10 @@ import { StudentService } from '@core/services';
 import { StudentListResponse } from '@core/models';
 import { ReferenceDataService, GroupService } from '@core/services';
 import {
-  Student,
   StudentFilters,
   StudentListConfig,
-  StudentSortConfig,
-  StudentSortField,
 } from '@core/models';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { map, shareReplay } from 'rxjs/operators';
+import { BreakpointObserver } from '@angular/cdk/layout';
 
 @Component({
   selector: 'app-student-list',
@@ -123,7 +119,7 @@ export class StudentListComponent implements OnInit {
         this.totalPages = Math.ceil(this.totalItems / this.pageSize);
         this.loading = false;
       },
-      error: err => {
+      error: () => {
         this.error = 'Erreur lors du chargement des apprenants';
         this.loading = false;
       },
@@ -270,8 +266,8 @@ export class StudentListComponent implements OnInit {
           }
           this.loadStudents();
         },
-        error: err => {
-          console.error('Erreur lors de la suppression:', err);
+        error: () => {
+          console.error('Erreur lors de la suppression');
           alert("Erreur lors de la suppression de l'étudiant");
         },
       });
