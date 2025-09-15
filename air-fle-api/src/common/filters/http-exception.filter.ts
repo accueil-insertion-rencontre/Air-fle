@@ -55,7 +55,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
               : typeof exception,
         }),
       );
-    } catch {}
+    } catch {
+      // Silently ignore logging errors
+    }
 
     const errorResponse = ApiResponse.error(message, status);
 
