@@ -102,11 +102,12 @@ export class UserRepository {
   }
 
   // Méthodes utilitaires spécifiques
-  async findWithoutPassword(
-    id: string,
-  ): Promise<Omit<Prisma.UserGetPayload<{
-    include: { role: true; courses: true };
-  }>, 'user_password'> | null> {
+  async findWithoutPassword(id: string): Promise<Omit<
+    Prisma.UserGetPayload<{
+      include: { role: true; courses: true };
+    }>,
+    'user_password'
+  > | null> {
     const user = await this.findById(id);
     if (!user) return null;
 

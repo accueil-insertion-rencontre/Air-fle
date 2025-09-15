@@ -62,7 +62,7 @@ export class TransformInterceptor<T>
 
         // Si c'est un succès
         const message = this.getDefaultMessageForStatusCode(statusCode);
-        const payload = ApiResponse.success(data as T, message, statusCode);
+        const payload = ApiResponse.success(data, message, statusCode);
         return payload;
       }),
       tap(() => {

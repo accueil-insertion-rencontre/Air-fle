@@ -224,7 +224,7 @@ export class UserService {
       const deletedUser = userToDelete;
       await this.userRepository.delete(id);
       this.logger.log(JSON.stringify({ event: 'user_deleted', user_uuid: id }));
-      
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { user_password, ...result } = deletedUser as UserWithRole;
       return result;

@@ -10,7 +10,7 @@ export class JwtTokenAdapter implements ITokenService {
     if (typeof payload === 'string') {
       return this.jwtService.sign(payload, options);
     }
-    return this.jwtService.sign(payload as object | Buffer, options);
+    return this.jwtService.sign(payload, options);
   }
 
   verify<T extends object = Record<string, unknown>>(token: string): T {

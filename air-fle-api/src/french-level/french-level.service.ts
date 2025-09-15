@@ -50,7 +50,9 @@ export class FrenchLevelService {
     const normalizedData = this.normalizeLevelData(data);
 
     // ✅ Création via repository
-    const level = await this.frenchLevelRepository.create(normalizedData as Prisma.FrenchLevelCreateInput);
+    const level = await this.frenchLevelRepository.create(
+      normalizedData as Prisma.FrenchLevelCreateInput,
+    );
     this.logger.log(
       JSON.stringify({
         event: 'french_level_created',

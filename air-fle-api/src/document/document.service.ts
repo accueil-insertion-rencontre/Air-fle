@@ -28,7 +28,9 @@ export class DocumentService {
    */
   async generateCertificate(student_uuid: string): Promise<Buffer> {
     const certificateData = await this.getCertificateData(student_uuid);
-    const pdf = await this.certificateGenerator.generate(certificateData as unknown as Record<string, unknown>);
+    const pdf = await this.certificateGenerator.generate(
+      certificateData as unknown as Record<string, unknown>,
+    );
     this.logger.log(
       JSON.stringify({
         event: 'document_generated',
