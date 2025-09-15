@@ -1,6 +1,6 @@
 {
   "name": "air-fle-front",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Interface Angular pour la gestion des apprenants FLE",
   "author": "Association Air",
   "private": true,
