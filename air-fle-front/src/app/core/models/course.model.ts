@@ -1,5 +1,3 @@
-import { Group } from './group.model';
-import { User } from './user.model';
 
 export interface Course {
   // ✅ NOUVEAUX CHAMPS API

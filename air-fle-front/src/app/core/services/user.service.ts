@@ -77,7 +77,7 @@ export class UserService {
         // Convertir tous les utilisateurs en UserDisplayInfo
         return users.map(user => this.convertToDisplayInfo(user));
       }),
-      catchError(error => {
+      catchError(() => {
         // Si ça plante, retourner un tableau vide
         return of([]);
       })
@@ -109,7 +109,7 @@ export class UserService {
           })
         );
       }),
-      catchError(error => {
+      catchError(() => {
         return this.getTeachersFallback();
       })
     );
@@ -206,8 +206,8 @@ export class UserService {
         }
         throw new Error('Erreur lors de la création de l\'utilisateur');
       }),
-      catchError(error => {
-        throw error;
+      catchError((err) => {
+        throw err;
       })
     );
   }
@@ -224,8 +224,8 @@ export class UserService {
         }
         throw new Error('Erreur lors de la mise à jour de l\'utilisateur');
       }),
-      catchError(error => {
-        throw error;
+      catchError((err) => {
+        throw err;
       })
     );
   }
@@ -235,8 +235,8 @@ export class UserService {
    */
   deleteUser(id: string | number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
-      catchError(error => {
-        throw error;
+      catchError((err) => {
+        throw err;
       })
     );
   }

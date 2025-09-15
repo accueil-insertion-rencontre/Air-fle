@@ -222,9 +222,9 @@ export class SanitizationService {
   }
 
   secureLog(message: string, data?: any): void {
-    const safeMessage = this.sanitizeText(message);
-    const safeData = data ? this.sanitizeText(JSON.stringify(data).substring(0, 200)) : '';
-    
-    
+    this.sanitizeText(message);
+    if (data) {
+      this.sanitizeText(JSON.stringify(data).substring(0, 200));
+    }
   }
 }

@@ -3,7 +3,7 @@ import { environment } from '@environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, tap, catchError } from 'rxjs';
+import { Observable, BehaviorSubject, tap } from 'rxjs';
 import { CookieService } from './cookie.service';
 import { User } from '../models';
 
@@ -129,7 +129,6 @@ export class AuthService {
   }
 
   logTokenToConsole(): void {
-    const token = this.getToken();
-    
+    this.getToken();
   }
 }

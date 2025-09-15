@@ -69,7 +69,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // S'abonner aux changements de route
     this.routerSubscription = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe((event: any) => {
+      .subscribe(() => {
         this.updateBreadcrumbs();
 
         // Fermer la sidebar sur changement de route en mode mobile

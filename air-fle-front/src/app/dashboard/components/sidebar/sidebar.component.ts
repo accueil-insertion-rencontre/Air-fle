@@ -136,7 +136,9 @@ export class SidebarComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
-  ngAfterViewChecked(): void {}
+  ngAfterViewChecked(): void {
+    // Hook lifecycle nécessaire pour la détection de changement
+  }
 
   // plus de réinitialisation Feather: icônes en SVG inline
   forceIconRefresh(): void {}

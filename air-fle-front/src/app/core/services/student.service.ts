@@ -30,7 +30,7 @@ export class StudentService {
         if (Array.isArray(response)) return response as Student[];
         return [];
       }),
-      catchError(error => of([]))
+      catchError(() => of([]))
     );
   }
 
@@ -59,7 +59,7 @@ export class StudentService {
         if (Array.isArray(response)) return response as Student[];
         return [];
       }),
-      catchError(error => of([]))
+      catchError(() => of([]))
     );
   }
 
@@ -112,7 +112,7 @@ export class StudentService {
         }
         return { students: [], total: 0 };
       }),
-      catchError(error => of({ students: [], total: 0 }))
+      catchError(() => of({ students: [], total: 0 }))
     );
   }
 
@@ -195,7 +195,7 @@ export class StudentService {
         }
         return { students: [], total: 0, page, pageSize, totalPages: 1 };
       }),
-      catchError(error => of({ students: [], total: 0, page: 1, pageSize: 20, totalPages: 1 }))
+      catchError(() => of({ students: [], total: 0, page: 1, pageSize: 20, totalPages: 1 }))
     );
   }
 
@@ -230,8 +230,8 @@ export class StudentService {
   /**
    * Gestion des erreurs HTTP
    */
-  private handleError<T>(operation = 'operation', result?: T) {
-    return (error: any): Observable<T> => {
+  private handleError<T>(result?: T) {
+    return (): Observable<T> => {
       return new Observable(observer => {
         observer.next(result as T);
         observer.complete();

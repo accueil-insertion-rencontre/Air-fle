@@ -3,7 +3,7 @@ import { environment } from '@environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { tap, catchError, map } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { ApiResponse } from '../models/reference-data.model';
 
 export interface Subtask {

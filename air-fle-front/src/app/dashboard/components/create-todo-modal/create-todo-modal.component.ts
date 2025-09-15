@@ -2,7 +2,6 @@ import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import {
-  CreateTodoRequest,
   TodoTask,
   CreateTodoWithSubtasksRequest,
   SubtaskRequest,
@@ -18,8 +17,8 @@ import {
 export class CreateTodoModalComponent implements OnChanges {
   @Input() isOpen = false;
   @Input() parentTasks: TodoTask[] = [];
-  @Output() close = new EventEmitter<void>();
-  @Output() submit = new EventEmitter<CreateTodoWithSubtasksRequest>();
+  @Output() closeModal = new EventEmitter<void>();
+  @Output() submitTodo = new EventEmitter<CreateTodoWithSubtasksRequest>();
 
   todoForm!: FormGroup;
   isSubmitting = false;
@@ -101,7 +100,7 @@ export class CreateTodoModalComponent implements OnChanges {
         subtasks: subtasks,
       };
 
-      this.submit.emit(todoData);
+      this.submitTodo.emit(todoData);
 
       // Réinitialiser le formulaire après soumission
       setTimeout(() => {
@@ -112,7 +111,7 @@ export class CreateTodoModalComponent implements OnChanges {
 
   onClose() {
     this.resetForm();
-    this.close.emit();
+    this.closeModal.emit();
   }
 
   // Empêcher la fermeture quand on clique sur le contenu de la modal

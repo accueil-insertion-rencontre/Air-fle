@@ -27,8 +27,6 @@ export interface ReferenceData {
   exitReasons: ExitReason[];
   disabilities: Disability[];
 }
-import { finalize, switchMap } from 'rxjs/operators';
-import { of } from 'rxjs';
 
 @Component({
   selector: 'app-student-form',

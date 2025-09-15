@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
-import { AuthService, AuthResponse } from './auth.service';
+import { AuthService } from './auth.service';
 import { User } from '../models';
 import { CookieService } from './cookie.service';
 import { environment } from '@environments/environment';

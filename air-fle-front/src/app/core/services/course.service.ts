@@ -123,7 +123,7 @@ export class CourseService {
         }
         throw new Error('Erreur lors de la mise à jour du cours');
       }),
-      catchError(patchError => {
+      catchError(() => {
         // Fallback avec PUT
         return this.http.put<any>(`${this.apiUrl}/${id}`, apiCourse).pipe(
           map(response => {
@@ -156,7 +156,7 @@ export class CourseService {
       switchMap(() => {
         return this.createCourse(course);
       }),
-      catchError(error => {
+      catchError(() => {
         throw new Error('Impossible de modifier le cours (suppression/création échouée)');
       })
     );
@@ -179,7 +179,7 @@ export class CourseService {
         if (Array.isArray(response)) return (response as any[]).map(c => this.convertToFrontendModel(c));
         return [];
       }),
-      catchError(error => {
+      catchError(() => {
         // Fallback : récupérer tous les cours et filtrer
         return this.getCourses().pipe(
           map((allCourses: Course[]) => {

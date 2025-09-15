@@ -54,11 +54,11 @@ export class DocumentGenerationModalComponent implements OnInit, OnChanges {
   constructor(private documentService: DocumentService) {}
 
   ngOnInit(): void {
-    // Plus besoin de charger les données à l'avance
+    // Initialisation du composant
   }
 
   ngOnChanges(): void {
-    // Plus besoin de charger les données à l'avance
+    // Détection des changements d'inputs
   }
 
   /**
