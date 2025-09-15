@@ -1,0 +1,48 @@
+<div class="sidebar" [class.collapsed]="!isOpen">
+  <div class="sidebar-header">
+    <div class="logo-container">
+      <img src="/assets/img/auth/icone.png" alt="AIR Logo" class="logo" />
+      <h1 class="brand-text">AIR</h1>
+    </div>
+    <!-- Bouton de fermeture visible uniquement en mobile -->
+    <button class="close-button mobile-only" (click)="toggleSidebar()">
+      <span>×</span>
+    </button>
+  </div>
+
+  <div class="sidebar-menu">
+    <ul class="menu-list">
+      <!-- Parcourir les éléments de menu en tenant compte des sections -->
+      <ng-container *ngFor="let item of menuItems; let i = index">
+        <!-- Afficher le titre de la section si présent -->
+        <li class="menu-section" *ngIf="item.section">
+          <span class="section-title">{{ item.section }}</span>
+        </li>
+
+        <!-- Afficher l'élément du menu -->
+        <li class="menu-item" [class.active]="item.active">
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+          >
+            <div class="menu-icon-container" aria-hidden="true">
+              <ng-container [ngSwitch]="item.icon">
+                <svg *ngSwitchCase="'home'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7"/><path d="M9 22V12h6v10"/></svg>
+                <svg *ngSwitchCase="'users'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <svg *ngSwitchCase="'user'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <svg *ngSwitchCase="'database'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg>
+                <svg *ngSwitchCase="'clipboard'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-3"/></svg>
+                <svg *ngSwitchCase="'trending-up'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                <svg *ngSwitchCase="'calendar'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <svg *ngSwitchCase="'book-open'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a4 4 0 0 1 4 4v12a4 4 0 0 0-4-4H2z"/><path d="M22 4h-7a4 4 0 0 0-4 4v12a4 4 0 0 1 4-4h7z"/></svg>
+                <svg *ngSwitchDefault width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+              </ng-container>
+            </div>
+            <span class="menu-text">{{ item.label }}</span>
+          </a>
+        </li>
+      </ng-container>
+    </ul>
+  </div>
+</div>

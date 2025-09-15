@@ -1,0 +1,417 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===============================
+// TABLES DE RÉFÉRENCE
+// ===============================
+
+model Role {
+  role_uuid String @id @default(uuid()) @map("role_uuid")
+  role_name String @map("role_name") @db.VarChar(50)
+  users     User[]
+
+  @@map("Roles")
+}
+
+model Nationality {
+  nationality_uuid  String               @id @default(uuid()) @map("nationality_uuid")
+  nationality_label String               @map("nationality_label") @db.VarChar(256)
+  students          StudentNationality[]
+
+  @@map("Nationalities")
+}
+
+model FrenchLevel {
+  french_level_uuid        String             @id @default(uuid()) @map("french_level_uuid")
+  french_level_code        String             @map("french_level_code") @db.VarChar(50)
+  french_level_description String             @map("french_level_description") @db.VarChar(50)
+  students                 Student[]
+  exit_students            StudentExitLevel[]
+
+  @@map("French_Levels")
+}
+
+model Gender {
+  gender_uuid  String    @id @default(uuid()) @map("gender_uuid")
+  gender_label String    @map("gender_label") @db.VarChar(50)
+  students     Student[]
+
+  @@map("Genders")
+}
+
+model Address {
+  address_uuid       String           @id @default(uuid()) @map("address_uuid")
+  adress_street      String           @map("adress_street") @db.VarChar(50)
+  adress_compladress String?          @map("adress_compladress") @db.VarChar(50)
+  adress_zipcode     Int              @map("adress_zipcode")
+  adress_city        String           @map("adress_city") @db.VarChar(50)
+  students           StudentAddress[]
+
+  @@map("Addresses")
+}
+
+model ExitReason {
+  exit_reason_uuid String    @id @default(uuid()) @map("exit_reason_uuid")
+  exit_reason      String    @map("exit_reason") @db.VarChar(50)
+  students         Student[]
+
+  @@map("Exit_Reasons")
+}
+
+model Orientation {
+  orientation_uuid        String    @id @default(uuid()) @map("orientation_uuid")
+  orientation_type        String    @map("orientation_type") @db.VarChar(50)
+  orientation_description String    @map("orientation_description") @db.VarChar(50)
+  students                Student[]
+
+  @@map("Orientations")
+}
+
+model Period {
+  period_uuid          String        @id @default(uuid()) @map("period_uuid")
+  period_label         String        @map("period_label") @db.VarChar(50)
+  period_started_at    DateTime      @map("period_started_at") @db.Date
+  period_ended_at      DateTime      @map("period_ended_at") @db.Date
+  period_actual_period Boolean       @map("period_actual_period")
+  groups               GroupPeriod[]
+
+  @@map("Periods")
+}
+
+model Session {
+  session_uuid        String   @id @default(uuid()) @map("session_uuid")
+  session_label       String   @map("session_label") @db.VarChar(50)
+  session_started_at  DateTime @map("session_started_at") @db.Date
+  session_finished_at DateTime @map("session_finished_at") @db.Date
+  groups              Group[]
+
+  @@map("Sessions")
+}
+
+model Status {
+  status_uuid  String    @id @default(uuid()) @map("status_uuid")
+  status_label String    @map("status_label") @db.VarChar(50)
+  students     Student[]
+
+  @@map("Status")
+}
+
+model Financing {
+  financing_uuid String @id @default(uuid()) @map("financing_uuid")
+  financing_type String @map("financing_type") @db.VarChar(50)
+
+  // Relations
+  students Student[]
+
+  @@map("Financings")
+}
+
+model Disability {
+  disability_uuid        String  @id @default(uuid()) @map("disability_uuid")
+  disability_label       String  @map("disability_label") @db.VarChar(100)
+  disability_description String? @map("disability_description") @db.VarChar(255)
+
+  // Relations
+  students StudentDisability[]
+
+  @@map("Disabilities")
+}
+
+// ===============================
+// TABLES PRINCIPALES
+// ===============================
+
+model User {
+  user_uuid       String    @id @default(uuid()) @map("user_uuid")
+  user_firstname  String    @map("user_firstname") @db.VarChar(50)
+  user_lastname   String    @map("user_lastname") @db.VarChar(50)
+  user_mail       String    @unique @map("user_mail") @db.VarChar(50)
+  user_birthdate  DateTime? @map("user_birthdate")
+  user_password   String    @map("user_password") @db.VarChar(255)
+  user_isactive   Boolean   @default(true) @map("user_isactive")
+  user_created_at DateTime  @default(now()) @map("user_created_at")
+  role_uuid       String    @map("role_uuid")
+
+  // Relations
+  role                     Role         @relation(fields: [role_uuid], references: [role_uuid])
+  tasks                    Task[]
+  courses                  UserCourse[]
+  // Back relation: courses where this user took attendance
+  attendance_taken_courses Course[]     @relation("CourseAttendanceTakenBy")
+
+  @@map("Users")
+}
+
+model Student {
+  student_uuid                  String    @id @default(uuid()) @map("student_uuid")
+  student_firstname             String    @map("student_firstname") @db.VarChar(50)
+  student_lastname              String    @map("student_lastname") @db.VarChar(50)
+  student_birthdate             DateTime  @map("student_birthdate") @db.Date
+  student_place_of_birth        String?   @map("student_place_of_birth") @db.VarChar(50)
+  student_mail                  String?   @map("student_mail") @db.VarChar(50)
+  student_phone                 String?   @map("student_phone")
+  student_date_test_initial     DateTime? @map("student_date_test_initial") @db.Date
+  student_date_entry_france     DateTime? @map("student_date_entry_france") @db.Date
+  student_commentary            String?   @map("student_commentary") @db.VarChar(256)
+  student_created_at            DateTime? @map("student_created_at")
+  student_updated_at            DateTime? @map("student_updated_at")
+  student_date_cir              DateTime? @map("student_date_cir") @db.Date
+  student_date_residence_permit DateTime? @map("student_date_residence_permit") @db.Date
+  financing_uuid                String    @map("financing_uuid")
+  status_uuid                   String    @map("status_uuid")
+  orientation_uuid              String?   @map("orientation_uuid")
+  exit_reason_uuid              String?   @map("exit_reason_uuid")
+  french_level_uuid             String    @map("french_level_uuid")
+  gender_uuid                   String    @map("gender_uuid")
+
+  // Relations
+  financing   Financing    @relation(fields: [financing_uuid], references: [financing_uuid])
+  status      Status       @relation(fields: [status_uuid], references: [status_uuid])
+  orientation Orientation? @relation(fields: [orientation_uuid], references: [orientation_uuid])
+  exitReason  ExitReason?  @relation(fields: [exit_reason_uuid], references: [exit_reason_uuid])
+  frenchLevel FrenchLevel  @relation(fields: [french_level_uuid], references: [french_level_uuid])
+  gender      Gender       @relation(fields: [gender_uuid], references: [gender_uuid])
+
+  // Relations many-to-many et one-to-many
+  nationalities StudentNationality[]
+  addresses     StudentAddress[]
+  groups        StudentGroup[]
+  disabilities  StudentDisability[]
+  exit_levels   StudentExitLevel[]
+  exams         StudentExam[]
+  continuations Continuation[]
+  absences      Absence[]
+  // removed learner_history
+
+  @@map("students")
+}
+
+model Task {
+  task_uuid        String    @id @default(uuid()) @map("task_uuid")
+  task_title       String    @map("task_title") @db.VarChar(50)
+  task_description String?   @map("task_description") @db.VarChar(50)
+  task_status      Decimal   @map("task_status") @db.Decimal(15, 2)
+  task_created_at  DateTime  @map("task_created_at")
+  task_updated_at  DateTime  @map("task_updated_at")
+  task_due_at      DateTime? @map("task_due_at")
+  user_uuid        String?   @map("user_uuid")
+
+  // Relations
+  user     User?     @relation(fields: [user_uuid], references: [user_uuid])
+  subtasks Subtask[]
+
+  @@map("Tasks")
+}
+
+model Group {
+  group_uuid   String @id @default(uuid()) @map("group_uuid")
+  group_label  String @map("group_label") @db.VarChar(50)
+  session_uuid String @map("session_uuid")
+
+  // Relations
+  session  Session        @relation(fields: [session_uuid], references: [session_uuid])
+  courses  Course[]
+  students StudentGroup[]
+  periods  GroupPeriod[]
+
+  @@map("Groups")
+}
+
+model Course {
+  course_uuid       String    @id @default(uuid()) @map("course_uuid")
+  course_start_hour DateTime? @map("course_start_hour")
+  course_name       String?   @map("course_name") @db.VarChar(50)
+  course_end_hour   DateTime? @map("course_end_hour")
+  course_day        DateTime? @map("course_day") @db.Date
+  group_uuid        String    @map("group_uuid")
+
+  // Attendance tracking
+  attendance_taken              Boolean   @default(false) @map("attendance_taken")
+  attendance_taken_at           DateTime? @map("attendance_taken_at")
+  attendance_taken_by_user_uuid String?   @map("attendance_taken_by_user_uuid")
+  attendance_taken_by           User?     @relation("CourseAttendanceTakenBy", fields: [attendance_taken_by_user_uuid], references: [user_uuid])
+
+  // Relations
+  group    Group        @relation(fields: [group_uuid], references: [group_uuid])
+  teachers UserCourse[]
+  absences Absence[]
+
+  @@map("Courses")
+}
+
+model Exam {
+  exam_uuid     String   @id @default(uuid()) @map("exam_uuid")
+  exam_label    String   @map("exam_label") @db.VarChar(50)
+  exam_taked_at DateTime @map("exam_taked_at") @db.Date
+  exam_type     String   @default("written") @map("exam_type") @db.VarChar(50)
+  exam_created_at DateTime @default(now()) @map("exam_created_at")
+
+  // Relations
+  students StudentExam[]
+
+  @@map("Exams")
+}
+
+model StudentExam {
+  student_uuid String @map("student_uuid")
+  exam_uuid    String @map("exam_uuid")
+
+  // Données individuelles de l'étudiant pour cet examen
+  exam_score  String?  @map("exam_score") @db.VarChar(50)
+  exam_status String   @default("pending") @map("exam_status") @db.VarChar(50) // "passed", "failed", "absent", "pending"
+  exam_notes  String?  @map("exam_notes") @db.VarChar(500)
+  taken_at    DateTime @default(now()) @map("taken_at")
+
+  // Relations
+  student Student @relation(fields: [student_uuid], references: [student_uuid])
+  exam    Exam    @relation(fields: [exam_uuid], references: [exam_uuid])
+
+  @@id([student_uuid, exam_uuid])
+  @@map("student_exams")
+}
+
+model Continuation {
+  continuation_uuid        String  @id @default(uuid()) @map("continuation_uuid")
+  continuation_temporality String? @map("continuation_temporality") @db.VarChar(50)
+  continuation_commentary  String? @map("continuation_commentary") @db.VarChar(50)
+  student_uuid             String  @map("student_uuid")
+
+  // Relations
+  student Student @relation(fields: [student_uuid], references: [student_uuid])
+
+  @@map("Continuations")
+}
+
+model Subtask {
+  subtask_uuid        String   @id @default(uuid()) @map("subtask_uuid")
+  subtask_title       String   @map("subtask_title") @db.VarChar(50)
+  subtask_description String?  @map("subtask_description") @db.VarChar(50)
+  subtask_status      String   @map("subtask_status") @db.VarChar(50)
+  subtask_created_at  DateTime @map("subtask_created_at")
+  subtask_updated_at  DateTime @map("subtask_updated_at")
+  task_uuid           String   @map("task_uuid")
+
+  // Relations
+  task Task @relation(fields: [task_uuid], references: [task_uuid])
+
+  @@map("Subtasks")
+}
+
+model Absence {
+  absence_uuid   String  @id @default(uuid()) @map("absence_uuid")
+  absence_reason String? @map("absence_reason") @db.VarChar(50)
+  student_uuid   String  @map("student_uuid")
+  course_uuid    String  @map("course_uuid")
+  // Status of the absence and optional notes
+  absence_status String  @default("absent") @map("absence_status") @db.VarChar(20)
+  absence_notes  String? @map("absence_notes") @db.VarChar(255)
+
+  // Relations
+  student Student @relation(fields: [student_uuid], references: [student_uuid])
+  course  Course  @relation(fields: [course_uuid], references: [course_uuid])
+
+  // Contrainte unique pour empêcher plusieurs absences par étudiant par cours
+  @@unique([student_uuid, course_uuid])
+  @@map("Absences")
+}
+
+// ===============================
+// TABLES DE RELATION (N,N)
+// ===============================
+
+model StudentNationality {
+  student_uuid     String @map("student_uuid")
+  nationality_uuid String @map("nationality_uuid")
+
+  // Relations
+  student     Student     @relation(fields: [student_uuid], references: [student_uuid])
+  nationality Nationality @relation(fields: [nationality_uuid], references: [nationality_uuid])
+
+  @@id([student_uuid, nationality_uuid])
+  @@map("student_nationalities")
+}
+
+model StudentExitLevel {
+  student_uuid      String @map("student_uuid")
+  french_level_uuid String @map("french_level_uuid")
+
+  // Relations
+  student      Student     @relation(fields: [student_uuid], references: [student_uuid])
+  french_level FrenchLevel @relation(fields: [french_level_uuid], references: [french_level_uuid])
+
+  @@id([student_uuid, french_level_uuid])
+  @@map("student_exit_levels")
+}
+
+model StudentAddress {
+  student_uuid String @map("student_uuid")
+  address_uuid String @map("address_uuid")
+
+  // Relations
+  student Student @relation(fields: [student_uuid], references: [student_uuid])
+  address Address @relation(fields: [address_uuid], references: [address_uuid])
+
+  @@id([student_uuid, address_uuid])
+  @@map("student_addresses")
+}
+
+model StudentGroup {
+  student_uuid String @map("student_uuid")
+  group_uuid   String @map("group_uuid")
+
+  // Relations
+  student Student @relation(fields: [student_uuid], references: [student_uuid])
+  group   Group   @relation(fields: [group_uuid], references: [group_uuid])
+
+  @@id([student_uuid, group_uuid])
+  @@map("student_groups")
+}
+
+model StudentDisability {
+  student_uuid    String @map("student_uuid")
+  disability_uuid String @map("disability_uuid")
+
+  // Relations
+  student    Student    @relation(fields: [student_uuid], references: [student_uuid])
+  disability Disability @relation(fields: [disability_uuid], references: [disability_uuid])
+
+  @@id([student_uuid, disability_uuid])
+  @@map("student_disabilities")
+}
+
+model UserCourse {
+  user_uuid   String @map("user_uuid")
+  course_uuid String @map("course_uuid")
+
+  // Relations
+  user   User   @relation(fields: [user_uuid], references: [user_uuid])
+  course Course @relation(fields: [course_uuid], references: [course_uuid])
+
+  @@id([user_uuid, course_uuid])
+  @@map("user_courses")
+}
+
+model GroupPeriod {
+  period_uuid String @map("period_uuid")
+  group_uuid  String @map("group_uuid")
+
+  // Relations
+  period Period @relation(fields: [period_uuid], references: [period_uuid])
+  group  Group  @relation(fields: [group_uuid], references: [group_uuid])
+
+  @@id([period_uuid, group_uuid])
+  @@map("group_periods")
+}
+
+// ===============================
+// SYSTÈME D'HISTORIQUE
+// ===============================
+
+// LearnerHistory removed

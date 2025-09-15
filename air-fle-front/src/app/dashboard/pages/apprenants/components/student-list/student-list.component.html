@@ -1,0 +1,211 @@
+<div class="students-container">
+  <div class="students-actions">
+    <button class="create-btn" (click)="openCreateModal()">
+      <span class="btn-icon">+</span>
+      Créer un étudiant
+    </button>
+
+    <!-- Barre de recherche -->
+    <div class="search-container">
+      <input
+        type="text"
+        placeholder="Rechercher par nom ou prénom..."
+        #searchInput
+        (keyup.enter)="onSearch(searchInput.value)"
+        class="search-input"
+      />
+      <button (click)="onSearch(searchInput.value)" class="search-btn">Rechercher</button>
+      <button (click)="clearFilters(); searchInput.value = ''" class="clear-btn">Effacer</button>
+    </div>
+
+    <button class="advanced-filters-toggle" (click)="showAdvancedFilters = !showAdvancedFilters">
+      {{ showAdvancedFilters ? 'Masquer les filtres avancés' : 'Filtres avancés' }}
+    </button>
+
+    <div class="advanced-filters" *ngIf="showAdvancedFilters">
+      <select [(ngModel)]="filters.french_level_uuid">
+        <option value="">Aucun niveau de français</option>
+        <option *ngFor="let level of frenchLevels" [value]="level.id">
+          {{ level.code }} - {{ level.description }}
+        </option>
+      </select>
+      <select [(ngModel)]="filters.group_uuid">
+        <option value="">Aucun groupe</option>
+        <option *ngFor="let group of groups" [value]="group.id">
+          {{ group.label }}
+        </option>
+      </select>
+      <select [(ngModel)]="filters.nationality_uuid">
+        <option value="">Aucune nationalité</option>
+        <option *ngFor="let nat of nationalities" [value]="nat.id">
+          {{ nat.label }}
+        </option>
+      </select>
+      <select [(ngModel)]="filters.status_uuid">
+        <option value="">Tous statuts</option>
+        <option *ngFor="let status of statuses" [value]="status.id">
+          {{ status.label }}
+        </option>
+      </select>
+      <select [(ngModel)]="filters.financing_uuid">
+        <option value="">Tous financements</option>
+        <option *ngFor="let fin of financings" [value]="fin.id">
+          {{ fin.type }}
+        </option>
+      </select>
+      <select [(ngModel)]="filters.orientation_uuid">
+        <option value="">Toutes orientations</option>
+        <option *ngFor="let ori of orientations" [value]="ori.id">
+          {{ ori.type }}
+        </option>
+      </select>
+      <button class="apply-advanced-filters-btn" (click)="applyAdvancedFilters()">Appliquer les filtres</button>
+    </div>
+  </div>
+
+  <!-- Informations sur les résultats -->
+  <div class="results-info" *ngIf="!loading">
+    <span *ngIf="totalItems > 0">{{ getDisplayRange() }}</span>
+    <span *ngIf="totalItems === 0">0 résultat</span>
+  </div>
+  <div class="students-content">
+    <!-- Desktop/tablette : tableau -->
+    <div class="students-list" *ngIf="!isReallyMobile()">
+      <div class="students-header">
+        <div class="column author">APPRENANT</div>
+        <div class="column level">NIVEAU</div>
+        <div class="column status">STATUT</div>
+        <div class="column nationality">NATIONALITÉ</div>
+        <div class="column actions"></div>
+      </div>
+      <div class="student-item" *ngFor="let student of students">
+        <div class="column author">
+          <div class="student-avatar">
+            <div class="avatar-initials">{{ getStudentInitials(student) }}</div>
+          </div>
+          <div class="student-info">
+            <div class="student-name">{{ getStudentName(student) }}</div>
+            <div class="student-email">{{ getStudentEmail(student) }}</div>
+          </div>
+        </div>
+        <div class="column level">
+          <div class="level-badge" [attr.data-level]="student.currentLevel?.code || student.level?.code">
+            {{ getStudentLevel(student) }}
+          </div>
+        </div>
+        <div class="column status">
+          <div class="status-badge" [attr.data-status]="student.status?.code">
+            {{ getStudentStatus(student) }}
+          </div>
+        </div>
+        <div class="column nationality">
+          <div class="nationality-name">{{ getStudentNationality(student) }}</div>
+        </div>
+        <div class="column actions">
+          <button class="edit-btn" [routerLink]="['/dashboard/apprenants', student.student_uuid, 'view']">Voir</button>
+        </div>
+      </div>
+    </div>
+    <!-- Mobile : cartes -->
+    <div class="students-list-mobile" *ngIf="isReallyMobile()">
+      <div class="student-card-mobile" *ngFor="let student of students">
+        <div class="student-avatar">
+          <div class="avatar-initials">{{ getStudentInitials(student) }}</div>
+        </div>
+        <div class="student-info-mobile">
+          <div class="field">
+            <span class="label">Nom</span>
+            <span class="value name">{{ getStudentName(student) }}</span>
+          </div>
+          <div class="field">
+            <span class="label">Email</span>
+            <span class="value email">{{ getStudentEmail(student) }}</span>
+          </div>
+          <div class="field">
+            <span class="label">Niveau</span>
+            <span class="value level">{{ getStudentLevel(student) }}</span>
+          </div>
+          <div class="field">
+            <span class="label">Statut</span>
+            <span class="value status">{{ getStudentStatus(student) }}</span>
+          </div>
+          <div class="field">
+            <span class="label">Nationalité</span>
+            <span class="value nationality">{{ getStudentNationality(student) }}</span>
+          </div>
+          <div class="actions-mobile">
+            <button class="edit-btn" [routerLink]="['/dashboard/apprenants', student.student_uuid, 'view']">Voir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+      <div *ngIf="loading" class="loading-indicator">
+        <div class="spinner"></div>
+        <span>Chargement des apprenants...</span>
+      </div>
+
+      <div *ngIf="!loading && students.length === 0" class="empty-state">
+        <p>Aucun apprenant trouvé</p>
+      </div>
+
+      <div *ngIf="error" class="error-message">
+        <p>{{ error }}</p>
+        <button (click)="loadStudents()" class="retry-btn">Réessayer</button>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="!loading && totalPages > 1">
+    <div class="pagination">
+      <!-- Bouton Précédent -->
+      <button class="pagination-btn" [disabled]="currentPage === 1" (click)="previousPage()">
+        ‹ Précédent
+      </button>
+
+      <!-- Numéros de page -->
+      <button
+        *ngFor="let page of getPageNumbers()"
+        class="pagination-btn"
+        [class.active]="page === currentPage"
+        (click)="changePage(page)"
+      >
+        {{ page }}
+      </button>
+
+      <!-- Bouton Suivant -->
+      <button class="pagination-btn" [disabled]="currentPage === totalPages" (click)="nextPage()">
+        Suivant ›
+      </button>
+    </div>
+    <!-- Suppression du sélecteur de taille de page -->
+  </div>
+
+  <!-- Modal de choix de création -->
+  <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Comment souhaitez-vous ajouter des étudiants ?</h2>
+        <button class="close-btn" (click)="closeCreateModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="option-cards">
+          <div class="option-card" (click)="createSingleStudent()">
+            <div class="option-icon">👤</div>
+            <h3>Créer un étudiant</h3>
+            <p>Ajouter un nouvel étudiant individuellement avec le formulaire complet</p>
+            <div class="option-badge individual">Individuel</div>
+          </div>
+
+          <div class="option-card" (click)="importFromExcel()">
+            <div class="option-icon">📊</div>
+            <h3>Importer depuis Excel</h3>
+            <p>Ajouter plusieurs étudiants en une fois depuis un fichier Excel existant</p>
+            <div class="option-badge bulk">En masse</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

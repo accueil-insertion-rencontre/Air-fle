@@ -1,0 +1,116 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h2>{{ isEditMode ? 'Modifier le groupe' : 'Créer un nouveau groupe' }}</h2>
+    </div>
+    <div class="col-md-6 text-end">
+      <a [routerLink]="['/dashboard/groups']" class="btn btn-secondary">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/><line x1="9" y1="12" x2="21" y2="12"/></svg>
+        Retour à la liste
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h5 class="card-title">{{ isEditMode ? 'Informations du groupe' : 'Nouveau groupe' }}</h5>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="groupForm" (ngSubmit)="onSubmit()">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="label" class="form-label">Nom du groupe</label>
+            <input
+              type="text"
+              id="label"
+              formControlName="label"
+              class="form-control"
+              [ngClass]="{ 'is-invalid': submitted && groupForm.get('label')?.errors }"
+              placeholder="Entrez le nom du groupe"
+            />
+            <div class="invalid-feedback" *ngIf="submitted && groupForm.get('label')?.errors">
+              Le nom du groupe est requis.
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="session_id" class="form-label">Session</label>
+            <select
+              id="session_id"
+              formControlName="session_id"
+              class="form-select"
+              [ngClass]="{ 'is-invalid': submitted && groupForm.get('session_id')?.errors }"
+            >
+              <option value="">Sélectionnez une session</option>
+              <option *ngFor="let session of sessions" [value]="session.session_uuid || session.id">
+                {{ session.label }} ({{ session.started_at | date: 'dd/MM/yyyy' }} -
+                {{ session.finished_at | date: 'dd/MM/yyyy' }})
+              </option>
+            </select>
+            <div class="invalid-feedback" *ngIf="submitted && groupForm.get('session_id')?.errors">
+              La session est requise.
+            </div>
+          </div>
+        </div>
+
+        <div class="d-grid d-md-flex justify-content-md-end mt-4">
+          <button type="submit" class="btn btn-primary" [disabled]="loading">
+            <span
+              *ngIf="loading"
+              class="spinner-border spinner-border-sm me-2"
+              role="status"
+              aria-hidden="true"
+            ></span>
+            {{ isEditMode ? 'Enregistrer les modifications' : 'Créer le groupe' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Section des étudiants (visible uniquement en mode édition) -->
+  <div class="card mt-4" *ngIf="isEditMode && groupId">
+    <div class="card-header">
+      <h5 class="card-title">Gestion des membres</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <h6>Étudiants disponibles</h6>
+          <div class="list-group">
+            <div
+              *ngFor="let student of availableStudents"
+              class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+            >
+              {{ student.student_firstname }} {{ student.student_lastname }}
+              <button class="btn btn-sm btn-success" (click)="addStudentToGroup(student)">
+                <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+            <div *ngIf="availableStudents.length === 0" class="list-group-item">
+              Aucun étudiant disponible
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <h6>Membres du groupe</h6>
+          <div class="list-group">
+            <div
+              *ngFor="let student of selectedStudents"
+              class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+            >
+              {{ student.student_firstname }} {{ student.student_lastname }}
+              <button class="btn btn-sm btn-danger" (click)="removeStudentFromGroup(student)">
+                <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+            <div *ngIf="selectedStudents.length === 0" class="list-group-item">
+              Aucun étudiant dans ce groupe
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

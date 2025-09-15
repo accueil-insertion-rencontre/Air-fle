@@ -1,0 +1,430 @@
+<div class="profile-container">
+  <!-- Bannière bleue avec bouton retour -->
+  <div class="banner" [ngClass]="{ 'inactive-banner': user && !user.user_isactive }"></div>
+
+  <!-- Boutons flottants -->
+  <div class="floating-buttons">
+    <button class="back-button" (click)="goBack()">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M19 12H5"></path>
+        <path d="M12 19l-7-7 7-7"></path>
+      </svg>
+      Retour
+    </button>
+
+    <div class="action-buttons">
+      <button *ngIf="user && !editMode" class="edit-button" (click)="toggleEditMode()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        Modifier
+      </button>
+
+      <button *ngIf="user && !editMode" class="delete-button" (click)="openDeleteModal()">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path
+            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+          ></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+        Supprimer
+      </button>
+    </div>
+  </div>
+
+  <!-- Mode affichage -->
+  <div *ngIf="!editMode">
+    <!-- Carte transparente avec avatar et nom -->
+    <div class="user-card" *ngIf="user">
+      <div class="user-info">
+        <div class="avatar">{{ getInitials(user.user_firstname, user.user_lastname) }}</div>
+        <div class="name-container">
+          <h2>{{ user.user_firstname }} {{ user.user_lastname }}</h2>
+          <p>{{ user.user_mail }}</p>
+          <span class="status-badge" [ngClass]="user.user_isactive ? 'active' : 'inactive'">
+            {{ user.user_isactive ? 'Actif' : 'Inactif' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Carte d'informations détaillées -->
+    <div class="info-card" *ngIf="user">
+      <h3>Informations</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">Prénom:</span>
+          <span class="value">{{ user.user_firstname || 'Non renseigné' }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Nom:</span>
+          <span class="value">{{ user.user_lastname || 'Non renseigné' }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Email:</span>
+          <span class="value">{{ user.user_mail }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Date de naissance:</span>
+          <span class="value">{{
+            user.user_birthdate ? (user.user_birthdate | date: 'dd/MM/yyyy') : 'Non renseignée'
+          }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Age:</span>
+          <span class="value">{{ user.age || 'Non renseigné' }} ans</span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Rôle:</span>
+          <span class="value">{{ user.role?.role_name || 'Non renseigné' }}</span>
+        </div>
+
+        <div class="info-item status-switch-item">
+          <span class="label">Statut:</span>
+          <div class="switch-container">
+            <label class="switch">
+              <input type="checkbox" [checked]="user.user_isactive" disabled />
+              <span class="slider round"></span>
+            </label>
+            <span class="switch-text" [ngClass]="user.user_isactive ? 'active-text' : 'inactive-text'">
+              {{ user.user_isactive ? 'Compte actif' : 'Compte inactif' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mode édition -->
+  <div *ngIf="editMode && user" class="edit-form-container">
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+      <div class="form-card">
+        <h3>Modifier l'utilisateur</h3>
+
+        <!-- Message d'erreur -->
+        <div *ngIf="error" class="form-error-message">
+          {{ error }}
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="firstname">Prénom</label>
+            <input type="text" id="firstname" formControlName="firstname" class="form-control" />
+            <div
+              *ngIf="userForm.get('firstname')?.invalid && userForm.get('firstname')?.touched"
+              class="error-message"
+            >
+              Prénom requis
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="lastname">Nom</label>
+            <input type="text" id="lastname" formControlName="lastname" class="form-control" />
+            <div
+              *ngIf="userForm.get('lastname')?.invalid && userForm.get('lastname')?.touched"
+              class="error-message"
+            >
+              Nom requis
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" formControlName="email" class="form-control" />
+            <div
+              *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched"
+              class="error-message"
+            >
+              Email invalide
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="birthdate">Date de naissance</label>
+            <input type="date" id="birthdate" formControlName="birthdate" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="role">Rôle</label>
+            <select id="role" formControlName="role_id" class="form-control">
+              <option *ngFor="let role of roles" [value]="role.role_uuid">{{ role.role_name }}</option>
+            </select>
+          </div>
+
+          <div class="form-group status-group">
+            <label>Statut</label>
+            <div class="switch-container">
+              <label class="switch">
+                <input type="checkbox" formControlName="isActive" />
+                <span class="slider round"></span>
+              </label>
+              <span
+                class="switch-text"
+                [ngClass]="userForm.get('isActive')?.value ? 'active-text' : 'inactive-text'"
+              >
+                {{ userForm.get('isActive')?.value ? 'Compte actif' : 'Compte inactif' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="cancel-button" (click)="cancelEdit()">Annuler</button>
+          <button type="submit" class="save-button" [disabled]="userForm.invalid || isSubmitting">
+            <span *ngIf="!isSubmitting">Enregistrer</span>
+            <span *ngIf="isSubmitting">Enregistrement...</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Formulaire de modification du mot de passe (uniquement pour l'utilisateur connecté) -->
+  <div *ngIf="!editMode && user && isCurrentUser" class="password-section">
+    <button class="toggle-password-button" (click)="togglePasswordForm()">
+      <svg
+        *ngIf="!showPasswordForm"
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      <svg
+        *ngIf="showPasswordForm"
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="8" y1="12" x2="16" y2="12"></line>
+      </svg>
+      {{ showPasswordForm ? 'Annuler' : 'Modifier mon mot de passe' }}
+    </button>
+
+    <div *ngIf="showPasswordForm" class="password-form-container">
+      <form [formGroup]="passwordForm" (ngSubmit)="onPasswordSubmit()">
+        <div class="form-card">
+          <h3>Modifier le mot de passe</h3>
+
+          <!-- Message d'erreur -->
+          <div *ngIf="passwordError" class="form-error-message">
+            {{ passwordError }}
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="currentPassword">Mot de passe actuel</label>
+              <input
+                type="password"
+                id="currentPassword"
+                formControlName="currentPassword"
+                class="form-control"
+              />
+              <div
+                *ngIf="
+                  passwordForm.get('currentPassword')?.invalid &&
+                  passwordForm.get('currentPassword')?.touched
+                "
+                class="error-message"
+              >
+                Mot de passe actuel requis
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="newPassword">Nouveau mot de passe</label>
+              <input
+                type="password"
+                id="newPassword"
+                formControlName="newPassword"
+                class="form-control"
+              />
+              <div
+                *ngIf="
+                  passwordForm.get('newPassword')?.invalid &&
+                  passwordForm.get('newPassword')?.touched
+                "
+                class="error-message"
+              >
+                <div *ngIf="passwordForm.get('newPassword')?.errors?.['required']">
+                  Mot de passe requis
+                </div>
+                <div *ngIf="passwordForm.get('newPassword')?.errors?.['minlength']">
+                  Le mot de passe doit contenir au moins 8 caractères
+                </div>
+                <div *ngIf="passwordForm.get('newPassword')?.errors?.['pattern']">
+                  Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et
+                  un caractère spécial
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword">Confirmer le mot de passe</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                formControlName="confirmPassword"
+                class="form-control"
+              />
+              <div
+                *ngIf="
+                  passwordForm.hasError('mismatch') && passwordForm.get('confirmPassword')?.touched
+                "
+                class="error-message"
+              >
+                Les mots de passe ne correspondent pas
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="cancel-button" (click)="togglePasswordForm()">
+              Annuler
+            </button>
+            <button
+              type="submit"
+              class="save-button"
+              [disabled]="passwordForm.invalid || isSubmittingPassword"
+            >
+              <span *ngIf="!isSubmittingPassword">Mettre à jour</span>
+              <span *ngIf="isSubmittingPassword">Mise à jour...</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- État de chargement -->
+  <div class="loading" *ngIf="loading">Chargement...</div>
+
+  <!-- Message de succès -->
+  <div *ngIf="successMessage" class="success-message">
+    {{ successMessage }}
+  </div>
+
+  <!-- Première modale de confirmation de suppression -->
+  <div class="modal-overlay" *ngIf="showDeleteModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Confirmation de suppression</h3>
+        <button class="close-button" (click)="closeDeleteModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir supprimer cet utilisateur ?</p>
+
+        <div class="user-summary" *ngIf="user">
+          <div class="avatar">{{ getInitials(user.user_firstname, user.user_lastname) }}</div>
+          <div class="user-info">
+            <h4>{{ user.user_firstname }} {{ user.user_lastname }}</h4>
+            <p>{{ user.user_mail }}</p>
+            <span class="status-badge" [ngClass]="user.user_isactive ? 'active' : 'inactive'">
+              {{ user.user_isactive ? 'Actif' : 'Inactif' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="cancel-button" (click)="closeDeleteModal()">Annuler</button>
+        <button class="confirm-button" (click)="confirmDelete()">Oui, supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seconde modale de confirmation avec mot de passe -->
+  <div class="modal-overlay" *ngIf="showPasswordModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Confirmation de sécurité</h3>
+        <button class="close-button" (click)="closePasswordModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <p>
+          Pour confirmer la suppression, veuillez entrer votre mot de passe et cocher la case de
+          confirmation.
+        </p>
+
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <input type="password" id="password" [(ngModel)]="password" class="form-control" />
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-container">
+            <input type="checkbox" [(ngModel)]="confirmationChecked" />
+            <span class="checkmark"></span>
+            Je confirme vouloir supprimer définitivement cet utilisateur
+          </label>
+        </div>
+
+        <div *ngIf="deleteError" class="error-message">
+          {{ deleteError }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="cancel-button" (click)="closePasswordModal()">Annuler</button>
+        <button
+          class="delete-confirm-button"
+          [disabled]="!confirmationChecked || !password"
+          (click)="deleteUser()"
+        >
+          Supprimer définitivement
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

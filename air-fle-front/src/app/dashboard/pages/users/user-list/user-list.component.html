@@ -1,0 +1,192 @@
+<div class="users-container">
+  <div class="users-content">
+    <div class="users-actions">
+      <button class="create-btn" (click)="showCreateUserModal()">Créer un utilisateur</button>
+    </div>
+
+    <div class="users-list">
+      <div class="users-header">
+        <div class="column author">UTILISATEUR</div>
+        <div class="column role">RÔLE</div>
+        <div class="column status">STATUT</div>
+        <div class="column employed">INSCRIT LE</div>
+        <div class="column actions"></div>
+      </div>
+
+      <div class="user-item" *ngFor="let user of users">
+        <div class="column author">
+          <div class="user-avatar">
+            <div class="avatar-initials">{{ getUserInitials(user) }}</div>
+          </div>
+          <div class="user-info">
+            <div class="user-name">
+              {{ user.user_firstname }} {{ user.user_lastname }}
+              <span class="current-user" *ngIf="user.user_uuid === currentUserId">(vous)</span>
+            </div>
+            <div class="user-email">{{ user.user_mail }}</div>
+          </div>
+        </div>
+
+        <div class="column role">
+          <div class="role-name">{{ getRoleDescription(user.role_uuid) }}</div>
+        </div>
+
+        <div class="column status">
+          <div class="status-badge" [ngClass]="user.user_isactive ? 'active' : 'inactive'">
+            {{ user.user_isactive ? 'Actif' : 'Inactif' }}
+          </div>
+        </div>
+
+        <div class="column employed">
+          <div class="date">{{ formatDate(user.user_created_at) || 'Non renseigné' }}</div>
+          <div class="days">{{ getDaysCount(user.user_created_at) || '0' }} jours</div>
+        </div>
+
+        <div class="column actions">
+          <button class="edit-btn" (click)="editUser(user.user_uuid)">Voir</button>
+        </div>
+      </div>
+
+      <div *ngIf="loading" class="loading-indicator">
+        <div class="spinner"></div>
+        <span>Chargement des utilisateurs...</span>
+      </div>
+
+      <div *ngIf="!loading && users.length === 0" class="empty-state">
+        <p>Aucun utilisateur trouvé</p>
+      </div>
+
+      <div *ngIf="error" class="error-message">
+        <p>{{ error }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de création d'utilisateur -->
+  <div class="modal-overlay" *ngIf="showModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2>Créer un utilisateur</h2>
+        <button class="close-btn" (click)="hideCreateUserModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="createUserForm" (ngSubmit)="createUser()">
+          <div class="form-group">
+            <label for="firstname">Prénom</label>
+            <input type="text" id="firstname" formControlName="firstname" placeholder="Prénom" />
+            <div
+              class="error-message"
+              *ngIf="
+                createUserForm.get('firstname')?.invalid && createUserForm.get('firstname')?.touched
+              "
+            >
+              Le prénom est requis
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="lastname">Nom</label>
+            <input type="text" id="lastname" formControlName="lastname" placeholder="Nom" />
+            <div
+              class="error-message"
+              *ngIf="
+                createUserForm.get('lastname')?.invalid && createUserForm.get('lastname')?.touched
+              "
+            >
+              Le nom est requis
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" formControlName="email" placeholder="Email" />
+            <div
+              class="error-message"
+              *ngIf="createUserForm.get('email')?.invalid && createUserForm.get('email')?.touched"
+            >
+              Email invalide
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Mot de passe</label>
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              placeholder="Mot de passe"
+            />
+            <div
+              class="error-message"
+              *ngIf="
+                createUserForm.get('password')?.invalid && createUserForm.get('password')?.touched
+              "
+            >
+              Le mot de passe doit contenir au moins 6 caractères
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="birthdate">Date de naissance</label>
+            <input
+              type="date"
+              class="form-control"
+              id="birthdate"
+              formControlName="birthdate"
+              placeholder="YYYY-MM-DD"
+            />
+            <small class="form-text text-muted">Format: AAAA-MM-JJ</small>
+          </div>
+
+          <div class="form-group">
+            <label for="role_id">Rôle</label>
+            <select id="role_id" formControlName="role_id">
+              <option value="">Sélectionnez un rôle</option>
+              <option *ngFor="let role of roles" [value]="role.role_uuid">{{ role.role_name }}</option>
+            </select>
+            <div
+              class="error-message"
+              *ngIf="
+                createUserForm.get('role_id')?.invalid && createUserForm.get('role_id')?.touched
+              "
+            >
+              Le rôle est requis
+            </div>
+          </div>
+
+          <div class="form-group switch-group">
+            <label class="switch-label">Compte actif</label>
+            <div class="switch-container">
+              <label class="switch">
+                <input type="checkbox" formControlName="isActive" />
+                <span class="slider round"></span>
+              </label>
+              <span class="switch-text">{{
+                createUserForm.get('isActive')?.value ? 'Actif' : 'Inactif'
+              }}</span>
+            </div>
+          </div>
+
+          <!-- Message d'erreur global -->
+          <div class="error-message-global" *ngIf="errorMessage">
+            {{ errorMessage }}
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="cancel-btn" (click)="hideCreateUserModal()">
+              Annuler
+            </button>
+            <button
+              type="submit"
+              class="submit-btn"
+              [disabled]="createUserForm.invalid || isSubmitting"
+            >
+              <span *ngIf="!isSubmitting">Créer</span>
+              <span *ngIf="isSubmitting">Création en cours...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,473 @@
+// Variables
+$primary-color: #4fd1c5;
+$text-color: #2d3748;
+$muted-color: #718096;
+$border-color: rgba(0, 0, 0, 0.1);
+$hover-bg: #f7fafc;
+$border-radius: 12px;
+$spacing: 20px;
+$green: #48bb78;
+$red: #f56565;
+$white: #ffffff;
+$gray-100: #f7fafc;
+$gray-200: #edf2f7;
+$gray-300: #e2e8f0;
+$shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+@use 'sass:color';
+
+.nationalities-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+// Actions (boutons en haut)
+.nationalities-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 20px;
+  flex-wrap: wrap;
+
+  h2 {
+    margin: 0;
+    color: $text-color;
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  .back-btn,
+  .create-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    gap: 8px;
+  }
+
+  .back-btn {
+    background-color: $gray-200;
+    color: $text-color;
+
+    &:hover {
+      background-color: $gray-300;
+    }
+  }
+
+  .create-btn {
+    background-color: $primary-color;
+    color: white;
+
+    &:hover {
+      background-color: color.scale($primary-color, $lightness: -8.85%);
+    }
+  }
+
+  .btn-icon {
+    font-size: 16px;
+    font-weight: bold;
+  }
+}
+
+// Message d'erreur
+.error-message {
+  background: #fed7d7;
+  border: 1px solid #feb2b2;
+  color: #c53030;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .close-error {
+    background: none;
+    border: none;
+    color: #c53030;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// Contenu principal
+.nationalities-content {
+  flex: 1;
+  overflow: auto;
+
+  .nationalities-list {
+    width: 100%;
+    background: white;
+    border-radius: 8px;
+    box-shadow: $shadow;
+
+    .nationalities-header {
+      display: flex;
+      padding: 15px 20px;
+      border-bottom: 1px solid $border-color;
+      background: $gray-100;
+
+      .column {
+        font-size: 12px;
+        font-weight: 600;
+        color: $muted-color;
+        text-transform: uppercase;
+
+        &.name {
+          flex: 2;
+        }
+
+        &.created {
+          flex: 1;
+        }
+
+        &.actions {
+          width: 200px;
+          text-align: right;
+        }
+      }
+    }
+
+    .nationality-item {
+      display: flex;
+      padding: 15px 20px;
+      border-bottom: 1px solid $border-color;
+      align-items: center;
+
+      &:hover {
+        background-color: $hover-bg;
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .column {
+        &.name {
+          flex: 2;
+
+          .nationality-name {
+            color: $text-color;
+            font-weight: 500;
+            font-size: 16px;
+          }
+        }
+
+        &.created {
+          flex: 1;
+
+          .created-date {
+            color: $muted-color;
+            font-size: 14px;
+          }
+        }
+
+        &.actions {
+          width: 200px;
+          text-align: right;
+          display: flex;
+          gap: 8px;
+          justify-content: flex-end;
+
+          .edit-btn,
+          .delete-btn {
+            padding: 6px 12px;
+            border: 1px solid $border-color;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+
+          .edit-btn {
+            background: white;
+            color: $text-color;
+
+            &:hover {
+              background: $primary-color;
+              color: white;
+              border-color: $primary-color;
+            }
+          }
+
+          .delete-btn {
+            background: white;
+            color: $red;
+            border-color: $red;
+
+            &:hover {
+              background: $red;
+              color: white;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// État de chargement
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 12px;
+
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid $gray-300;
+    border-left: 2px solid $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  span {
+    color: $muted-color;
+    font-size: 14px;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// État vide
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+
+  p {
+    color: $muted-color;
+    margin-bottom: 20px;
+    font-size: 16px;
+  }
+
+  .create-btn {
+    background-color: $primary-color;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    &:hover {
+      background-color: color.scale($primary-color, $lightness: -8.85%);
+    }
+
+    .btn-icon {
+      font-size: 16px;
+      font-weight: bold;
+    }
+  }
+}
+
+// Modals
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid $border-color;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: $text-color;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: $muted-color;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+
+    &:hover {
+      background: $gray-100;
+    }
+  }
+}
+
+.modal-body {
+  padding: 20px;
+
+  .form-group {
+    margin-bottom: 20px;
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: $text-color;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid $border-color;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba(79, 209, 197, 0.1);
+      }
+
+      &.error {
+        border-color: $red;
+      }
+
+      &::placeholder {
+        color: $muted-color;
+      }
+    }
+
+    .error-text {
+      color: $red;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+
+    .cancel-btn,
+    .submit-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .cancel-btn {
+      background: white;
+      color: $text-color;
+      border: 1px solid $border-color;
+
+      &:hover {
+        background: $gray-100;
+      }
+    }
+
+    .submit-btn {
+      background: $primary-color;
+      color: white;
+      border: 1px solid $primary-color;
+
+      &:hover:not(:disabled) {
+        background: color.scale($primary-color, $lightness: -8.85%);
+      }
+
+      &:disabled {
+        background: $gray-300;
+        color: $muted-color;
+        border-color: $gray-300;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .nationalities-actions {
+    flex-direction: column;
+    align-items: stretch;
+
+    h2 {
+      text-align: center;
+    }
+  }
+
+  .nationalities-list {
+    .nationalities-header,
+    .nationality-item {
+      padding: 12px 16px;
+    }
+
+    .nationality-item {
+      .column.actions {
+        width: auto;
+        flex-direction: column;
+        gap: 4px;
+
+        .edit-btn,
+        .delete-btn {
+          font-size: 11px;
+          padding: 4px 8px;
+        }
+      }
+    }
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 20px;
+  }
+}

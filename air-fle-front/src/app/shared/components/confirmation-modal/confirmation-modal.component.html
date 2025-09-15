@@ -1,0 +1,36 @@
+<!-- Modal de confirmation -->
+<div
+  class="modal-backdrop-custom"
+  id="confirmationModal"
+  *ngIf="config && visible"
+  (click)="onBackdropClick($event)"
+  aria-modal="true"
+>
+  <div class="modal-dialog-custom" role="dialog" aria-labelledby="confirmationModalLabel">
+      <div class="modal-content-custom">
+        <div class="modal-header border-0 pb-0">
+          <div class="d-flex align-items-center">
+            <ng-container [ngSwitch]="config.type">
+              <svg *ngSwitchCase="'danger'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <svg *ngSwitchCase="'warning'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2" aria-hidden="true"><polygon points="10 3 3 21 21 21 14 3"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <svg *ngSwitchCase="'info'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <svg *ngSwitchDefault width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
+            </ng-container>
+            <h5 class="modal-title mb-0" id="confirmationModalLabel">{{ config.title }}</h5>
+          </div>
+        <button type="button" class="btn-close" aria-label="Fermer" (click)="onCancel()"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="mb-0">{{ config.message }}</p>
+      </div>
+      <div class="modal-footer border-0 pt-2">
+        <button type="button" class="btn btn-secondary" (click)="onCancel()">
+          {{ config.cancelText }}
+        </button>
+        <button type="button" [class]="'btn ' + getButtonClass()" (click)="onConfirm()">
+          {{ config.confirmText }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

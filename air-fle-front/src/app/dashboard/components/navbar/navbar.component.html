@@ -1,0 +1,63 @@
+<nav class="navbar">
+  <div class="navbar-left">
+    <!-- Bouton toggle sidebar (visible uniquement en mobile) -->
+    <button class="sidebar-toggle" (click)="onToggleSidebar()">
+      <span class="toggle-icon"></span>
+    </button>
+
+    <div class="page-header">
+      <!-- Fil d'Ariane (Breadcrumb) -->
+      <div class="breadcrumb">
+        <ng-container *ngFor="let item of breadcrumbs; let last = last; let i = index">
+          <a *ngIf="!last && item.path" [routerLink]="item.path" class="breadcrumb-item">
+            {{ item.label }}
+          </a>
+          <span *ngIf="!last && !item.path" class="breadcrumb-item">
+            {{ item.label }}
+          </span>
+          <span *ngIf="last" class="breadcrumb-item" [class.active]="item.active">
+            {{ item.label }}
+          </span>
+          <span *ngIf="!last" class="breadcrumb-separator">/</span>
+        </ng-container>
+      </div>
+
+      <!-- Titre de la page sur une nouvelle ligne -->
+      <h1 class="page-title">{{ pageTitle }}</h1>
+    </div>
+  </div>
+
+  <div class="navbar-right">
+    <!-- Bouton notes de mises à jour -->
+    <button class="btn btn-outline" (click)="onOpenReleaseNotes()">Notes de mises à jour</button>
+
+    <!-- Bouton ouvrir un ticket -->
+    <button class="btn btn-primary" (click)="onOpenTicket()">OUVRIR UN TICKET</button>
+
+    <!-- Menu utilisateur -->
+    <div class="nav-item user-profile" (click)="toggleUserMenu()">
+      <span class="user-name">{{ userDisplayName }}</span>
+      <i class="dropdown-icon" [class.open]="showUserMenu"></i>
+
+      <!-- Menu déroulant utilisateur -->
+      <div class="user-dropdown" *ngIf="showUserMenu">
+        <div class="dropdown-item" (click)="goToMyProfile()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:12px; color:#3b82f6">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span>Mon profil</span>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" (click)="logout()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-right:12px; color:#64748b">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          <span>Déconnexion</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>

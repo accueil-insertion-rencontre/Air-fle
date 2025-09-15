@@ -1,0 +1,59 @@
+<div class="search-container">
+  <div class="search-field">
+    <input
+      type="text"
+      [(ngModel)]="searchValue"
+      (ngModelChange)="onSearchChange($event)"
+      placeholder="Rechercher un étudiant..."
+      class="search-input"
+    />
+    <button class="btn-filter" (click)="toggleFilters()">
+      {{ showFilters ? 'Masquer les filtres' : 'Afficher les filtres' }}
+    </button>
+  </div>
+
+  <div class="advanced-filters" *ngIf="showFilters">
+    <div class="filter-group">
+      <label>Prénom</label>
+      <input
+        type="text"
+        [(ngModel)]="filters.firstName"
+        (ngModelChange)="onFiltersChange()"
+        placeholder="Filtrer par prénom"
+      />
+    </div>
+    <div class="filter-group">
+      <label>Nom</label>
+      <input
+        type="text"
+        [(ngModel)]="filters.lastName"
+        (ngModelChange)="onFiltersChange()"
+        placeholder="Filtrer par nom"
+      />
+    </div>
+    <div class="filter-group">
+      <label>Email</label>
+      <input
+        type="text"
+        [(ngModel)]="filters.email"
+        (ngModelChange)="onFiltersChange()"
+        placeholder="Filtrer par email"
+      />
+    </div>
+    <button class="btn-clear" (click)="clearFilters()">Effacer les filtres</button>
+  </div>
+
+  <div class="search-history" *ngIf="searchHistory.length > 0">
+    <h4>Historique des recherches</h4>
+    <div class="history-chips">
+      <span
+        class="history-chip"
+        *ngFor="let term of searchHistory"
+        (click)="applyHistoryTerm(term)"
+      >
+        {{ term }}
+        <button class="remove-chip" (click)="removeFromHistory(term, $event)">×</button>
+      </span>
+    </div>
+  </div>
+</div>

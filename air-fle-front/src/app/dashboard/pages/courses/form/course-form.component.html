@@ -1,0 +1,113 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h2>{{ isEditMode ? 'Modifier le cours' : 'Créer un nouveau cours' }}</h2>
+    </div>
+    <div class="col-md-6 text-end">
+      <a [routerLink]="['/dashboard/courses']" class="btn btn-secondary">
+        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/><line x1="9" y1="12" x2="21" y2="12"/></svg>
+        Retour au calendrier
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h5 class="card-title">{{ isEditMode ? 'Informations du cours' : 'Nouveau cours' }}</h5>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="courseForm" (ngSubmit)="onSubmit()">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="intitule" class="form-label">Intitulé du cours</label>
+            <input
+              type="text"
+              id="intitule"
+              formControlName="intitule"
+              class="form-control"
+              [ngClass]="{ 'is-invalid': submitted && courseForm.get('intitule')?.errors }"
+              placeholder="Entrez l'intitulé du cours"
+            />
+            <div class="invalid-feedback" *ngIf="submitted && courseForm.get('intitule')?.errors">
+              L'intitulé du cours est requis.
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="group_id" class="form-label">Groupe</label>
+            <select
+              id="group_id"
+              formControlName="group_id"
+              class="form-select"
+              [ngClass]="{ 'is-invalid': submitted && courseForm.get('group_id')?.errors }"
+            >
+              <option value="">Sélectionnez un groupe</option>
+              <option *ngFor="let group of groups" [value]="group.group_id">
+                {{ group.label }}
+              </option>
+            </select>
+            <div class="invalid-feedback" *ngIf="submitted && courseForm.get('group_id')?.errors">
+              Le groupe est requis.
+            </div>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label for="day_" class="form-label">Date</label>
+            <input
+              type="date"
+              id="day_"
+              formControlName="day_"
+              class="form-control"
+              [ngClass]="{ 'is-invalid': submitted && courseForm.get('day_')?.errors }"
+            />
+            <div class="invalid-feedback" *ngIf="submitted && courseForm.get('day_')?.errors">
+              La date est requise.
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label for="start_hour" class="form-label">Heure de début</label>
+            <input
+              type="time"
+              id="start_hour"
+              formControlName="start_hour"
+              class="form-control"
+              [ngClass]="{ 'is-invalid': submitted && courseForm.get('start_hour')?.errors }"
+            />
+            <div class="invalid-feedback" *ngIf="submitted && courseForm.get('start_hour')?.errors">
+              L'heure de début est requise.
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label for="end_hour" class="form-label">Heure de fin</label>
+            <input
+              type="time"
+              id="end_hour"
+              formControlName="end_hour"
+              class="form-control"
+              [ngClass]="{ 'is-invalid': submitted && courseForm.get('end_hour')?.errors }"
+            />
+            <div class="invalid-feedback" *ngIf="submitted && courseForm.get('end_hour')?.errors">
+              L'heure de fin est requise.
+            </div>
+          </div>
+        </div>
+
+        <div class="d-grid d-md-flex justify-content-md-end mt-4">
+          <button type="submit" class="btn btn-primary" [disabled]="loading">
+            <span
+              *ngIf="loading"
+              class="spinner-border spinner-border-sm me-2"
+              role="status"
+              aria-hidden="true"
+            ></span>
+            {{ isEditMode ? 'Enregistrer les modifications' : 'Créer le cours' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

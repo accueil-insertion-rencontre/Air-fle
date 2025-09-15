@@ -1,0 +1,264 @@
+@use 'sass:color';
+
+// Variables supplémentaires alignées sur la page Examens
+$primary: #4fd1c5;
+$text: #2d3748;
+$muted: #718096;
+$surface: #ffffff;
+$border: #e2e8f0;
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+// Variables de couleurs
+$primary-color: #4fd1c5; // Couleur turquoise
+$text-color: #344767;
+$bg-color: #f8f9fa;
+$border-color: #dee2e6;
+$hover-bg: #f9fafb;
+
+.card {
+  box-shadow: 0 0.375rem 0.75rem rgba(0, 0, 0, 0.05);
+  border-radius: 0.75rem;
+  border: none;
+  overflow: hidden;
+}
+
+/* Styles de la liste alignés avec examens */
+.session-list{ display:flex; flex-direction:column; gap:12px; }
+.session-item{ border:1px solid $border; background:$surface; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.06); transition: box-shadow .15s ease, transform .15s ease; padding:0; }
+.session-header{ display:flex; justify-content:space-between; align-items:center; padding:14px 16px; }
+.session-item:hover{ box-shadow:0 8px 22px rgba(0,0,0,.08); transform: translateY(-1px); }
+.session-item .left{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+.title-row{ display:flex; align-items:center; gap:10px; color:$text; }
+.title-row strong{ font-size:15px; font-weight:700; max-width:600px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.session-item .right{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; min-width:140px; }
+.meta-row{ display:flex; align-items:center; gap:6px; font-size:12px; }
+.meta-row .muted{ color:$muted; }
+.meta-row .sep{ color:#cbd5e1; }
+.badge-type{ display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; background:#f1f5f9; color:$text; font-weight:600; }
+.badge-type .dot{ width:6px; height:6px; border-radius:50%; background:$primary; display:inline-block; }
+.icons{ display:flex; gap:8px; }
+.icon-btn{ display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:10px; border:1px solid $border; background:#f8fafc; cursor:pointer; }
+.icon-btn.danger{ background:#fee2e2; border-color:#fecaca; color:#991b1b; }
+
+.header-card{ display:flex; justify-content:space-between; align-items:center; padding:16px 18px; background:$surface; border:1px solid $border; border-radius:14px; box-shadow:0 4px 18px rgba(0,0,0,.06); margin-bottom:16px; }
+.header-card .left h1{ margin:0; font-size:24px; color:$text; font-weight:700; }
+.header-card .left .subtitle{ margin:6px 0 0; color:$muted; font-size:14px; }
+.header-card .actions .btn.primary{ background:linear-gradient(135deg,$primary,#38b2ac); color:#fff; border-color:transparent; }
+
+.loading{ display:flex; flex-direction:column; align-items:center; gap:10px; padding:24px; color:$muted; }
+.spinner{ width:28px; height:28px; border:3px solid #e2e8f0; border-top-color:$primary; border-radius:50%; animation:spin 1s linear infinite; }
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+.card-header {
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 1rem;
+}
+
+.card-title {
+  margin-bottom: 0;
+}
+
+.btn-group {
+  .btn {
+    padding: 0.25rem 0.5rem;
+
+    &:not(:last-child) {
+      margin-right: 0.25rem;
+    }
+  }
+}
+
+:host {
+  display: block;
+}
+
+// Style spécifique pour le titre
+h1.h2,
+.title-text,
+h6 {
+  color: #344767 !important;
+  letter-spacing: -0.5px;
+  font-weight: 600;
+}
+
+.container-fluid {
+  max-width: 1600px;
+}
+
+.card-body {
+  padding: 0;
+}
+
+// Styles pour Modal
+.modal {
+  .modal-content {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+  }
+
+  .modal-header {
+    border-bottom: 1px solid $border-color;
+    background-color: #fafbfc;
+    padding: 1rem 1.5rem;
+
+    .modal-title {
+      color: $text-color;
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+
+    .btn-close {
+      box-shadow: none;
+      transition: all 0.2s;
+
+      &:hover {
+        transform: rotate(90deg);
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-footer {
+    border-top: 1px solid $border-color;
+    padding: 1rem 1.5rem;
+  }
+
+  .form-control,
+  .form-select {
+    border: 1px solid $border-color;
+    border-radius: 0.5rem;
+    padding: 0.6rem 1rem;
+    transition: all 0.2s;
+
+    &:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 0.25rem rgba(79, 209, 197, 0.25);
+    }
+  }
+
+  .invalid-feedback {
+    font-size: 0.8rem;
+  }
+}
+
+// Styles génériques pour les tables Bootstrap
+    .table {
+      thead {
+        th {
+          color: #8392ab;
+          font-weight: 600;
+          font-size: 0.65rem;
+          padding: 0.75rem 1rem;
+          letter-spacing: 0.05rem;
+          text-transform: uppercase;
+          border-top: none;
+      border-bottom: 2px solid $border-color;
+          background-color: #fafbfc;
+      border-right: none;
+      border-left: none;
+        }
+      }
+
+      tbody {
+        td {
+          font-size: 0.875rem;
+          padding: 1rem;
+          color: $text-color;
+      border-top: none;
+      border-bottom: 1px solid $border-color;
+      border-right: none;
+      border-left: none;
+          vertical-align: middle;
+        }
+
+        tr {
+          transition: all 0.2s ease;
+
+          &:hover {
+            background-color: $hover-bg;
+          }
+
+          &:last-child td {
+            border-bottom: none;
+          }
+        }
+      }
+    }
+
+// Styles pour les boutons
+.btn-primary {
+  background: linear-gradient(135deg, $primary, #38b2ac) !important;
+  border-color: transparent !important;
+  font-weight: 600;
+  color: #fff;
+  border-radius: 10px;
+  height: 36px;
+  padding: 0 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  transition: transform .15s ease, box-shadow .2s ease;
+  &:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+}
+
+  .btn-info {
+    background: linear-gradient(135deg, $primary, #38b2ac);
+    border-color: transparent;
+  }
+
+  .btn-warning {
+    background: linear-gradient(135deg,#f59e0b,#d97706);
+    border-color: transparent;
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg,#dc3545,#c82333);
+    border-color: transparent;
+  }
+
+// Styles pour les input groups
+.input-group {
+  .input-group-text {
+    background-color: #fff;
+    border-color: $border-color;
+  }
+
+  .form-control {
+    border-left: none;
+    }
+  }
+
+// Styles pour la pagination
+.pagination {
+  .page-item.active .page-link { background-color: $primary; border-color: $primary; }
+  .page-link { color: $text-color; }
+}
+
+/* Icônes actions style Examens */
+.btn.btn-outline-info,
+.btn.btn-outline-warning,
+.btn.btn-outline-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid $border;
+  background: #f8fafc;
+  padding: 0;
+}
+.btn.btn-outline-danger { background:#fee2e2; border-color:#fecaca; color:#991b1b; }
+
+// Ajustement pour les tables avec peu de données
+@media (min-height: 800px) {
+  .card {
+    min-height: 400px;
+  }
+}

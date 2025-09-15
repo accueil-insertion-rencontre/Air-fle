@@ -1,0 +1,33 @@
+# =============================================================================
+# API DOCKERIGNORE - NestJS Specific Rules Only
+# =============================================================================
+
+# Build outputs (API specific)
+dist/
+build/
+
+# Testing (API specific)
+test/
+coverage/
+*.spec.ts
+*.test.ts
+vitest*.config.ts
+jest.config.js
+
+# Prisma specific
+prisma/*.db
+prisma/*.db-journal
+prisma/seed.ts
+prisma/student.fixtures.ts
+
+# NestJS specific
+.nest/
+eslint.config.mjs
+nodemon.json
+
+# API Scripts
+scripts/*.sh
+backups/
+
+# JWT secrets
+.jwt-secret

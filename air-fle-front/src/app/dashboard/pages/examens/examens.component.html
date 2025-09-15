@@ -1,0 +1,932 @@
+<div class="exams-page">
+  <!-- En-tête -->
+  <div class="header-card">
+    <div class="left">
+      <h1>Examens</h1>
+      <p class="subtitle">Gérez les examens et évaluations des apprenants</p>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" (click)="onRefresh()" [disabled]="isLoading" title="Actualiser">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.13 3.36L1 14"/>
+        </svg>
+        <span>Actualiser</span>
+      </button>
+      <button class="btn primary" (click)="showCreateExamForm()" [disabled]="isLoading">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span>Nouveau</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Erreur -->
+  <div *ngIf="error" class="alert error" role="alert">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12.01" y2="8"></line><line x1="12" y1="12" x2="12" y2="16"></line></svg>
+    <span class="msg">{{ error }}</span>
+    <button class="close" (click)="error = null" aria-label="Fermer">×</button>
+  </div>
+
+  <!-- Chargement -->
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement des examens...</p>
+  </div>
+
+  <!-- Contenu principal -->
+  <div *ngIf="!isLoading" class="content">
+    <!-- Statistiques -->
+    <div class="stats">
+      <div class="stat">
+        <div class="icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="text"><div class="num">{{ getTotalExams() }}</div><div class="label">Examens</div></div>
+      </div>
+      <div class="stat">
+        <div class="icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="text"><div class="num">{{ getExamsWithScores() }}</div><div class="label">Avec notes</div></div>
+      </div>
+      <div class="stat">
+        <div class="icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="text"><div class="num">{{ students.length }}</div><div class="label">Étudiants</div></div>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Rechercher un examen, un étudiant ou une note..." [(ngModel)]="searchTerm" (input)="onSearchChange()" />
+      </div>
+      <div class="sort">
+        <label>Tri</label>
+        <div class="sort-buttons">
+          <button class="chip" [class.active]="sortBy==='date'" (click)="onSortChange('date')">Date</button>
+          <button class="chip" [class.active]="sortBy==='student'" (click)="onSortChange('student')">Étudiant</button>
+          <button class="chip" [class.active]="sortBy==='score'" (click)="onSortChange('score')">Note</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Création -->
+    <div *ngIf="showCreateForm" class="card form-card">
+      <div class="card-header">
+        <div class="title">Créer un examen</div>
+        <button class="icon-btn" (click)="hideCreateForm()" aria-label="Fermer">×</button>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="examForm" (ngSubmit)="onCreateExam()">
+          <div class="form-grid">
+            <div class="field">
+              <label for="exam_label">Libellé de l'examen</label>
+              <input id="exam_label" type="text" formControlName="exam_label" [class.invalid]="hasFieldError('exam_label')" placeholder="Ex: Examen final A1" />
+              <div class="error" *ngIf="hasFieldError('exam_label')">{{ getFieldError('exam_label') }}</div>
+            </div>
+            <div class="field">
+              <label for="exam_taked_at">Date de passation</label>
+              <input id="exam_taked_at" type="date" formControlName="exam_taked_at" [class.invalid]="hasFieldError('exam_taked_at')" />
+              <div class="error" *ngIf="hasFieldError('exam_taked_at')">{{ getFieldError('exam_taked_at') }}</div>
+            </div>
+            <div class="field">
+              <label for="exam_type">Type d'examen</label>
+              <select id="exam_type" formControlName="exam_type">
+                <option value="written">Écrit</option>
+                <option value="oral">Oral</option>
+                <option value="practical">Pratique</option>
+              </select>
+            </div>
+          </div>
+          <div class="hint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Vous pourrez ajouter les étudiants et leurs notes après la création.
+          </div>
+          <div class="actions">
+            <button type="button" class="btn ghost" (click)="hideCreateForm()">Annuler</button>
+            <button type="submit" class="btn primary" [disabled]="examForm.invalid || isCreating">
+              <span *ngIf="isCreating" class="spinner sm"></span>
+              <span *ngIf="!isCreating">Créer l'examen</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edition -->
+    <div *ngIf="showEditForm" class="card form-card warn">
+      <div class="card-header">
+        <div class="title">Modifier l'examen</div>
+        <button class="icon-btn" (click)="hideEditForm()" aria-label="Fermer">×</button>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="editForm" (ngSubmit)="onUpdateExam()">
+          <div class="form-grid">
+            <div class="field wide">
+              <label for="edit_exam_label">Libellé de l'examen</label>
+              <input id="edit_exam_label" type="text" formControlName="exam_label" [class.invalid]="hasFieldError('exam_label', editForm)" placeholder="Ex: Examen final A1" />
+              <div class="error" *ngIf="hasFieldError('exam_label', editForm)">{{ getFieldError('exam_label', editForm) }}</div>
+            </div>
+            <div class="field">
+              <label for="edit_exam_score">Note ou résultat</label>
+              <input id="edit_exam_score" type="text" formControlName="exam_score" placeholder="Ex: B1 - 14/20" />
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn ghost" (click)="hideEditForm()">Annuler</button>
+            <button type="submit" class="btn warn" [disabled]="editForm.invalid || isUpdating">
+              <span *ngIf="isUpdating" class="spinner sm"></span>
+              <span *ngIf="!isUpdating">Mettre à jour</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Liste des examens (lecture seule) -->
+    <div class="exam-list" *ngIf="filteredExams.length > 0">
+      <div class="exam-item" *ngFor="let exam of filteredExams; trackBy: trackByExamId">
+        <div class="exam-header">
+        <div class="left">
+          <div class="title-row">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+            <strong>{{ exam.label }}</strong>
+          </div>
+          <div class="meta-row">
+            <span class="badge-type" *ngIf="exam.type as t">
+              <span class="dot"></span>
+              <span class="txt">{{ t === 'written' ? 'Écrit' : t === 'oral' ? 'Oral' : t === 'practical' ? 'Pratique' : t }}</span>
+            </span>
+            <span class="sep">•</span>
+            <span class="muted">Créé le</span>
+            <span class="date">{{ exam.createdAt || '—' }}</span>
+          </div>
+        </div>
+        <div class="right">
+          <div class="icons">
+            <button type="button" class="icon-btn" title="Voir les détails" (click)="openExamDetails(exam)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button type="button" class="icon-btn" title="Ajouter" (click)="openAddOptions(exam)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <button type="button" class="icon-btn" title="Modifier" (click)="openEditOptions(exam)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
+            <button type="button" class="icon-btn danger" title="Supprimer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        </div>
+        </div>
+
+        <!-- panneau détaillé intégré -->
+        <div class="students-list-inline" *ngIf="expandedExamId === exam.id && selectedExam">
+          <div class="participants">
+            <div class="participant-item" *ngFor="let s of detailsStudents" [class.editing]="editingStudentUuid === s.student_uuid">
+              <div class="row-1">
+                <div class="student-name">{{ s.name || '—' }}</div>
+                <div class="score-pill" [class.empty]="!s.score" *ngIf="editingStudentUuid !== s.student_uuid">{{ s.score || '—' }}</div>
+                <input *ngIf="editingStudentUuid === s.student_uuid" type="text" class="form-control form-control-sm score-input" [(ngModel)]="inlineEdit.score" placeholder="Ex: 15/20" />
+              </div>
+              <div class="row-2">
+                <span class="label">Email</span>
+                <span class="value">{{ s.email || '—' }}</span>
+                <span class="dot"></span>
+                <span class="label">Statut</span>
+                <span class="value" *ngIf="editingStudentUuid !== s.student_uuid">{{ s.status || '—' }}</span>
+                <select *ngIf="editingStudentUuid === s.student_uuid" class="form-select form-select-sm status-select" [(ngModel)]="inlineEdit.status">
+                  <option value="pending">En attente</option>
+                  <option value="passed">Réussi</option>
+                  <option value="failed">Échoué</option>
+                  <option value="absent">Absent</option>
+                </select>
+              </div>
+              <div class="row-3">
+                <span class="label">Commentaires</span>
+                <span class="value" *ngIf="editingStudentUuid !== s.student_uuid">{{ s.notes || '-' }}</span>
+                <input *ngIf="editingStudentUuid === s.student_uuid" type="text" class="form-control form-control-sm notes-input" [(ngModel)]="inlineEdit.notes" placeholder="Commentaires" />
+              </div>
+              <div class="row-actions">
+                <ng-container *ngIf="detailsEditable">
+                  <ng-container *ngIf="editingStudentUuid !== s.student_uuid; else editingBtns">
+                    <button class="icon-btn" title="Modifier la note" (click)="startInlineEdit(s)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    </button>
+                    <button class="icon-btn danger" title="Retirer de l'examen" (click)="removeStudentInline(s)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </ng-container>
+                  <ng-template #editingBtns>
+                    <button class="btn btn-sm btn-outline-secondary me-2" (click)="cancelInlineEdit()">Annuler</button>
+                    <button class="btn btn-sm btn-primary" (click)="saveInlineEdit(s)">Enregistrer</button>
+                  </ng-template>
+                </ng-container>
+              </div>
+            </div>
+            <div class="participant-empty" *ngIf="detailsStudents.length === 0">Aucun participant</div>
+          </div>
+          <div class="details-footer minimal">
+            <div class="pagination-info">Page {{ detailsPage }} / {{ Math.max(1, Math.ceil(detailsTotal / detailsPageSize)) }}</div>
+            <div class="btn-group">
+              <button class="btn btn-outline-secondary btn-sm" (click)="onDetailsPageChange(detailsPage - 1)">Précédent</button>
+              <button class="btn btn-outline-secondary btn-sm" (click)="onDetailsPageChange(detailsPage + 1)">Suivant</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panneau d'édition (options) -->
+        <div class="add-panel" *ngIf="editOptionsExamId === exam.id && selectedExam">
+          <div class="add-header">
+            <div class="title">Modifier</div>
+          </div>
+          <div class="add-body">
+            <div class="participants">
+              <div class="participant-item">
+                <div class="row-1">
+                  <div class="student-name">Paramètres de l’examen</div>
+                </div>
+                <div class="row-3">
+                  <button class="btn btn-warning btn-sm" (click)="chooseEditExam()">Modifier l’examen</button>
+                </div>
+              </div>
+              <div class="participant-item">
+                <div class="row-1">
+                  <div class="student-name">Notes et participants</div>
+                </div>
+                <div class="row-3">
+                  <button class="btn btn-primary btn-sm" (click)="chooseEditNotes()">Gérer les notes</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edition inline de l'examen -->
+        <div class="add-panel warn" *ngIf="editInlineExamId === exam.id && selectedExam">
+          <div class="add-header">
+            <div class="title">Modifier l'examen</div>
+          </div>
+          <div class="add-body">
+            <form [formGroup]="editForm" (ngSubmit)="onUpdateExam()">
+              <div class="form-grid">
+                <div class="field wide">
+                  <label>Libellé de l'examen</label>
+                  <input type="text" formControlName="exam_label" placeholder="Ex: Examen final A1" />
+                </div>
+                <div class="field">
+                  <label>Type d'examen</label>
+                  <select formControlName="exam_type">
+                    <option value="written">Écrit</option>
+                    <option value="oral">Oral</option>
+                    <option value="practical">Pratique</option>
+                  </select>
+                </div>
+              </div>
+              <div class="actions">
+                <button type="button" class="btn ghost" (click)="editInlineExamId = null">Annuler</button>
+                <button type="submit" class="btn warn" [disabled]="editForm.invalid || isUpdating">Mettre à jour</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Panneau d'ajout (étudiants ou groupe) -->
+        <div class="add-panel" *ngIf="addOptionsExamId === exam.id && selectedExam">
+          <div class="add-header">
+            <div class="title">Ajouter</div>
+            <div class="tabs">
+              <button class="chip" [class.active]="currentAddMode==='students'" (click)="setAddMode('students')">Étudiants</button>
+              <button class="chip" [class.active]="currentAddMode==='group'" (click)="setAddMode('group')">Groupe</button>
+            </div>
+          </div>
+
+          <!-- Mode Étudiants -->
+          <div *ngIf="currentAddMode==='students'" class="add-body">
+            <div class="inline-search">
+              <input type="text" placeholder="Rechercher un étudiant..." [(ngModel)]="studentSearchTerm" (input)="onStudentSearchChange()" />
+            </div>
+            <div class="participants">
+              <div class="participant-item" *ngFor="let s of getPaginatedStudents()">
+                <div class="row-1">
+                  <div class="student-name">{{ s.student_firstname }} {{ s.student_lastname }}</div>
+                </div>
+                <div class="row-2">
+                  <span class="label">Email</span>
+                  <span class="value">{{ s.student_mail || '—' }}</span>
+                </div>
+                <div class="row-3">
+                  <button class="btn btn-secondary btn-sm" *ngIf="isStudentAlreadyInExam(s.student_uuid)" disabled>Déjà ajouté</button>
+                  <button class="btn btn-primary btn-sm" *ngIf="!isStudentAlreadyInExam(s.student_uuid)" (click)="toggleStudentSelection(s.student_uuid)">{{ isStudentSelected(s.student_uuid) ? 'Retirer' : 'Ajouter' }}</button>
+                </div>
+              </div>
+            </div>
+            <div class="details-footer minimal">
+              <div class="pagination-info">Page {{ currentStudentPage }} / {{ getTotalStudentPages() }}</div>
+              <div class="btn-group">
+                <button class="btn btn-outline-secondary btn-sm" (click)="onStudentPageChange(currentStudentPage - 1)">Précédent</button>
+                <button class="btn btn-outline-secondary btn-sm" (click)="onStudentPageChange(currentStudentPage + 1)">Suivant</button>
+              </div>
+            </div>
+            <div class="actions" *ngIf="selectedStudents.length>0">
+              <button class="btn primary" (click)="addSelectedStudentsToExam()">Ajouter {{ selectedStudents.length }} étudiant(s)</button>
+            </div>
+          </div>
+
+          <!-- Mode Groupe -->
+          <div *ngIf="currentAddMode==='group'" class="add-body">
+            <div class="inline-form">
+              <label>Groupe</label>
+              <select class="form-select" [formGroup]="addGroupForm" formControlName="group_uuid">
+                <option value="">Sélectionnez un groupe</option>
+                <option *ngFor="let g of groups" [value]="g.group_uuid">{{ g.label || g.group_label }}</option>
+              </select>
+            </div>
+            <div class="actions">
+              <button class="btn primary" (click)="onAddGroupToExam()" [disabled]="!addGroupForm.get('group_uuid')?.value">Ajouter le groupe</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Etat vide -->
+    <div class="empty" *ngIf="filteredExams.length === 0">
+      <div class="icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <h3>{{ searchTerm ? 'Aucun examen trouvé' : 'Aucun examen enregistré' }}</h3>
+      <p>{{ searchTerm ? 'Essayez de modifier votre recherche' : 'Commencez par créer votre premier examen' }}</p>
+      <button *ngIf="!searchTerm" class="btn primary" (click)="showCreateExamForm()">
+        Créer un examen
+      </button>
+    </div>
+  </div>
+
+
+  <!-- Gestion des Étudiants (sections existantes conservées, icônes nettoyées) -->
+  <div *ngIf="showManageStudents" class="form-section mb-4">
+    <div class="card border-info">
+      <div class="card-header bg-info bg-opacity-10">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Gérer les Étudiants - {{ selectedExam?.exam_label }}</h5>
+          <button type="button" class="btn-close" (click)="hideManageStudentsForm()"></button>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <!-- Liste des étudiants actuels (style cartes) -->
+        <div class="mb-4" *ngIf="hasStudents()">
+          <h6 class="mb-3">Étudiants inscrits ({{ getStudentsCount() }})</h6>
+          <div class="participants">
+            <div class="participant-item" *ngFor="let s of selectedExam?.students || []">
+              <div class="row-1">
+                <div class="student-name">{{ s.student?.student_firstname }} {{ s.student?.student_lastname }}</div>
+                <div class="score-pill" [class.empty]="!s.exam_score">{{ s.exam_score || '—' }}</div>
+              </div>
+              <div class="row-2">
+                <span class="label">Email</span>
+                <span class="value">{{ s.student?.student_mail || '—' }}</span>
+                <span class="dot"></span>
+                <span class="label">Statut</span>
+                <span class="value">{{ s.exam_status === 'passed' ? 'Réussi' : s.exam_status === 'failed' ? 'Échoué' : s.exam_status === 'absent' ? 'Absent' : 'En attente' }}</span>
+              </div>
+              <div class="row-3" *ngIf="s.exam_notes">
+                <span class="label">Commentaires</span>
+                <span class="value">{{ s.exam_notes }}</span>
+              </div>
+              <div class="row-actions">
+                <button class="btn btn-sm btn-outline-warning me-2 icon-btn" title="Modifier la note" (click)="showEditStudentScoreForm(s)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  <span class="ms-1">Modifier</span>
+                </button>
+                <button class="btn btn-sm btn-outline-danger icon-btn" title="Retirer">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M19 21H5a2 2 0 0 1-2-2v-7"/>
+                    <path d="M16 3a4 4 0 0 1 4 4v3"/>
+                    <circle cx="8" cy="9" r="4"/>
+                    <line x1="16" y1="19" x2="22" y2="19"/>
+                  </svg>
+                  <span class="ms-1">Retirer</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bouton Fermer -->
+        <div class="form-actions mt-3">
+          <button type="button" class="btn btn-outline-secondary" (click)="hideManageStudentsForm()">
+            Fermer
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmation de Suppression -->
+  <div *ngIf="showDeleteConfirm" class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header bg-danger">
+        <h5 class="modal-title text-white">Confirmer la suppression</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="cancelDelete()"></button>
+      </div>
+      
+      <div class="modal-body">
+          <div class="text-center mb-3">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+              <path d="M10 11v6"/>
+              <path d="M14 11v6"/>
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </div>
+        
+        <h6 class="text-center mb-3">Êtes-vous sûr de vouloir supprimer cet examen ?</h6>
+        
+        <div class="exam-details">
+          <div class="detail-item">
+            <strong>Libellé :</strong> {{ examToDelete?.label }}
+          </div>
+          <div class="detail-item">
+            <strong>Étudiant :</strong> {{ examToDelete?.studentName }}
+          </div>
+          <div class="detail-item">
+            <strong>Date :</strong> {{ examToDelete?.date }}
+          </div>
+          <div class="detail-item" *ngIf="examToDelete?.score">
+            <strong>Note :</strong> {{ examToDelete?.score }}
+          </div>
+        </div>
+        
+        <div class="alert alert-warning mt-3">Attention : Cette action est irréversible. L'examen sera définitivement supprimé.</div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn ghost" (click)="cancelDelete()">Annuler</button>
+        <button type="button" class="btn danger" (click)="confirmDelete()" [disabled]="isDeleting">
+          <span *ngIf="isDeleting" class="spinner sm"></span>
+          <span *ngIf="!isDeleting">Supprimer définitivement</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ajout de Groupe -->
+  <div *ngIf="showAddGroupForm" class="form-section mb-4">
+    <div class="card border-success">
+      <div class="card-header bg-success bg-opacity-10">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Ajouter un Groupe - {{ selectedExam?.exam_label }}</h5>
+          <button type="button" class="btn-close" (click)="hideAddGroupForm()"></button>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="alert alert-info"><strong>Note :</strong> Tous les étudiants du groupe sélectionné seront ajoutés à cet examen.</div>
+
+        <form [formGroup]="addGroupForm" (ngSubmit)="onAddGroupToExam()">
+          <div class="row g-3">
+            <!-- Groupe -->
+            <div class="col-md-6">
+              <label for="add_group_uuid" class="form-label">
+                Groupe <span class="text-danger">*</span>
+              </label>
+              <select 
+                class="form-select"
+                [class.is-invalid]="hasFieldError('group_uuid', addGroupForm)"
+                id="add_group_uuid"
+                formControlName="group_uuid">
+                <option value="">Sélectionner un groupe</option>
+                <option *ngFor="let group of groups" [value]="group.group_id || group.group_uuid">
+                  {{ group.label || group.group_label }}
+                  <span *ngIf="group.session?.session_label"> - {{ group.session?.session_label }}</span>
+                </option>
+              </select>
+              <div *ngIf="hasFieldError('group_uuid', addGroupForm)" class="invalid-feedback">
+                {{ getFieldError('group_uuid', addGroupForm) }}
+              </div>
+            </div>
+
+            <!-- Score par défaut -->
+            <div class="col-md-3">
+              <label for="add_default_score" class="form-label">
+                Score par défaut <span class="text-muted">(optionnel)</span>
+              </label>
+              <input 
+                type="text" 
+                class="form-control"
+                id="add_default_score"
+                formControlName="default_score"
+                placeholder="Ex: 15/20">
+            </div>
+
+            <!-- Statut par défaut -->
+            <div class="col-md-3">
+              <label for="add_default_status" class="form-label">
+                Statut par défaut <span class="text-muted">(optionnel)</span>
+              </label>
+              <select 
+                class="form-select"
+                id="add_default_status"
+                formControlName="default_status">
+                <option value="pending">En attente</option>
+                <option value="passed">Réussi</option>
+                <option value="failed">Échoué</option>
+                <option value="absent">Absent</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions mt-3">
+            <button type="button" class="btn btn-outline-secondary me-2" (click)="hideAddGroupForm()">
+              Annuler
+            </button>
+            <button type="submit" class="btn primary" [disabled]="addGroupForm.invalid">Ajouter le groupe</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Choix d'Ajout -->
+  <div *ngIf="showAddOptionsModal" class="form-section mb-4">
+    <div class="card border-success">
+      <div class="card-header bg-success bg-opacity-10">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Ajouter à l'Examen - {{ selectedExam?.exam_label }}</h5>
+          <button type="button" class="btn-close" (click)="hideAddOptionsModal()"></button>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="alert alert-info"><strong>Choisissez ce que vous voulez ajouter :</strong></div>
+
+        <div class="row g-3">
+          <!-- Ajouter un Étudiant -->
+          <div class="col-md-6">
+            <div class="card h-100 border-primary">
+              <div class="card-body text-center">
+                <h6 class="card-title">Ajouter un Étudiant</h6>
+                <p class="card-text text-muted">
+                  Ajouter un étudiant individuel à cet examen
+                </p>
+                <button 
+                  type="button" 
+                  class="btn btn-primary"
+                  (click)="addStudentToExamFromModal()">
+                  Ajouter un Étudiant
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ajouter un Groupe -->
+          <div class="col-md-6">
+            <div class="card h-100 border-success">
+              <div class="card-body text-center">
+                <h6 class="card-title">Ajouter un Groupe</h6>
+                <p class="card-text text-muted">
+                  Ajouter tous les étudiants d'un groupe à cet examen
+                </p>
+                <button 
+                  type="button" 
+                  class="btn btn-success"
+                  (click)="addGroupToExamFromModal()">
+                  Ajouter un Groupe
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions mt-3">
+          <button type="button" class="btn btn-outline-secondary" (click)="hideAddOptionsModal()">
+            Annuler
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ajout d'Étudiants -->
+  <div *ngIf="showAddStudentForm" class="form-section mb-4">
+    <div class="card border-primary">
+      <div class="card-header bg-primary bg-opacity-10">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right:6px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Ajouter des Étudiants - {{ selectedExam?.exam_label }}
+          </h5>
+          <button type="button" class="btn-close" (click)="hideAddStudentForm()"></button>
+        </div>
+      </div>
+      
+      <div class="card-body">
+          <div class="alert alert-info">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <strong>Note :</strong> Sélectionnez un ou plusieurs étudiants à ajouter à cet examen
+          </div>
+
+        <!-- Barre de recherche et tri -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="student_search" class="form-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right:6px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Rechercher des étudiants
+            </label>
+            <input 
+              type="text" 
+              class="form-control"
+              id="student_search"
+              [(ngModel)]="studentSearchTerm"
+              (ngModelChange)="onStudentSearchChange()"
+              placeholder="Tapez le nom, prénom ou email...">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Trier par :</label>
+            <div class="btn-group" role="group">
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                [class.active]="studentSortBy === 'name'"
+                (click)="onStudentSortChange('name')">
+                Nom
+                <span *ngIf="studentSortBy === 'name'">
+                  {{ studentSortDirection === 'asc' ? '↑' : '↓' }}
+                </span>
+              </button>
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary"
+                [class.active]="studentSortBy === 'email'"
+                (click)="onStudentSortChange('email')">
+                Email
+                <span *ngIf="studentSortBy === 'email'">
+                  {{ studentSortDirection === 'asc' ? '↑' : '↓' }}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions de sélection -->
+        <div class="mb-3">
+            <button type="button" class="btn btn-sm btn-outline-primary me-2" (click)="selectAllStudents()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1" aria-hidden="true"><polyline points="20 6 9 17 4 12"/><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+              Tout sélectionner
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="deselectAllStudents()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+              Tout désélectionner
+            </button>
+          <span class="ms-3 text-muted">
+            {{ selectedStudents.length }} étudiant(s) sélectionné(s)
+          </span>
+        </div>
+
+        <!-- Liste des étudiants avec pagination -->
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th style="width: 50px;">
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input"
+                    [checked]="selectedStudents.length === getPaginatedStudents().length && getPaginatedStudents().length > 0"
+                    (change)="selectedStudents.length === getPaginatedStudents().length ? deselectAllStudents() : selectAllStudents()">
+                </th>
+                <th>Nom</th>
+                <th>Email</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let student of getPaginatedStudents()">
+                <td>
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input"
+                    [checked]="isStudentSelected(student.student_uuid)"
+                    (change)="toggleStudentSelection(student.student_uuid)">
+                </td>
+                <td>
+                  <strong>{{ student.student_firstname }} {{ student.student_lastname }}</strong>
+                </td>
+                <td>
+                  <span *ngIf="student.student_mail">{{ student.student_mail }}</span>
+                  <span *ngIf="!student.student_mail" class="text-muted">-</span>
+                </td>
+                <td>
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-outline-primary"
+                      (click)="toggleStudentSelection(student.student_uuid)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2" aria-hidden="true">
+                        <ng-container *ngIf="isStudentSelected(student.student_uuid); else plusIcon">
+                          <polyline points="20 6 9 17 4 12"/>
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        </ng-container>
+                        <ng-template #plusIcon>
+                          <line x1="12" y1="5" x2="12" y2="19"/>
+                          <line x1="5" y1="12" x2="19" y2="12"/>
+                        </ng-template>
+                      </svg>
+                      {{ isStudentSelected(student.student_uuid) ? 'Désélectionner' : 'Sélectionner' }}
+                    </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div class="text-muted">
+            Affichage {{ getStudentDisplayRange() }} 
+            sur {{ totalStudentItems || 0 }} étudiant(s)
+          </div>
+          <nav>
+            <ul class="pagination pagination-sm mb-0">
+              <!-- Bouton Précédent -->
+              <li class="page-item" [class.disabled]="currentStudentPage === 1">
+                <button class="page-link" (click)="onStudentPageChange(currentStudentPage - 1)" [disabled]="currentStudentPage === 1">
+                  Précédent
+                </button>
+              </li>
+              
+              <!-- Pages avec ellipses intelligentes -->
+              <li class="page-item" *ngFor="let page of getSmartStudentPageNumbers()" 
+                  [class.active]="page === currentStudentPage"
+                  [class.disabled]="page === '...'">
+                <button class="page-link" 
+                        (click)="onStudentPageChange(page)" 
+                        [disabled]="page === '...'">
+                  {{ page }}
+                </button>
+              </li>
+              
+              <!-- Bouton Suivant -->
+              <li class="page-item" [class.disabled]="currentStudentPage === getTotalStudentPages()">
+                <button class="page-link" (click)="onStudentPageChange(currentStudentPage + 1)" [disabled]="currentStudentPage === getTotalStudentPages()">
+                  Suivant
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+
+        <!-- Paramètres par défaut pour les étudiants sélectionnés -->
+        <div class="mt-4">
+          <h6>📝 Paramètres par défaut pour les étudiants sélectionnés :</h6>
+          <form [formGroup]="addStudentForm">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label for="add_exam_score" class="form-label">
+                  Note par défaut <span class="text-muted">(optionnel)</span>
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  id="add_exam_score"
+                  formControlName="exam_score"
+                  placeholder="Ex: 15/20">
+              </div>
+              <div class="col-md-3">
+                <label for="add_exam_status" class="form-label">
+                  Statut par défaut <span class="text-muted">(optionnel)</span>
+                </label>
+                <select 
+                  class="form-select"
+                  id="add_exam_status"
+                  formControlName="exam_status">
+                  <option value="pending">En attente</option>
+                  <option value="passed">Réussi</option>
+                  <option value="failed">Échoué</option>
+                  <option value="absent">Absent</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="add_exam_notes" class="form-label">
+                  Commentaires par défaut <span class="text-muted">(optionnel)</span>
+                </label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  id="add_exam_notes"
+                  formControlName="exam_notes"
+                  placeholder="Commentaires">
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="form-actions mt-4">
+          <button type="button" class="btn btn-outline-secondary me-2" (click)="hideAddStudentForm()">
+            Annuler
+          </button>
+            <button 
+              type="button" 
+              class="btn btn-primary"
+              [disabled]="selectedStudents.length === 0"
+              (click)="addSelectedStudentsToExam()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="12" x2="13" y2="12"/><line x1="16" y1="9" x2="16" y2="15"/></svg>
+              Ajouter {{ selectedStudents.length }} Étudiant(s)
+            </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Édition de la Note d'un Étudiant -->
+  <div *ngIf="showEditStudentScore" class="form-section mb-4">
+    <div class="card border-warning">
+      <div class="card-header bg-warning bg-opacity-10">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            ✏️ Modifier la Note - {{ selectedStudent?.student?.student_firstname }} {{ selectedStudent?.student?.student_lastname }}
+          </h5>
+          <button type="button" class="btn-close" (click)="hideEditStudentScoreForm()"></button>
+        </div>
+      </div>
+      
+      <div class="card-body">
+          <div class="alert alert-info">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <strong>Note :</strong> Modification de la note pour l'examen "{{ selectedExam?.exam_label }}"
+          </div>
+
+        <form [formGroup]="editStudentScoreForm" (ngSubmit)="onUpdateStudentScore()">
+          <div class="row g-3">
+            <!-- Note -->
+            <div class="col-md-4">
+              <label for="edit_student_score" class="form-label">
+                Note <span class="text-muted">(optionnel)</span>
+              </label>
+              <input 
+                type="text" 
+                class="form-control"
+                id="edit_student_score"
+                formControlName="exam_score"
+                placeholder="Ex: 15/20">
+            </div>
+
+            <!-- Statut -->
+            <div class="col-md-4">
+              <label for="edit_student_status" class="form-label">
+                Statut <span class="text-danger">*</span>
+              </label>
+              <select 
+                class="form-select"
+                [class.is-invalid]="hasFieldError('exam_status', editStudentScoreForm)"
+                id="edit_student_status"
+                formControlName="exam_status">
+                <option value="pending">En attente</option>
+                <option value="passed">Réussi</option>
+                <option value="failed">Échoué</option>
+                <option value="absent">Absent</option>
+              </select>
+              <div *ngIf="hasFieldError('exam_status', editStudentScoreForm)" class="invalid-feedback">
+                {{ getFieldError('exam_status', editStudentScoreForm) }}
+              </div>
+            </div>
+
+            <!-- Commentaires -->
+            <div class="col-md-4">
+              <label for="edit_student_notes" class="form-label">
+                Commentaires <span class="text-muted">(optionnel)</span>
+              </label>
+              <input 
+                type="text" 
+                class="form-control"
+                id="edit_student_notes"
+                formControlName="exam_notes"
+                placeholder="Commentaires">
+            </div>
+          </div>
+
+          <div class="form-actions mt-3">
+            <button type="button" class="btn btn-outline-secondary me-2" (click)="hideEditStudentScoreForm()">
+              Annuler
+            </button>
+            <button 
+              type="submit" 
+              class="btn btn-warning"
+              [disabled]="editStudentScoreForm.invalid">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              Mettre à Jour la Note
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div> 

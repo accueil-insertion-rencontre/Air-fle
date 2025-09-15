@@ -1,0 +1,105 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ReactiveFormsModule } from '@angular/forms';
+import { RouterTestingModule } from '@angular/router/testing';
+import { StudentFormComponent } from './student-form.component';
+import { StudentService } from '../../services/student.service';
+import { LevelService } from '../../services/level.service';
+import { NationalityService } from '../../services/nationality.service';
+import { AddressService } from '../../services/address.service';
+import { of } from 'rxjs';
+
+describe('StudentFormComponent', () => {
+  let component: StudentFormComponent;
+  let fixture: ComponentFixture<StudentFormComponent>;
+  let studentService: jasmine.SpyObj<StudentService>;
+  let levelService: jasmine.SpyObj<LevelService>;
+  let nationalityService: jasmine.SpyObj<NationalityService>;
+  let addressService: jasmine.SpyObj<AddressService>;
+
+  beforeEach(async () => {
+    const studentServiceSpy = jasmine.createSpyObj('StudentService', [
+      'createStudent',
+      'updateStudent',
+      'getStudentById',
+    ]);
+    const levelServiceSpy = jasmine.createSpyObj('LevelService', ['getLevels']);
+    const nationalityServiceSpy = jasmine.createSpyObj('NationalityService', ['getNationalities']);
+    const addressServiceSpy = jasmine.createSpyObj('AddressService', ['getCountries']);
+
+    await TestBed.configureTestingModule({
+      imports: [ReactiveFormsModule, RouterTestingModule, StudentFormComponent],
+      providers: [
+        { provide: StudentService, useValue: studentServiceSpy },
+        { provide: LevelService, useValue: levelServiceSpy },
+        { provide: NationalityService, useValue: nationalityServiceSpy },
+        { provide: AddressService, useValue: addressServiceSpy },
+      ],
+    }).compileComponents();
+
+    studentService = TestBed.inject(StudentService) as jasmine.SpyObj<StudentService>;
+    levelService = TestBed.inject(LevelService) as jasmine.SpyObj<LevelService>;
+    nationalityService = TestBed.inject(NationalityService) as jasmine.SpyObj<NationalityService>;
+    addressService = TestBed.inject(AddressService) as jasmine.SpyObj<AddressService>;
+  });
+
+  beforeEach(() => {
+    levelService.getLevels.and.returnValue(of([]));
+    nationalityService.getNationalities.and.returnValue(of([]));
+    addressService.getCountries.and.returnValue(of([]));
+
+    fixture = TestBed.createComponent(StudentFormComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should initialize the form with empty values', () => {
+    expect(component.studentForm.get('firstName')?.value).toBe('');
+    expect(component.studentForm.get('lastName')?.value).toBe('');
+    expect(component.studentForm.get('email')?.value).toBe('');
+  });
+
+  it('should mark form as invalid when empty', () => {
+    expect(component.studentForm.valid).toBeFalsy();
+  });
+
+  it('should mark form as valid when all required fields are filled', () => {
+    component.studentForm.patchValue({
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
+      birthDate: '1990-01-01',
+      phone: '+33612345678',
+      street: '123 Main St',
+      city: 'Paris',
+      zipCode: '75001',
+      country: 'France',
+      nationality: 'FR',
+      level: 'B2',
+      status: 'ACTIVE',
+    });
+
+    expect(component.studentForm.valid).toBeTruthy();
+  });
+
+  it('should validate email format', () => {
+    const emailControl = component.studentForm.get('email');
+    emailControl?.setValue('invalid-email');
+    expect(emailControl?.valid).toBeFalsy();
+
+    emailControl?.setValue('valid@email.com');
+    expect(emailControl?.valid).toBeTruthy();
+  });
+
+  it('should validate phone number format', () => {
+    const phoneControl = component.studentForm.get('phone');
+    phoneControl?.setValue('123');
+    expect(phoneControl?.valid).toBeFalsy();
+
+    phoneControl?.setValue('+33612345678');
+    expect(phoneControl?.valid).toBeTruthy();
+  });
+});

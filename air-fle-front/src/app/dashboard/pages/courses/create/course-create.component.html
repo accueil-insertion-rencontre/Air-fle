@@ -1,0 +1,147 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card mb-4">
+        <div class="card-header pb-0">
+          <h6>{{ isEditMode ? 'Modifier le cours' : 'Créer un nouveau cours' }}</h6>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="courseForm" (ngSubmit)="onSubmit()">
+            <!-- Message d'erreur général -->
+            <div *ngIf="error" class="alert alert-danger">
+              {{ error }}
+            </div>
+
+            <!-- Session -->
+            <div class="mb-3">
+              <label for="session_uuid" class="form-label"
+                >Session <span class="text-danger">*</span></label
+              >
+              <select
+                class="form-select"
+                id="session_uuid"
+                formControlName="session_uuid"
+                [ngClass]="{ 'is-invalid': isFieldInvalid('session_uuid') }"
+              >
+                <option value="">Sélectionner une session</option>
+                <option *ngFor="let session of sessions" [value]="session.session_uuid || session.id">
+                  {{ session.session_label || session.label }}
+                </option>
+              </select>
+              <div *ngIf="isFieldInvalid('session_uuid')" class="invalid-feedback">
+                La session est obligatoire
+              </div>
+            </div>
+
+            <!-- Date -->
+            <div class="mb-3">
+              <label for="course_day" class="form-label">Date <span class="text-danger">*</span></label>
+              <input
+                type="date"
+                class="form-control"
+                id="course_day"
+                formControlName="course_day"
+                [ngClass]="{ 'is-invalid': isFieldInvalid('course_day') }"
+              />
+              <div *ngIf="isFieldInvalid('course_day')" class="invalid-feedback">
+                La date est obligatoire
+              </div>
+            </div>
+
+            <!-- Intitulé du cours -->
+            <div class="mb-3">
+              <label for="course_name" class="form-label"
+                >Intitulé du cours <span class="text-danger">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="course_name"
+                formControlName="course_name"
+                [ngClass]="{ 'is-invalid': isFieldInvalid('course_name') }"
+                placeholder="Ex: Grammaire française A1"
+              />
+              <div *ngIf="isFieldInvalid('course_name')" class="invalid-feedback">
+                L'intitulé du cours est obligatoire (minimum 3 caractères)
+              </div>
+            </div>
+
+            <!-- Horaires -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="course_start_hour" class="form-label"
+                  >Heure de début <span class="text-danger">*</span></label
+                >
+                <select
+                  class="form-select"
+                  id="course_start_hour"
+                  formControlName="course_start_hour"
+                  [ngClass]="{ 'is-invalid': isFieldInvalid('course_start_hour') }"
+                >
+                  <option value="">Sélectionner une heure</option>
+                  <option *ngFor="let time of timeSlots" [value]="time">{{ time }}</option>
+                </select>
+                <div *ngIf="isFieldInvalid('course_start_hour')" class="invalid-feedback">
+                  L'heure de début est obligatoire
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="course_end_hour" class="form-label"
+                  >Heure de fin <span class="text-danger">*</span></label
+                >
+                <select
+                  class="form-select"
+                  id="course_end_hour"
+                  formControlName="course_end_hour"
+                  [ngClass]="{ 'is-invalid': isFieldInvalid('course_end_hour') }"
+                >
+                  <option value="">Sélectionner une heure</option>
+                  <option *ngFor="let time of timeSlots" [value]="time">{{ time }}</option>
+                </select>
+                <div *ngIf="isFieldInvalid('course_end_hour')" class="invalid-feedback">
+                  L'heure de fin est obligatoire
+                </div>
+              </div>
+            </div>
+
+            <!-- Professeur assigné -->
+            <div class="mb-3">
+              <label for="user_uuid" class="form-label">Professeur assigné</label>
+              <select class="form-select" id="user_uuid" formControlName="user_uuid">
+                <option value="">Aucun professeur assigné</option>
+                <option *ngFor="let teacher of teachers" [value]="teacher.user_uuid || teacher.id">
+                  {{ teacher.fullName }} ({{ teacher.user_mail || teacher.email }})
+                </option>
+              </select>
+              <small class="form-text text-muted">
+                Sélectionnez un professeur ou laissez vide si aucun n'est assigné
+              </small>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-between">
+              <button type="button" class="btn btn-secondary" (click)="resetForm()">
+                <i class="fas fa-undo me-2"></i> Réinitialiser
+              </button>
+              <div>
+                <a [routerLink]="['/dashboard/courses']" class="btn btn-outline-primary me-2">
+                  <i class="fas fa-arrow-left me-2"></i> Retour au calendrier
+                </a>
+                <button type="submit" class="btn btn-primary" [disabled]="loading">
+                  <span
+                    *ngIf="loading"
+                    class="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                  <i *ngIf="!loading" class="fas fa-save me-2"></i>
+                  {{ isEditMode ? 'Mettre à jour' : 'Enregistrer' }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

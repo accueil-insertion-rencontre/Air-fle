@@ -1,0 +1,137 @@
+<div class="financings-container">
+  <!-- Actions -->
+  <div class="financings-actions">
+    <button class="back-btn" (click)="goBack()">
+      <span class="btn-icon">←</span>
+      Retour
+    </button>
+
+  <h2 class="d-flex align-items-center gap-2">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+    Financements
+  </h2>
+
+    <button class="create-btn" (click)="openCreateModal()">
+      <span class="btn-icon">+</span>
+      Ajouter un financement
+    </button>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="error" class="error-message">
+    <p>{{ error }}</p>
+    <button (click)="error = null" class="close-error">×</button>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="financings-content">
+    <div class="financings-list">
+      <!-- En-tête du tableau -->
+      <div class="financings-header">
+        <div class="column name">TYPE</div>
+        <div class="column actions">ACTIONS</div>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="loading-indicator">
+        <div class="spinner"></div>
+        <span>Chargement des financements...</span>
+      </div>
+
+      <!-- Liste des financements -->
+      <div *ngFor="let financing of financings; trackBy: trackByFinancingId" class="financing-item">
+        <div class="column name">
+          <div class="financing-name">{{ financing.type }}</div>
+        </div>
+
+        <div class="column actions">
+          <button class="edit-btn" (click)="openEditModal(financing)">Modifier</button>
+          <button class="delete-btn" (click)="deleteFinancing(financing)">Supprimer</button>
+        </div>
+      </div>
+
+      <!-- État vide -->
+      <div *ngIf="!isLoading && financings.length === 0" class="empty-state">
+        <p>Aucun financement trouvé</p>
+        <button class="create-btn" (click)="openCreateModal()">
+          <span class="btn-icon">+</span>
+          Ajouter un financement
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de création -->
+<div class="modal-overlay" *ngIf="isCreateModalOpen" (click)="closeCreateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Ajouter un financement</h2>
+      <button class="close-btn" (click)="closeCreateModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <form [formGroup]="createForm" (ngSubmit)="createFinancing()">
+        <div class="form-group">
+          <label for="createType">Type *</label>
+          <input
+            id="createType"
+            type="text"
+            formControlName="type"
+            placeholder="Ex: Pôle Emploi, CPF, Personnel..."
+            [class.error]="createType?.invalid && createType?.touched"
+          />
+          <div *ngIf="createType?.invalid && createType?.touched" class="error-text">
+            <span *ngIf="createType?.hasError('required')">Le type est requis</span>
+            <span *ngIf="createType?.hasError('minlength')"
+              >Le type doit contenir au moins 2 caractères</span
+            >
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" (click)="closeCreateModal()">Annuler</button>
+          <button type="submit" class="submit-btn" [disabled]="createForm.invalid">Créer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal d'édition -->
+<div class="modal-overlay" *ngIf="isEditModalOpen" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Modifier le financement</h2>
+      <button class="close-btn" (click)="closeEditModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <form [formGroup]="editForm" (ngSubmit)="updateFinancing()">
+        <div class="form-group">
+          <label for="editType">Type *</label>
+          <input
+            id="editType"
+            type="text"
+            formControlName="type"
+            placeholder="Ex: Pôle Emploi, CPF, Personnel..."
+            [class.error]="editType?.invalid && editType?.touched"
+          />
+          <div *ngIf="editType?.invalid && editType?.touched" class="error-text">
+            <span *ngIf="editType?.hasError('required')">Le type est requis</span>
+            <span *ngIf="editType?.hasError('minlength')"
+              >Le type doit contenir au moins 2 caractères</span
+            >
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" (click)="closeEditModal()">Annuler</button>
+          <button type="submit" class="submit-btn" [disabled]="editForm.invalid">
+            Sauvegarder
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

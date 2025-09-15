@@ -1,0 +1,55 @@
+@use 'sass:color';
+
+$primary: #4fd1c5;
+$text: #2d3748;
+$muted: #718096;
+$surface: #ffffff;
+$border: #e2e8f0;
+
+
+/* Densité compacte */
+.header-card{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:$surface; border:1px solid $border; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.05); margin-bottom:12px; }
+.header-card .left h1{ margin:0; font-size:20px; color:$text; font-weight:700; }
+.header-card .left .subtitle{ margin:4px 0 0; color:$muted; font-size:12px; }
+.btn{ display:inline-flex; align-items:center; gap:4px; height:28px; padding:0 8px; border-radius:6px; font-weight:600; font-size:12px; border:1px solid $border; background:transparent; color:$text; cursor:pointer; transition:transform .15s ease, box-shadow .2s ease, background .2s ease; svg{display:inline-block;} &:hover{ background:#f1f5f9; box-shadow:0 2px 8px rgba(0,0,0,.06); transform:translateY(-1px);} &.primary,&.ghost,&.danger,&.warn{ background:transparent; border-color:$border; color:$text; }
+}
+
+.form-card{ border:1px solid $border; border-radius:10px; background:$surface; box-shadow:0 4px 14px rgba(0,0,0,.06); margin-bottom:12px; }
+.form-card .card-header{ display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid $border; }
+.form-card .card-header .title{ font-weight:700; color:$text; }
+.form-card .card-body{ padding:12px; }
+
+.participants{ display:flex; flex-direction:column; gap:8px; padding:8px 10px; }
+.participant-item{ border:1px solid $border; border-radius:8px; background:#fff; padding:8px 10px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.participant-item .row-1{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.participant-item .student-name{ font-weight:700; color:$text; }
+.participant-item .row-2{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:4px; color:$muted; font-size:11px; }
+.participant-item .row-2 .label{ font-weight:600; color:$muted; }
+.participant-item .row-2 .value{ color:$text; }
+.icons{ display:flex; gap:8px; }
+.icon-btn{ display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; border:1px solid $border; background:#f8fafc; cursor:pointer; }
+.icon-btn.danger{ background:#fee2e2; border-color:#fecaca; color:#991b1b; }
+
+@media (max-width: 768px){
+  .header-card{ padding:10px 12px; }
+  .header-card .left h1{ font-size:18px; }
+  .btn{ height:30px; padding:0 8px; }
+}
+
+/* Modal custom */
+.modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1050; }
+.modal-content-custom{ position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:520px; background:$surface; border:1px solid $border; border-radius:10px; box-shadow:0 18px 40px rgba(0,0,0,.25); z-index:1051; overflow:hidden; }
+.modal-header-custom{ display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid $border; }
+.modal-body-custom{ padding:12px 14px; display:flex; flex-direction:column; gap:10px; }
+.modal-footer-custom{ padding:10px 14px; border-top:1px solid $border; display:flex; justify-content:flex-end; gap:8px; }
+.alert.info{ background:#f1f5f9; border:1px solid $border; border-radius:8px; padding:8px 10px; color:$text; }
+.alert.error{ background:#fee2e2; border:1px solid #fecaca; border-radius:8px; padding:8px 10px; color:#991b1b; }
+.field{ display:flex; flex-direction:column; gap:6px; }
+.field label{ font-weight:600; color:$text; font-size:13px; }
+.field .req{ color:#dc2626; }
+.field input{ border:1px solid $border; border-radius:8px; padding:8px 10px; font-size:14px; background:#fff; color:$text; outline:0; }
+.field input.invalid{ border-color:#dc2626; }
+.inline-select{ display:flex; gap:8px; align-items:center; }
+.inline-select select{ flex:1; border:1px solid $border; border-radius:8px; padding:8px 10px; background:#fff; color:$text; }
+.spinner.sm{ width:16px; height:16px; border:2px solid #e2e8f0; border-top-color:$primary; border-radius:50%; animation:spin 1s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg);} }

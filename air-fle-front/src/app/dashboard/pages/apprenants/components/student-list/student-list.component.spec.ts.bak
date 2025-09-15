@@ -1,0 +1,130 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { StudentListComponent } from './student-list.component';
+import { StudentService } from '../../services/student.service';
+import { StudentSearchComponent } from '../student-search/student-search.component';
+import { of } from 'rxjs';
+import { Student } from '../../models/student.model';
+
+describe('StudentListComponent', () => {
+  let component: StudentListComponent;
+  let fixture: ComponentFixture<StudentListComponent>;
+  let studentService: jasmine.SpyObj<StudentService>;
+
+  const mockStudents: Student[] = [
+    {
+      id: 1,
+      personalInfo: {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        birthDate: new Date('1990-01-01'),
+        phone: '+33612345678',
+      },
+      address: {
+        street: '123 Main St',
+        city: 'Paris',
+        zipCode: '75001',
+        country: 'France',
+      },
+      nationality: {
+        code: 'FR',
+        name: 'Française',
+        countryCode: 'FR',
+      },
+      level: {
+        code: 'B2',
+        name: 'Avancé',
+        description: 'Niveau avancé',
+        order: 4,
+      },
+      status: {
+        code: 'ACTIVE',
+        name: 'Actif',
+        description: 'Étudiant actif',
+        color: '#28a745',
+      },
+      statusHistory: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ];
+
+  beforeEach(async () => {
+    const studentServiceSpy = jasmine.createSpyObj('StudentService', [
+      'getStudents',
+      'deleteStudent',
+    ]);
+    studentServiceSpy.getStudents.and.returnValue(of({ students: mockStudents, total: 1 }));
+    studentServiceSpy.deleteStudent.and.returnValue(of(void 0));
+
+    await TestBed.configureTestingModule({
+      imports: [RouterTestingModule, StudentListComponent, StudentSearchComponent],
+      providers: [{ provide: StudentService, useValue: studentServiceSpy }],
+    }).compileComponents();
+
+    studentService = TestBed.inject(StudentService) as jasmine.SpyObj<StudentService>;
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(StudentListComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should load students on init', () => {
+    expect(studentService.getStudents).toHaveBeenCalled();
+    expect(component.students).toEqual(mockStudents);
+  });
+
+  it('should update sort configuration when sorting', () => {
+    component.sort('personalInfo.firstName');
+    expect(component.sortConfig).toEqual({
+      field: 'personalInfo.firstName',
+      direction: 'asc',
+    });
+
+    component.sort('personalInfo.firstName');
+    expect(component.sortConfig).toEqual({
+      field: 'personalInfo.firstName',
+      direction: 'desc',
+    });
+  });
+
+  it('should change page', () => {
+    component.changePage(2);
+    expect(component.currentPage).toBe(2);
+    expect(studentService.getStudents).toHaveBeenCalled();
+  });
+
+  it('should not change page if invalid page number', () => {
+    const currentPage = component.currentPage;
+    component.changePage(0);
+    expect(component.currentPage).toBe(currentPage);
+  });
+
+  it('should update filters on search', () => {
+    const searchTerm = 'test';
+    component.onSearch(searchTerm);
+    expect(component.filters.firstName).toBe(searchTerm);
+    expect(component.filters.lastName).toBe(searchTerm);
+    expect(component.filters.email).toBe(searchTerm);
+    expect(component.currentPage).toBe(1);
+  });
+
+  it('should delete student after confirmation', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    component.deleteStudent(1);
+    expect(studentService.deleteStudent).toHaveBeenCalledWith(1);
+  });
+
+  it('should not delete student if not confirmed', () => {
+    spyOn(window, 'confirm').and.returnValue(false);
+    component.deleteStudent(1);
+    expect(studentService.deleteStudent).not.toHaveBeenCalled();
+  });
+});

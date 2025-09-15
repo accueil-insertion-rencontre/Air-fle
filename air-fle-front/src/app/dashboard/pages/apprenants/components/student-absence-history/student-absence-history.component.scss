@@ -1,0 +1,56 @@
+.attendance-history-container {
+  .stat-item {
+    padding: 10px;
+
+    .stat-number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6c757d;
+      font-weight: 500;
+    }
+  }
+
+  .course-info {
+    .course-title {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+  }
+
+  .table {
+    th {
+      border-top: none;
+      font-weight: 600;
+      color: #495057;
+      background-color: #f8f9fa;
+    }
+
+    td {
+      vertical-align: middle;
+    }
+
+    tbody tr:hover {
+      background-color: rgba(0, 123, 255, 0.05);
+    }
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.6em;
+  }
+
+  .card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+
+    .card-header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    }
+  }
+}

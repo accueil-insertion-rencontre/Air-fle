@@ -1,0 +1,123 @@
+<div class="exit-reasons-container">
+  <div class="exit-reasons-actions">
+    <button class="back-btn" (click)="goBack()">
+      <span class="btn-icon">←</span>
+      Retour
+    </button>
+  <h2 class="d-flex align-items-center gap-2">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+    Raisons de Sortie
+  </h2>
+    <button class="create-btn" (click)="openCreateModal()">
+      <span class="btn-icon">+</span>
+      Ajouter une raison
+    </button>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    <p>{{ error }}</p>
+    <button (click)="error = null" class="close-error">×</button>
+  </div>
+
+  <div class="exit-reasons-content">
+    <div class="exit-reasons-list">
+      <div class="exit-reasons-header">
+        <div class="column name">RAISON</div>
+        <div class="column actions">ACTIONS</div>
+      </div>
+
+      <div *ngIf="isLoading" class="loading-indicator">
+        <div class="spinner"></div>
+        <span>Chargement des raisons de sortie...</span>
+      </div>
+
+      <div *ngFor="let reason of exitReasons; trackBy: trackByReasonId" class="exit-reason-item">
+        <div class="column name">
+          <div class="exit-reason-name">{{ reason.reason }}</div>
+        </div>
+        <div class="column actions">
+          <button class="edit-btn" (click)="openEditModal(reason)">Modifier</button>
+          <button class="delete-btn" (click)="deleteExitReason(reason)">Supprimer</button>
+        </div>
+      </div>
+
+      <div *ngIf="!isLoading && exitReasons.length === 0" class="empty-state">
+        <p>Aucune raison de sortie trouvée</p>
+        <button class="create-btn" (click)="openCreateModal()">
+          <span class="btn-icon">+</span>
+          Ajouter une raison
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de création -->
+<div class="modal-overlay" *ngIf="isCreateModalOpen" (click)="closeCreateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Ajouter une raison de sortie</h2>
+      <button class="close-btn" (click)="closeCreateModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="createForm" (ngSubmit)="createExitReason()">
+        <div class="form-group">
+          <label for="createReason">Raison *</label>
+          <input
+            id="createReason"
+            type="text"
+            formControlName="reason"
+            placeholder="Ex: Formation terminée, Abandon, Déménagement..."
+            [class.error]="createReason?.invalid && createReason?.touched"
+          />
+          <div *ngIf="createReason?.invalid && createReason?.touched" class="error-text">
+            <span *ngIf="createReason?.hasError('required')">La raison est requise</span>
+            <span *ngIf="createReason?.hasError('minlength')"
+              >La raison doit contenir au moins 2 caractères</span
+            >
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" (click)="closeCreateModal()">Annuler</button>
+          <button type="submit" class="submit-btn" [disabled]="createForm.invalid">Créer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal d'édition -->
+<div class="modal-overlay" *ngIf="isEditModalOpen" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Modifier la raison de sortie</h2>
+      <button class="close-btn" (click)="closeEditModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="editForm" (ngSubmit)="updateExitReason()">
+        <div class="form-group">
+          <label for="editReason">Raison *</label>
+          <input
+            id="editReason"
+            type="text"
+            formControlName="reason"
+            placeholder="Ex: Formation terminée, Abandon, Déménagement..."
+            [class.error]="editReason?.invalid && editReason?.touched"
+          />
+          <div *ngIf="editReason?.invalid && editReason?.touched" class="error-text">
+            <span *ngIf="editReason?.hasError('required')">La raison est requise</span>
+            <span *ngIf="editReason?.hasError('minlength')"
+              >La raison doit contenir au moins 2 caractères</span
+            >
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" (click)="closeEditModal()">Annuler</button>
+          <button type="submit" class="submit-btn" [disabled]="editForm.invalid">
+            Sauvegarder
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,317 @@
+@use 'sass:color';
+
+$navbar-height: 80px;
+$dropdown-bg: #ffffff;
+$dropdown-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+$dropdown-border: rgba(0, 0, 0, 0.05);
+$primary-color: #4fd1c5;
+$outline-color: #e2e8f0;
+$text-color: #2d3748;
+$muted-color: #718096;
+$hover-bg: #f7fafc;
+$active-color: #4299e1;
+$border-radius: 12px;
+$spacing: 20px;
+$mobile-breakpoint: 768px;
+$small-screen-breakpoint: 480px;
+
+@mixin transition($property: all, $duration: 0.3s, $timing: ease) {
+  transition: $property $duration $timing;
+}
+
+// Classe pour les éléments visibles uniquement en mobile
+.mobile-only {
+  display: none;
+
+  @media (max-width: $mobile-breakpoint) {
+    display: flex;
+  }
+}
+
+.navbar {
+  min-height: $navbar-height;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px $spacing;
+  background-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+
+  .navbar-left,
+  .navbar-right {
+    display: flex;
+    align-items: center;
+  }
+
+  .sidebar-toggle {
+    display: none; // Caché par défaut
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-right: 15px;
+
+    @media (max-width: $mobile-breakpoint) {
+      display: flex; // Visible uniquement en version mobile
+    }
+
+    &:hover {
+      background-color: $hover-bg;
+    }
+
+    .toggle-icon {
+      position: relative;
+      width: 20px;
+      height: 2px;
+      background-color: $text-color;
+
+      &::before,
+      &::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 2px;
+        background-color: $text-color;
+        left: 0;
+        @include transition(transform);
+      }
+
+      &::before {
+        top: -6px;
+      }
+
+      &::after {
+        bottom: -6px;
+      }
+    }
+  }
+
+  // Structure du header
+  .page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  // Fil d'Ariane
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+
+    .breadcrumb-item {
+      font-size: 14px;
+      color: $muted-color;
+      text-decoration: none;
+
+      &:hover:not(.active) {
+        color: color.adjust($muted-color, $lightness: -10%);
+      }
+
+      &.active {
+        color: $text-color;
+        font-weight: 500;
+      }
+    }
+
+    .breadcrumb-separator {
+      margin: 0 8px;
+      color: $muted-color;
+    }
+  }
+
+  // Titre de la page
+  .page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: $text-color;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  // Boutons
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    @include transition();
+    margin-left: 10px;
+
+    &.btn-outline {
+      border: 1px solid $outline-color;
+      background-color: transparent;
+      color: $text-color;
+
+      &:hover {
+        background-color: $hover-bg;
+        border-color: color.adjust($outline-color, $lightness: -5%);
+      }
+    }
+
+    &.btn-primary {
+      background-color: $primary-color;
+      color: white;
+      border: none;
+
+      &:hover {
+        background-color: color.adjust($primary-color, $lightness: -5%);
+        box-shadow: 0 2px 6px rgba(79, 209, 197, 0.25);
+      }
+    }
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 15px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: $hover-bg;
+    }
+
+    &.user-profile {
+      position: relative;
+      min-width: 120px;
+      padding: 0 12px;
+
+      .user-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: $text-color;
+        margin-right: 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px;
+      }
+
+      .dropdown-icon {
+        position: relative;
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 4px;
+          left: 0;
+          width: 0;
+          height: 0;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-top: 5px solid $text-color;
+          @include transition(transform);
+        }
+
+        &.open::before {
+          transform: rotate(180deg);
+        }
+      }
+
+      .user-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        width: 200px;
+        background-color: $dropdown-bg;
+        border-radius: 8px;
+        box-shadow: $dropdown-shadow;
+        z-index: 1000;
+        overflow: hidden;
+        animation: dropdownFadeIn 0.2s ease;
+
+        .dropdown-item {
+          display: flex;
+          align-items: center;
+          padding: 12px 16px;
+          cursor: pointer;
+
+          &:hover {
+            background-color: $hover-bg;
+          }
+
+          i {
+            display: inline-block;
+            width: 20px;
+            margin-right: 12px;
+            font-size: 16px;
+            color: $muted-color;
+          }
+
+          span {
+            color: $text-color;
+            font-size: 14px;
+          }
+        }
+
+        .dropdown-divider {
+          height: 1px;
+          background-color: $dropdown-border;
+          margin: 0;
+        }
+      }
+    }
+  }
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.profile-icon::before {
+  content: '';
+}
+
+.logout-icon::before {
+  content: '';
+}
+
+@media (max-width: $mobile-breakpoint) {
+  .navbar {
+    padding: 10px calc($spacing / 2);
+
+    .breadcrumb {
+      display: none;
+    }
+
+    .btn.btn-outline {
+      display: none;
+    }
+
+    .btn.btn-primary {
+      display: none; // Masquer complètement le bouton "OUVRIR UN TICKET" en mobile
+    }
+
+    .page-title {
+      font-size: 20px;
+    }
+
+    .user-profile {
+      .user-name {
+        display: none;
+      }
+    }
+  }
+}

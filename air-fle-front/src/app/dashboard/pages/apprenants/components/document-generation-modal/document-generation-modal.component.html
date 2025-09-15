@@ -1,0 +1,74 @@
+<div *ngIf="isOpen" class="modal-overlay" (click)="onOverlayClick($event)">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3>
+        <i class="fas fa-file-alt"></i>
+        Génération de Documents
+      </h3>
+      <button class="close-btn" (click)="close()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Informations de l'étudiant -->
+      <div class="student-info">
+        <h4>
+          <i class="fas fa-user"></i>
+          {{ studentName }}
+        </h4>
+      </div>
+
+      <!-- Messages d'erreur -->
+      <div *ngIf="error" class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ error }}
+      </div>
+
+      <!-- Types de documents disponibles -->
+      <div class="document-types">
+        <h5>
+          <i class="fas fa-list"></i>
+          Types de documents
+        </h5>
+        
+        <!-- Loader pendant téléchargement -->
+        <div *ngIf="isLoading" class="loading-section">
+          <div class="spinner"></div>
+          <p>Téléchargement en cours...</p>
+        </div>
+
+        <div *ngIf="!isLoading" class="document-grid">
+          <div *ngFor="let docType of documentTypes" 
+               class="document-card"
+               [class.disabled]="!docType.available"
+               (click)="generateDocument(docType)">
+            <div class="card-header">
+              <i [class]="docType.icon"></i>
+              <span class="availability-badge" *ngIf="!docType.available">Bientôt</span>
+            </div>
+            <div class="card-body">
+              <h6>{{ docType.name }}</h6>
+              <p>{{ docType.description }}</p>
+            </div>
+            <div class="card-footer" *ngIf="docType.available">
+              <button class="generate-btn">
+                <i class="fas fa-download"></i>
+                Télécharger
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="close()">
+        <i class="fas fa-times"></i>
+        Fermer
+      </button>
+    </div>
+  </div>
+</div> 

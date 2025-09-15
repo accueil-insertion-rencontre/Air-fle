@@ -1,0 +1,990 @@
+<div class="container-fluid">
+  <!-- En-tête du planning -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h2>Planning des cours</h2>
+    </div>
+    <div class="col-md-6">
+      <!-- Sélecteur de session custom -->
+      <div class="session-select">
+        <label>Session</label>
+        <div class="select-wrap">
+          <select [(ngModel)]="selectedSessionId" (change)="onSessionChange(selectedSessionId)">
+            <option value="">Toutes les sessions</option>
+            <option *ngFor="let session of sessions" [value]="session.session_uuid || session.id">{{ session.label }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation du planning (custom) -->
+  <div class="week-nav">
+    <button class="chip-btn" (click)="previousWeek()" aria-label="Semaine précédente">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Semaine précédente</span>
+    </button>
+    <div class="week-title">{{ getWeekDisplay() }}</div>
+    <button class="chip-btn" (click)="nextWeek()" aria-label="Semaine suivante">
+      <span>Semaine suivante</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <!-- Planning -->
+  <div class="row">
+    <div class="col-12">
+      <div class="calendar-grid">
+        <!-- En-tête avec les jours -->
+        <div class="calendar-header">
+          <div *ngFor="let day of weekDays" class="day-column-header" [class.today]="day.isToday">
+            <div class="day-name">{{ day.dayName }}</div>
+            <div class="day-number">{{ day.dayNumber }}</div>
+          </div>
+        </div>
+
+        <!-- Colonnes des jours avec les cours -->
+        <div class="calendar-body">
+          <div
+            *ngFor="let day of weekDays"
+            class="day-column"
+            [class.today]="day.isToday"
+            (click)="onDayClick(day)"
+          >
+            <!-- Cours pour ce jour -->
+            <div
+              *ngFor="let course of getCoursesForDay(day)"
+              class="course-card"
+              [style.background-color]="getCourseColorWithOpacity(course)"
+              [style.--course-color]="getCourseColor(course)"
+              (click)="onCourseClick($event, course)"
+            >
+              <!-- Horaires du cours -->
+              <div class="course-time">{{ course.course_start_hour || course.start_hour }} - {{ course.course_end_hour || course.end_hour }}</div>
+
+              <!-- Titre du cours -->
+              <div class="course-title" [style.color]="getCourseColor(course)" *ngIf="course.course_name || course.title">
+                {{ course.course_name || course.title }}
+              </div>
+
+              <!-- Nom du professeur -->
+              <div
+                class="course-teacher"
+                *ngIf="course.user && (course.user.user_firstname || course.user.firstname || course.user.user_lastname || course.user.lastname)"
+              >
+                {{ course.user.user_firstname || course.user.firstname }} {{ course.user.user_lastname || course.user.lastname }}
+              </div>
+
+              <!-- Nom du groupe -->
+              <div class="course-group" *ngIf="course.group && (course.group.group_label || course.group.label)">
+                {{ course.group.group_label || course.group.label }}
+              </div>
+            </div>
+
+            <!-- Zone d'ajout si pas de cours -->
+            <div *ngIf="getCoursesForDay(day).length === 0" class="add-course-zone">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted" aria-hidden="true" style="margin-bottom:5px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span class="text-muted">Ajouter un cours</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de création de cours (custom) -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="onCancelCourse()"></div>
+<div class="modal-content-custom" *ngIf="showCreateModal" (click)="$event.stopPropagation()">
+  <div class="modal-header-custom">
+    <h5 class="modal-title">Nouveau cours</h5>
+    <button class="icon-btn" (click)="onCancelCourse()" aria-label="Fermer">×</button>
+  </div>
+  <form [formGroup]="courseForm" (ngSubmit)="onSubmitCourse()">
+    <div class="modal-body-custom">
+          <!-- Date sélectionnée ou mode multi-dates -->
+          <div class="alert" [ngClass]="isMultiDateMode ? 'alert-warning' : 'alert-info'">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <i class="fas fa-calendar me-2"></i>
+                <strong *ngIf="!isMultiDateMode">Date sélectionnée :</strong>
+                <strong *ngIf="isMultiDateMode">Mode multi-dates activé :</strong>
+                <span *ngIf="!isMultiDateMode">{{
+                  selectedDate | date: 'fullDate' : '' : 'fr-FR'
+                }}</span>
+                <span *ngIf="isMultiDateMode"
+                  >{{ selectedDates.length }} date(s) sélectionnée(s)</span
+                >
+              </div>
+              <button
+                type="button"
+                class="btn btn-sm"
+                [ngClass]="isMultiDateMode ? 'btn-warning' : 'btn-outline-secondary'"
+                (click)="toggleMultiDateMode()"
+              >
+                <i class="fas fa-calendar-plus me-1"></i>
+                {{ isMultiDateMode ? 'Mode simple' : 'Multi-dates' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Configuration multi-dates -->
+          <div *ngIf="isMultiDateMode" class="card mb-3">
+            <div class="card-header">
+              <h6 class="card-title mb-0">
+                <i class="fas fa-calendar-week me-2"></i>Configuration des dates
+              </h6>
+            </div>
+            <div class="card-body">
+              <!-- Type de récurrence -->
+              <div class="mb-3">
+                <label class="form-label">Type de récurrence</label>
+                <div class="row g-2">
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        name="recurrenceType"
+                        id="recurrenceNone"
+                        [checked]="recurrenceType === 'none'"
+                        (change)="onRecurrenceTypeChange('none')"
+                      />
+                      <label class="form-check-label" for="recurrenceNone">
+                        Aucune récurrence
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        name="recurrenceType"
+                        id="recurrenceWeekly"
+                        [checked]="recurrenceType === 'weekly'"
+                        (change)="onRecurrenceTypeChange('weekly')"
+                      />
+                      <label class="form-check-label" for="recurrenceWeekly">
+                        Récurrence hebdomadaire
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-check">
+                      <input
+                        class="form-check-input"
+                        type="radio"
+                        name="recurrenceType"
+                        id="recurrenceCustom"
+                        [checked]="recurrenceType === 'custom'"
+                        (change)="onRecurrenceTypeChange('custom')"
+                      />
+                      <label class="form-check-label" for="recurrenceCustom">
+                        Dates personnalisées
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Configuration récurrence hebdomadaire -->
+              <div *ngIf="recurrenceType === 'weekly'" class="mb-3">
+                <label for="weeklyOccurrences" class="form-label">Nombre d'occurrences</label>
+                <div class="input-group" style="max-width: 200px">
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    (click)="onWeeklyOccurrencesChange(weeklyOccurrences - 1)"
+                    [disabled]="weeklyOccurrences <= 1"
+                  >
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <input
+                    type="number"
+                    class="form-control text-center"
+                    id="weeklyOccurrences"
+                    [value]="weeklyOccurrences"
+                    (input)="onWeeklyOccurrencesChange($any($event.target).value)"
+                    min="1"
+                    [max]="maxWeeklyOccurrences"
+                  />
+                  <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    (click)="onWeeklyOccurrencesChange(weeklyOccurrences + 1)"
+                    [disabled]="weeklyOccurrences >= maxWeeklyOccurrences"
+                  >
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+                <small class="form-text text-muted">
+                  Créer ce cours {{ weeklyOccurrences }} fois, chaque semaine à partir du
+                  {{ selectedDate | date: 'shortDate' : '' : 'fr-FR' }}
+                </small>
+              </div>
+
+              <!-- Configuration dates personnalisées -->
+              <div *ngIf="recurrenceType === 'custom'" class="mb-3">
+                <label class="form-label">Ajouter une date</label>
+                <div class="input-group mb-2" style="max-width: 300px">
+                  <input type="date" class="form-control" #customDateInput [min]="selectedDate" />
+                  <button
+                    class="btn btn-outline-primary"
+                    type="button"
+                    (click)="addCustomDate(customDateInput.value); customDateInput.value = ''"
+                  >
+                    <i class="fas fa-plus"></i> Ajouter
+                  </button>
+                </div>
+              </div>
+
+              <!-- Liste des dates sélectionnées -->
+              <div *ngIf="selectedDates.length > 0" class="mb-3">
+                <label class="form-label">Dates sélectionnées ({{ selectedDates.length }})</label>
+                <div class="row g-2">
+                  <div class="col-md-6" *ngFor="let date of selectedDates; let i = index">
+                    <div
+                      class="d-flex align-items-center justify-content-between bg-light p-2 rounded"
+                    >
+                      <small class="text-muted me-2">{{ i + 1 }}.</small>
+                      <span class="flex-grow-1">{{ formatDateForDisplay(date) }}</span>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        (click)="removeCustomDate(date)"
+                        [disabled]="selectedDates.length === 1"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <small class="form-text text-muted">
+                  Un cours sera créé pour chacune de ces dates avec les mêmes paramètres.
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Groupe -->
+          <div class="mb-3">
+            <label for="courseGroup" class="form-label"
+              >Groupe <span class="text-danger">*</span></label
+            >
+            <select
+              id="courseGroup"
+              class="form-select"
+              formControlName="group_uuid"
+              [class.is-invalid]="isFieldInvalid('group_uuid')"
+            >
+              <option value="">Sélectionner un groupe</option>
+              <option
+                *ngFor="let group of groups; trackBy: trackByGroupId"
+                [value]="group.group_uuid || group.group_id"
+              >
+                {{ group.group_label || group.label }} ({{ group.session?.session_label || group.session?.label || 'Session' }})
+              </option>
+            </select>
+            <div *ngIf="isFieldInvalid('group_uuid')" class="invalid-feedback">
+              Le groupe est obligatoire
+            </div>
+          </div>
+
+          <!-- Professeur assigné -->
+          <div class="mb-3">
+            <label for="courseTeacher" class="form-label">Professeur assigné</label>
+            <select id="courseTeacher" class="form-select" formControlName="user_uuid">
+              <option value="">Aucun professeur assigné</option>
+              <option *ngFor="let teacher of teachers" [value]="teacher.user_uuid">
+                {{ teacher.fullName }} ({{ teacher.user_mail }})
+              </option>
+            </select>
+            <small class="form-text text-muted">
+              Sélectionnez un professeur ou laissez vide si aucun n'est assigné pour le moment
+            </small>
+          </div>
+
+          <!-- Couleur du cours -->
+          <div class="mb-3">
+            <label for="courseColor" class="form-label">Couleur du cours</label>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <select class="form-select" id="courseColor" formControlName="course_color">
+                  <option value="">Couleur par défaut (basée sur le groupe)</option>
+                  <option *ngFor="let color of predefinedColors" [value]="color.value">
+                    {{ color.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <input
+                  type="color"
+                  class="form-control form-control-color"
+                  id="customColor"
+                  formControlName="course_color"
+                  style="height: 38px"
+                  title="Choisir une couleur personnalisée"
+                />
+              </div>
+            </div>
+            <small class="form-text text-muted">
+              Choisissez une couleur prédéfinie ou utilisez le sélecteur pour une couleur
+              personnalisée
+            </small>
+          </div>
+
+          <!-- Intitulé du cours -->
+          <div class="mb-3">
+            <label for="courseTitle" class="form-label"
+              >Intitulé du cours <span class="text-danger">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="courseTitle"
+              formControlName="course_name"
+              [class.is-invalid]="isFieldInvalid('course_name')"
+              placeholder="Ex: Grammaire française A1"
+            />
+            <div *ngIf="isFieldInvalid('course_name')" class="invalid-feedback">
+              L'intitulé du cours est obligatoire (minimum 3 caractères)
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Heure de début -->
+            <div class="col-md-6 mb-3">
+              <label for="courseStartHour" class="form-label"
+                >Heure de début <span class="text-danger">*</span></label
+              >
+              <select
+                id="courseStartHour"
+                class="form-select"
+                formControlName="course_start_hour"
+                [class.is-invalid]="isFieldInvalid('course_start_hour')"
+              >
+                <option value="">Sélectionner une heure</option>
+                <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+              </select>
+              <div *ngIf="isFieldInvalid('course_start_hour')" class="invalid-feedback">
+                L'heure de début est obligatoire
+              </div>
+            </div>
+
+            <!-- Heure de fin -->
+            <div class="col-md-6 mb-3">
+              <label for="courseEndHour" class="form-label"
+                >Heure de fin <span class="text-danger">*</span></label
+              >
+              <select
+                id="courseEndHour"
+                class="form-select"
+                formControlName="course_end_hour"
+                [class.is-invalid]="isFieldInvalid('course_end_hour')"
+              >
+                <option value="">Sélectionner une heure</option>
+                <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+              </select>
+              <div *ngIf="isFieldInvalid('course_end_hour')" class="invalid-feedback">
+                L'heure de fin est obligatoire
+              </div>
+            </div>
+          </div>
+
+          <!-- Message d'erreur -->
+          <div *ngIf="error" class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+          </div>
+    </div>
+    <div class="modal-footer-custom">
+      <button type="button" class="btn ghost" (click)="onCancelCourse()">Annuler</button>
+      <button type="submit" class="btn primary" [disabled]="loading || courseForm.invalid">
+        <span *ngIf="!isMultiDateMode">Créer le cours</span>
+        <span *ngIf="isMultiDateMode">Créer {{ selectedDates.length }} cours</span>
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Modal de détail de cours (custom) -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="onCloseDetailsModal()"></div>
+<div class="modal-content-custom xl" *ngIf="showDetailsModal" (click)="$event.stopPropagation()">
+  <div class="modal-header-custom">
+    <div>
+      <h5 class="modal-title">Détails du cours</h5>
+      <small class="muted" *ngIf="selectedCourse">
+        {{ selectedCourse.day | date: 'fullDate' : '' : 'fr-FR' }} • {{ selectedCourse.start_hour }} - {{ selectedCourse.end_hour }}
+      </small>
+    </div>
+    <div class="actions">
+      <button class="chip-btn warning" *ngIf="selectedCourse" (click)="onEditCourse()">Modifier</button>
+      <button class="chip-btn danger" *ngIf="selectedCourse" (click)="onDeleteCourse()">Supprimer</button>
+      <button class="icon-btn" (click)="onCloseDetailsModal()">×</button>
+    </div>
+  </div>
+  <div class="modal-body-custom">
+        <div *ngIf="loadingCourseDetails" class="text-center my-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Chargement...</span>
+          </div>
+          <p class="mt-2">Chargement des détails du cours...</p>
+        </div>
+
+        <div *ngIf="!loadingCourseDetails && selectedCourse">
+          <!-- Informations du cours -->
+          <div class="row mb-4">
+            <div class="col-md-8">
+              <div class="card">
+                <div class="card-header d-flex align-items-center">
+                  <i class="fas fa-info-circle me-2"></i>
+                  <span>Informations générales</span>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <p><strong>Titre :</strong> {{ selectedCourse.title }}</p>
+                      <p>
+                        <strong>Date :</strong>
+                        {{ selectedCourse.day | date: 'fullDate' : '' : 'fr-FR' }}
+                      </p>
+                      <p>
+                        <strong>Horaires :</strong> {{ selectedCourse.start_hour }} -
+                        {{ selectedCourse.end_hour }}
+                      </p>
+                    </div>
+                    <div class="col-md-6">
+                      <p>
+                        <strong>Groupe :</strong> {{ selectedCourse.group?.label || 'Non défini' }}
+                      </p>
+                      <p>
+                        <strong>Session :</strong>
+                        {{ selectedCourse.session?.label || 'Non définie' }}
+                      </p>
+                      <div class="d-flex align-items-center">
+                        <strong class="me-2">Couleur :</strong>
+                        <div
+                          class="rounded me-2"
+                          [style.background-color]="getCourseColor(selectedCourse)"
+                          style="width: 30px; height: 20px; border: 1px solid #ddd"
+                        ></div>
+                        <span class="text-muted small">
+                          {{
+                            selectedCourse.color
+                              ? selectedCourse.color
+                              : 'Par défaut (basée sur le groupe)'
+                          }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Professeur assigné -->
+                  <div class="row mt-3" *ngIf="selectedCourse.user">
+                    <div class="col-12">
+                      <div class="alert alert-info">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>
+                        <strong>Professeur assigné :</strong>
+                        {{ selectedCourse.user.firstname }} {{ selectedCourse.user.lastname }}
+                        <span class="text-muted" *ngIf="selectedCourse.user.email">
+                          ({{ selectedCourse.user.email }})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Aucun professeur -->
+                  <div class="row mt-3" *ngIf="!selectedCourse.user">
+                    <div class="col-12">
+                      <div class="alert alert-warning">
+                        <i class="fas fa-user-slash me-2"></i>
+                        <strong>Aucun professeur assigné</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-header">
+                  <h6 class="card-title mb-0"><i class="fas fa-chart-bar me-2"></i>Statistiques</h6>
+                </div>
+                <div class="card-body">
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Élèves inscrits :</span>
+                    <strong>{{ courseStudents.length }}</strong>
+                  </div>
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Présents :</span>
+                    <strong class="text-success">{{ getPresentStudentsCount() }}</strong>
+                  </div>
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Absents :</span>
+                    <strong class="text-danger">{{ getAbsentStudentsCount() }}</strong>
+                  </div>
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Absents avec justification :</span>
+                    <strong class="text-warning">{{ getAbsentJustifiedStudentsCount() }}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Liste des élèves - version custom (sans Bootstrap) -->
+          <div class="section students">
+            <div class="section-header">
+              <h6>Liste des élèves ({{ courseStudents.length }})</h6>
+              <div class="actions-inline">
+                <button class="chip success" (click)="markAllStudentsPresent()">
+                  Marquer tous présents
+                </button>
+                <button class="chip danger" (click)="markAllStudentsAbsent()">
+                  Marquer tous absents
+                </button>
+              </div>
+            </div>
+            <div class="section-body">
+              <div *ngIf="courseStudents.length === 0" class="empty">Aucun élève inscrit dans ce groupe</div>
+              <div *ngIf="courseStudents.length > 0" class="students-list">
+                <div class="students-header">
+                  <div class="col name">Nom</div>
+                  <div class="col firstname">Prénom</div>
+                  <div class="col email">Email</div>
+                  <div class="col status">Statut</div>
+                  <div class="col actions">Actions</div>
+                </div>
+                <div class="students-row" *ngFor="let student of courseStudents; trackBy: trackByStudentId">
+                  <div class="col name">{{ student.student_lastname }}</div>
+                  <div class="col firstname">{{ student.student_firstname }}</div>
+                  <div class="col email">{{ student.student_mail || '-' }}</div>
+                  <div class="col status">
+                    <span class="status-badge" [ngClass]="{
+                      'success': isStudentPresent(student),
+                      'danger': isStudentAbsent(student),
+                      'warning': isStudentAbsentJustified(student)
+                    }">{{ getStudentStatusLabel(student) }}</span>
+                  </div>
+                  <div class="col actions">
+                    <button class="icon-btn" [class.active]="isStudentPresent(student)" (click)="markStudentPresent(student)" title="Présent" aria-label="Présent">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                    </button>
+                    <button class="icon-btn danger" [class.active]="isStudentAbsent(student)" (click)="markStudentAbsent(student)" title="Absent" aria-label="Absent">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                    <button class="icon-btn warning" [class.active]="isStudentAbsentJustified(student)" (click)="markStudentAbsentJustified(student)" title="Justifié" aria-label="Justifié">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M21 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  <div class="modal-footer-custom">
+    <button class="btn ghost" (click)="onCloseDetailsModal()">Fermer</button>
+    <button class="btn primary" *ngIf="selectedCourse" [disabled]="isSaving" (click)="saveAllAttendances()">
+      {{ isSaving ? 'Enregistrement...' : 'Enregistrer les présences' }}
+    </button>
+  </div>
+</div>
+
+<!-- Modal d'édition de cours (custom) -->
+<div class="modal-overlay" *ngIf="showEditModal" (click)="onCancelEditCourse()"></div>
+<div class="modal-content-custom" *ngIf="showEditModal" (click)="$event.stopPropagation()">
+  <div class="modal-header-custom">
+    <h5 class="modal-title">Modifier le cours</h5>
+    <button class="icon-btn" (click)="onCancelEditCourse()">×</button>
+  </div>
+  <form [formGroup]="editCourseForm" (ngSubmit)="onSubmitEditCourse()">
+    <div class="modal-body-custom">
+          <!-- Date sélectionnée -->
+          <div class="alert alert-info">
+            <i class="fas fa-calendar me-2"></i>
+            <strong>Date :</strong> {{ selectedCourse?.day | date: 'fullDate' : '' : 'fr-FR' }}
+          </div>
+
+          <!-- Groupe -->
+          <div class="mb-3">
+            <label for="editCourseGroup" class="form-label"
+              >Groupe <span class="text-danger">*</span></label
+            >
+            <select
+              id="editCourseGroup"
+              class="form-select"
+              formControlName="group_uuid"
+              [class.is-invalid]="isEditFieldInvalid('group_uuid')"
+            >
+              <option value="">Sélectionner un groupe</option>
+              <option
+                *ngFor="let group of groups; trackBy: trackByGroupId"
+                [value]="group.group_uuid || group.group_id"
+              >
+                {{ group.group_label || group.label }} ({{ group.session?.session_label || group.session?.label || 'Session' }})
+              </option>
+            </select>
+            <div *ngIf="isEditFieldInvalid('group_uuid')" class="invalid-feedback">
+              Le groupe est obligatoire
+            </div>
+          </div>
+
+          <!-- Professeur assigné -->
+          <div class="mb-3">
+            <label for="editUser_id" class="form-label">Professeur assigné</label>
+            <select class="form-select" id="editUser_id" formControlName="user_uuid">
+              <option value="">Aucun professeur assigné</option>
+              <option *ngFor="let teacher of teachers" [value]="teacher.user_uuid">
+                {{ teacher.fullName }} ({{ teacher.user_mail }})
+              </option>
+            </select>
+            <small class="form-text text-muted">
+              Sélectionnez un professeur ou laissez vide si aucun n'est assigné
+            </small>
+          </div>
+
+          <!-- Couleur du cours -->
+          <div class="mb-3">
+            <label for="editCourseColor" class="form-label">Couleur du cours</label>
+            <div class="row g-2">
+              <div class="col-md-6">
+                <select class="form-select" id="editCourseColor" formControlName="course_color">
+                  <option value="">Couleur par défaut (basée sur le groupe)</option>
+                  <option *ngFor="let color of predefinedColors" [value]="color.value">
+                    {{ color.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <input
+                  type="color"
+                  class="form-control form-control-color"
+                  id="editCustomColor"
+                  formControlName="course_color"
+                  style="height: 38px"
+                  title="Choisir une couleur personnalisée"
+                />
+              </div>
+            </div>
+            <small class="form-text text-muted">
+              Choisissez une couleur prédéfinie ou utilisez le sélecteur pour une couleur
+              personnalisée
+            </small>
+          </div>
+
+          <!-- Intitulé du cours -->
+          <div class="mb-3">
+            <label for="editCourseTitle" class="form-label"
+              >Intitulé du cours <span class="text-danger">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="editCourseTitle"
+              formControlName="course_name"
+              [class.is-invalid]="isEditFieldInvalid('course_name')"
+              placeholder="Ex: Grammaire française A1"
+            />
+            <div *ngIf="isEditFieldInvalid('course_name')" class="invalid-feedback">
+              L'intitulé du cours est obligatoire (minimum 3 caractères)
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Heure de début -->
+            <div class="col-md-6 mb-3">
+              <label for="editCourseStartHour" class="form-label"
+                >Heure de début <span class="text-danger">*</span></label
+              >
+              <select
+                id="editCourseStartHour"
+                class="form-select"
+                formControlName="course_start_hour"
+                [class.is-invalid]="isEditFieldInvalid('course_start_hour')"
+              >
+                <option value="">Sélectionner une heure</option>
+                <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+              </select>
+              <div *ngIf="isEditFieldInvalid('course_start_hour')" class="invalid-feedback">
+                L'heure de début est obligatoire
+              </div>
+            </div>
+
+            <!-- Heure de fin -->
+            <div class="col-md-6 mb-3">
+              <label for="editCourseEndHour" class="form-label"
+                >Heure de fin <span class="text-danger">*</span></label
+              >
+              <select
+                id="editCourseEndHour"
+                class="form-select"
+                formControlName="course_end_hour"
+                [class.is-invalid]="isEditFieldInvalid('course_end_hour')"
+              >
+                <option value="">Sélectionner une heure</option>
+                <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+              </select>
+              <div *ngIf="isEditFieldInvalid('course_end_hour')" class="invalid-feedback">
+                L'heure de fin est obligatoire
+              </div>
+            </div>
+          </div>
+
+          <!-- Date du cours (modification) -->
+          <div class="mb-3">
+            <label for="editCourseDay" class="form-label"
+              >Date du cours <span class="text-danger">*</span></label
+            >
+            <input
+              type="date"
+              class="form-control"
+              id="editCourseDay"
+              formControlName="day"
+              [class.is-invalid]="isEditFieldInvalid('day')"
+            />
+            <div *ngIf="isEditFieldInvalid('day')" class="invalid-feedback">
+              La date est obligatoire
+            </div>
+          </div>
+
+          <!-- Message d'erreur -->
+          <div *ngIf="editError" class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ editError }}
+          </div>
+    </div>
+    <div class="modal-footer-custom">
+      <button type="button" class="btn ghost" (click)="onCancelEditCourse()">
+        Annuler
+      </button>
+      <button type="submit" class="btn primary" [disabled]="editLoading || editCourseForm.invalid">
+        Enregistrer les modifications
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="cancelDeleteCourse()"></div>
+<div class="modal-content-custom delete" *ngIf="showDeleteConfirm" (click)="$event.stopPropagation()">
+  <div class="modal-header-custom">
+    <h5 class="modal-title">Confirmer la suppression</h5>
+    <button class="icon-btn" (click)="cancelDeleteCourse()">×</button>
+  </div>
+  <div class="modal-body-custom">
+    <div class="warning-box">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div>
+        <p><strong>Cette action est irréversible.</strong></p>
+        <p>Le cours et les absences associées seront définitivement supprimés.</p>
+      </div>
+    </div>
+    <div *ngIf="deleteError" class="alert error">{{ deleteError }}</div>
+  </div>
+  <div class="modal-footer-custom">
+    <button class="btn ghost" (click)="cancelDeleteCourse()">Annuler</button>
+    <button class="btn danger" [disabled]="deleteLoading" (click)="confirmDeleteCourse()">
+      {{ deleteLoading ? 'Suppression…' : 'Supprimer définitivement' }}
+    </button>
+  </div>
+</div>
+
+<style>
+  .calendar-grid {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  .week-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}
+  .week-title{font-weight:700;color:#111827;letter-spacing:.2px}
+  .chip-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid #e5e7eb;background:#fff;color:#111827;border-radius:999px;padding:8px 12px;cursor:pointer;transition:box-shadow .2s ease, transform .1s ease}
+  .chip-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.08);transform:translateY(-1px)}
+
+  /* Session select */
+  .session-select{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+  .session-select label{font-size:12px;color:#6b7280}
+  .select-wrap{position:relative}
+  .select-wrap select{appearance:none;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;background:#fff;min-width:200px}
+  .select-wrap::after{content:"▾";position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#6b7280;pointer-events:none}
+  /* Custom modals */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(2px);z-index:1050}
+  .modal-content-custom{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.18);width:min(860px,92vw);z-index:1060;display:flex;flex-direction:column;max-height:88vh}
+  .modal-content-custom.xl{width:min(980px,94vw)}
+  .modal-header-custom{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #e5e7eb}
+  .modal-header-custom .muted{color:#6b7280}
+  .modal-body-custom{padding:14px;overflow:auto}
+  .modal-footer-custom{display:flex;justify-content:flex-end;gap:10px;padding:12px 14px;border-top:1px solid #e5e7eb}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #e5e7eb;background:#fff;color:#111827;border-radius:10px;padding:8px 12px;cursor:pointer}
+  .btn.primary{background:#111827;color:#fff;border-color:#111827}
+  .btn.ghost{background:transparent}
+  .btn.danger{background:#dc2626;border-color:#dc2626;color:#fff}
+  .warning-box{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid #fde68a;background:#fffbeb;border-radius:10px;color:#92400e}
+
+  .calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+  }
+
+  .day-column-header {padding:14px 10px;text-align:center;border-right:1px solid #edf2f7;background:#f9fafb}
+
+  .day-column-header:last-child {
+    border-right: none;
+  }
+
+  .day-column-header.today {background: #eef7ff;color:#0b6bcb;font-weight: 700}
+
+  .day-name {font-size:.85rem;font-weight:700;color:#64748b;margin-bottom:6px}
+
+  .day-number {display:inline-block;font-size: .9rem;font-weight:700;color:#111827;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:4px 10px}
+
+  .calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    min-height: 500px;
+  }
+
+  .day-column {
+    border-right: 1px solid #dee2e6;
+    padding: 10px 8px;
+    min-height: 500px;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.2s;
+  }
+
+  .day-column:last-child {
+    border-right: none;
+  }
+
+  .day-column:hover {
+    background-color: #f8f9fa;
+  }
+
+  .day-column.today {
+    background-color: rgba(0, 123, 255, 0.02);
+  }
+
+  .course-card {
+    margin-bottom: 8px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    min-height: 120px;
+    max-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-left: 6px solid var(--course-color, #cbd5e1);
+  }
+
+  .course-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
+  }
+
+  .course-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    background-color: #cbd5e0 !important;
+  }
+
+  .course-time {
+    font-weight: 700;
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+    opacity: 1;
+    letter-spacing: 0.5px;
+    color: #000;
+    padding: 3px 8px;
+    border-radius: 10px;
+    display: inline-block;
+    text-shadow: none;
+  }
+
+  .course-title {
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    max-height: 2.4em;
+    opacity: 1;
+  }
+
+  .course-teacher {
+    font-size: 0.75rem;
+    opacity: 0.95;
+    margin-bottom: 3px;
+    font-weight: 500;
+    font-style: italic;
+    color: #000;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  }
+
+  .course-group {
+    font-size: 0.7rem;
+    opacity: 0.85;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 6px;
+    border-radius: 8px;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  }
+
+  .add-course-zone {display:flex;flex-direction:column;align-items:center;justify-content:center;height:80px;border:2px dashed #e5e7eb;border-radius:12px;background:#fff}
+
+  .add-course-zone:hover {border-color:#93c5fd;background:#f8fafc}
+
+  .add-course-zone i {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+  }
+
+  .add-course-zone span {
+    font-size: 0.8rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .calendar-header,
+    .calendar-body {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .day-column {
+      min-height: 200px;
+    }
+
+    .course-card {
+      font-size: 0.8rem;
+      padding: 6px;
+    }
+  }
+</style>

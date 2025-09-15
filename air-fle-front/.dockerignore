@@ -1,0 +1,31 @@
+# =============================================================================
+# FRONT DOCKERIGNORE - Angular Specific Rules Only
+# =============================================================================
+
+# Build outputs (Angular specific)
+dist/
+.angular/
+
+# Testing (Angular specific)
+coverage/
+cypress/
+cypress.config.ts
+*.spec.ts
+*.test.ts
+karma.conf.js
+testem.log
+
+# Angular specific files
+.sass-cache/
+connect.lock
+libpeerconnection.log
+typings/
+*.orig
+*.rej
+
+# Angular config
+tsconfig.spec.json
+angular.json
+
+# Scripts
+*.sh

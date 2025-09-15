@@ -1,0 +1,342 @@
+<div class="form-container">
+  <div class="form-header">
+    <h1>{{ isEditMode ? 'Modifier l\'apprenant' : 'Ajouter un apprenant' }}</h1>
+    <p>{{ isEditMode ? 'Mettre à jour les informations de l\'apprenant' : 'Créer un nouveau profil d\'apprenant dans le système' }}</p>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-indicator">
+    <div class="spinner"></div>
+    <span>Chargement des données...</span>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    <p>{{ error }}</p>
+  </div>
+
+  <form [formGroup]="studentForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading" class="student-form">
+    <!-- Section Informations Personnelles -->
+    <div class="form-section">
+      <h2>Informations Personnelles</h2>
+
+      <div class="form-row">
+        <div class="form-group required">
+          <label for="firstname">Prénom *</label>
+          <input
+            type="text"
+            id="firstname"
+            formControlName="firstname"
+            [class.invalid]="isFieldInvalid('firstname')"
+            placeholder="Entrez le prénom"
+            appAutoSanitize
+            sanitizeType="name"
+          />
+          <div class="error-text" *ngIf="isFieldInvalid('firstname')">
+            {{ getFieldError('firstname') }}
+          </div>
+        </div>
+
+        <div class="form-group required">
+          <label for="lastname">Nom *</label>
+          <input
+            type="text"
+            id="lastname"
+            formControlName="lastname"
+            [class.invalid]="isFieldInvalid('lastname')"
+            placeholder="Entrez le nom"
+            appAutoSanitize
+            sanitizeType="name"
+          />
+          <div class="error-text" *ngIf="isFieldInvalid('lastname')">
+            {{ getFieldError('lastname') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group required">
+          <label for="birthdate">Date de naissance *</label>
+          <input
+            type="date"
+            id="birthdate"
+            formControlName="birthdate"
+            [class.invalid]="isFieldInvalid('birthdate')"
+          />
+          <div class="error-text" *ngIf="isFieldInvalid('birthdate')">
+            {{ getFieldError('birthdate') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="placeOfBirth">Lieu de naissance</label>
+          <input
+            type="text"
+            id="placeOfBirth"
+            formControlName="placeOfBirth"
+            placeholder="Entrez le lieu de naissance"
+            appAutoSanitize
+            sanitizeType="text"
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            [class.invalid]="isFieldInvalid('email')"
+            placeholder="exemple@email.com"
+            appAutoSanitize
+            sanitizeType="email"
+          />
+          <div class="error-text" *ngIf="isFieldInvalid('email')">
+            {{ getFieldError('email') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">Téléphone</label>
+          <input
+            type="tel"
+            id="phone"
+            formControlName="phone"
+            [class.invalid]="isFieldInvalid('phone')"
+            placeholder="+33 1 23 45 67 89"
+            appAutoSanitize
+            sanitizeType="phone"
+          />
+          <div class="error-text" *ngIf="isFieldInvalid('phone')">
+            {{ getFieldError('phone') }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Informations Obligatoires -->
+    <div class="form-section">
+      <h2>Informations Obligatoires</h2>
+
+      <div class="form-row">
+        <div class="form-group required">
+          <label for="gender_id">Genre *</label>
+          <select
+            id="gender_id"
+            formControlName="gender_id"
+            [class.invalid]="isFieldInvalid('gender_id')"
+          >
+            <option value="">Sélectionnez un genre</option>
+            <option *ngFor="let gender of genders" [value]="gender.id">
+              {{ gender.label }}
+            </option>
+          </select>
+          <div class="error-text" *ngIf="isFieldInvalid('gender_id')">
+            {{ getFieldError('gender_id') }}
+          </div>
+        </div>
+
+        <div class="form-group required">
+          <label for="nationality_id">Nationalité *</label>
+          <select
+            id="nationality_id"
+            formControlName="nationality_id"
+            [class.invalid]="isFieldInvalid('nationality_id')"
+          >
+            <option value="">Sélectionnez une nationalité</option>
+            <option *ngFor="let nationality of nationalities" [value]="nationality.id">
+              {{ nationality.label }}
+            </option>
+          </select>
+          <div class="error-text" *ngIf="isFieldInvalid('nationality_id')">
+            {{ getFieldError('nationality_id') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group required">
+          <label for="initial_level_id">Niveau d'entrée *</label>
+          <select
+            id="initial_level_id"
+            formControlName="initial_level_id"
+            [class.invalid]="isFieldInvalid('initial_level_id')"
+          >
+            <option value="">Sélectionnez un niveau</option>
+            <option *ngFor="let level of frenchLevels" [value]="level.id">
+              {{ level.code }} - {{ level.description }}
+            </option>
+          </select>
+          <div class="error-text" *ngIf="isFieldInvalid('initial_level_id')">
+            {{ getFieldError('initial_level_id') }}
+          </div>
+          <small class="field-help">Niveau déterminé par le test de positionnement</small>
+        </div>
+
+        <div class="form-group">
+          <label for="current_level_id">Niveau actuel</label>
+          <select id="current_level_id" formControlName="current_level_id">
+            <option value="">Sélectionnez un niveau</option>
+            <option *ngFor="let level of frenchLevels" [value]="level.id">
+              {{ level.code }} - {{ level.description }}
+            </option>
+          </select>
+          <small class="field-help">Niveau actuel en cours de formation</small>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group required">
+          <label for="financing_id">Type de financement *</label>
+          <select
+            id="financing_id"
+            formControlName="financing_id"
+            [class.invalid]="isFieldInvalid('financing_id')"
+          >
+            <option value="">Sélectionnez un financement</option>
+            <option *ngFor="let financing of financings" [value]="financing.id">
+              {{ financing.type }}
+            </option>
+          </select>
+          <div class="error-text" *ngIf="isFieldInvalid('financing_id')">
+            {{ getFieldError('financing_id') }}
+          </div>
+        </div>
+
+        <div class="form-group required">
+          <label for="status_id">Statut *</label>
+          <select
+            id="status_id"
+            formControlName="status_id"
+            [class.invalid]="isFieldInvalid('status_id')"
+          >
+            <option value="">Sélectionnez un statut</option>
+            <option *ngFor="let status of statuses" [value]="status.id">
+              {{ status.label }}
+            </option>
+          </select>
+          <div class="error-text" *ngIf="isFieldInvalid('status_id')">
+            {{ getFieldError('status_id') }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="orientation_id">Orientation</label>
+          <select id="orientation_id" formControlName="orientation_id">
+            <option value="">Sélectionnez une orientation</option>
+            <option *ngFor="let orientation of orientations" [value]="orientation.id">
+              {{ orientation.type }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Handicaps -->
+    <div class="form-section">
+      <h2>Situation de handicap</h2>
+
+      <div class="form-group">
+        <div class="switch-container">
+          <label class="switch">
+            <input type="checkbox" formControlName="hasDisability" />
+            <span class="slider round"></span>
+          </label>
+          <span class="switch-label">Personne présentant un handicap ?</span>
+        </div>
+      </div>
+
+      <div *ngIf="studentForm.get('hasDisability')?.value" class="disabilities-selection">
+        <label class="section-label">Types de handicaps :</label>
+        <div class="disabilities-grid">
+          <div *ngFor="let disability of disabilities" class="disability-item">
+            <label class="checkbox-container">
+              <input
+                type="checkbox"
+                [checked]="isDisabilitySelected(disability.id)"
+                (change)="onDisabilityChange($event, disability.id)"
+              />
+              <span class="checkmark"></span>
+              {{ disability.label }}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Informations Optionnelles -->
+    <div class="form-section">
+      <h2>Informations Optionnelles</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="exit_reason_id">Raison de sortie</label>
+          <select id="exit_reason_id" formControlName="exit_reason_id">
+            <option value="">Sélectionnez une raison</option>
+            <option *ngFor="let reason of exitReasons" [value]="reason.id">
+              {{ reason.reason }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="date_test_initial">Date du test initial</label>
+          <input type="date" id="date_test_initial" formControlName="date_test_initial" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="date_entree_france">Date d'entrée en France</label>
+          <input type="date" id="date_entree_france" formControlName="date_entree_france" />
+        </div>
+
+        <div class="form-group">
+          <label for="date_titre_sejour">Date du titre de séjour</label>
+          <input type="date" id="date_titre_sejour" formControlName="date_titre_sejour" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="date_cir">Date CIR</label>
+          <input type="date" id="date_cir" formControlName="date_cir" />
+        </div>
+
+        <div class="form-group">
+          <!-- Espace vide pour l'alignement -->
+        </div>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="commentaire">Commentaire</label>
+        <textarea
+          id="commentaire"
+          formControlName="commentaire"
+          rows="4"
+          placeholder="Ajoutez des commentaires ou observations..."
+          appAutoSanitize
+          sanitizeType="text"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="isSubmitting"
+      >
+        Annuler
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+        <span *ngIf="isSubmitting" class="spinner-small"></span>
+                    {{ isSubmitting ? (isEditMode ? 'Mise à jour...' : 'Création...') : (isEditMode ? 'Mettre à jour' : "Créer l'apprenant") }}
+      </button>
+    </div>
+  </form>
+</div>

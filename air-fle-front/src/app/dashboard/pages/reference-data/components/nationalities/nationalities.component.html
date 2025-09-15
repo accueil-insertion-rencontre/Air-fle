@@ -1,0 +1,140 @@
+<div class="nationalities-container">
+  <!-- Actions -->
+  <div class="nationalities-actions">
+    <button class="back-btn" (click)="goBack()">
+      <span class="btn-icon">←</span>
+      Retour
+    </button>
+
+  <h2 class="d-flex align-items-center gap-2">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 0 0 20a15.3 15.3 0 0 0 0-20z"/></svg>
+    Nationalités
+  </h2>
+
+    <button class="create-btn" (click)="openCreateModal()">
+      <span class="btn-icon">+</span>
+      Ajouter une nationalité
+    </button>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="error" class="error-message">
+    <p>{{ error }}</p>
+    <button (click)="error = null" class="close-error">×</button>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="nationalities-content">
+    <div class="nationalities-list">
+      <!-- En-tête du tableau -->
+      <div class="nationalities-header">
+        <div class="column name">LIBELLÉ</div>
+        <div class="column actions">ACTIONS</div>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="loading-indicator">
+        <div class="spinner"></div>
+        <span>Chargement des nationalités...</span>
+      </div>
+
+      <!-- Liste des nationalités -->
+      <div
+        *ngFor="let nationality of nationalities; trackBy: trackByNationalityId"
+        class="nationality-item"
+      >
+        <div class="column name">
+          <div class="nationality-name">{{ nationality.label }}</div>
+        </div>
+
+        <div class="column actions">
+          <button class="edit-btn" (click)="openEditModal(nationality)">Modifier</button>
+          <button class="delete-btn" (click)="deleteNationality(nationality)">Supprimer</button>
+        </div>
+      </div>
+
+      <!-- État vide -->
+      <div *ngIf="!isLoading && nationalities.length === 0" class="empty-state">
+        <p>Aucune nationalité trouvée</p>
+        <button class="create-btn" (click)="openCreateModal()">
+          <span class="btn-icon">+</span>
+          Ajouter une nationalité
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de création -->
+<div class="modal-overlay" *ngIf="isCreateModalOpen" (click)="closeCreateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Ajouter une nationalité</h2>
+      <button class="close-btn" (click)="closeCreateModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <form [formGroup]="createForm" (ngSubmit)="createNationality()">
+        <div class="form-group">
+          <label for="createLabel">Libellé *</label>
+          <input
+            id="createLabel"
+            type="text"
+            formControlName="label"
+            placeholder="Ex: Française, Algérienne..."
+            [class.error]="createLabel?.invalid && createLabel?.touched"
+          />
+          <div *ngIf="createLabel?.invalid && createLabel?.touched" class="error-text">
+            <span *ngIf="createLabel?.hasError('required')">Le libellé est requis</span>
+            <span *ngIf="createLabel?.hasError('minlength')"
+              >Le libellé doit contenir au moins 2 caractères</span
+            >
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" (click)="closeCreateModal()">Annuler</button>
+          <button type="submit" class="submit-btn" [disabled]="createForm.invalid">Créer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal d'édition -->
+<div class="modal-overlay" *ngIf="isEditModalOpen" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Modifier la nationalité</h2>
+      <button class="close-btn" (click)="closeEditModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <form [formGroup]="editForm" (ngSubmit)="updateNationality()">
+        <div class="form-group">
+          <label for="editLabel">Libellé *</label>
+          <input
+            id="editLabel"
+            type="text"
+            formControlName="label"
+            placeholder="Ex: Française, Algérienne..."
+            [class.error]="editLabel?.invalid && editLabel?.touched"
+          />
+          <div *ngIf="editLabel?.invalid && editLabel?.touched" class="error-text">
+            <span *ngIf="editLabel?.hasError('required')">Le libellé est requis</span>
+            <span *ngIf="editLabel?.hasError('minlength')"
+              >Le libellé doit contenir au moins 2 caractères</span
+            >
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" (click)="closeEditModal()">Annuler</button>
+          <button type="submit" class="submit-btn" [disabled]="editForm.invalid">
+            Sauvegarder
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

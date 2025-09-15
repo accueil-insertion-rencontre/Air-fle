@@ -1,0 +1,23 @@
+<div class="dashboard-container" [class.sidebar-collapsed]="!isSidebarOpen">
+  <!-- Sidebar -->
+  <app-sidebar [(isOpen)]="isSidebarOpen"> </app-sidebar>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Navbar -->
+    <app-navbar
+      [userName]="userName"
+      [pageTitle]="pageTitle"
+      [breadcrumbs]="breadcrumbs"
+      (toggleSidebar)="toggleSidebar()"
+      (openTicket)="handleOpenTicket()"
+      (openReleaseNotes)="handleOpenReleaseNotes()"
+    >
+    </app-navbar>
+
+    <!-- Page Content -->
+    <div class="page-content">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

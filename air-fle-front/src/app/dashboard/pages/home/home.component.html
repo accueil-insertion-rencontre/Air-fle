@@ -1,0 +1,359 @@
+<div class="dashboard-home">
+  <!-- Cartes Statistiques -->
+  <div class="stats-grid">
+    <div class="stat-card" *ngFor="let card of statCards">
+      <div class="stat-content">
+        <div class="stat-title">{{ card.title }}</div>
+        <div class="stat-value">{{ card.value }}</div>
+        <div
+          class="stat-change"
+          *ngIf="card.change !== null"
+          [ngClass]="{ positive: card.change > 0, negative: card.change < 0 }"
+        >
+          {{ card.change > 0 ? '+' : '' }}{{ card.change }}%
+        </div>
+      </div>
+      <div class="stat-icon" [style.background-color]="card.color" aria-hidden="true">
+        <svg *ngIf="card.icon==='user'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        <svg *ngIf="card.icon==='map-pin'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+        <svg *ngIf="card.icon==='calendar'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <svg *ngIf="card.icon==='bar-chart-2'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Semaine d'enseignement -->
+  <div class="week-container">
+    <div class="week-header">
+    <h2>Semaine d'enseignement</h2>
+      <div class="week-navigation">
+        <button class="nav-btn" (click)="previousWeek()" title="Semaine précédente">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15,18 9,12 15,6"></polyline>
+          </svg>
+        </button>
+        <span class="week-display">{{ getWeekDisplay() }}</span>
+        <button class="nav-btn" (click)="nextWeek()" title="Semaine suivante">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9,18 15,12 9,6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div class="week-loading" *ngIf="isLoadingWeekCourses">
+      <div class="loading-spinner"></div>
+      <p>Chargement des cours...</p>
+    </div>
+
+    <!-- Error state -->
+    <div class="week-error" *ngIf="weekCoursesError && !isLoadingWeekCourses">
+      <p>{{ weekCoursesError }}</p>
+      <button class="retry-btn" (click)="loadWeekCourses()">Réessayer</button>
+    </div>
+
+    <!-- Week schedule -->
+    <div class="week-schedule" *ngIf="!isLoadingWeekCourses && !weekCoursesError">
+      <div class="week-grid">
+        <div class="day-column" *ngFor="let day of weekDays">
+          <div class="day-header" [class.today]="day.isToday">
+            <div class="day-name">{{ day.dayName }}</div>
+            <div class="day-number">{{ day.dayNumber }}</div>
+          </div>
+          <div class="day-courses">
+            <div 
+              class="course-item" 
+              *ngFor="let course of getCoursesForDay(day)"
+              [style.background-color]="getCourseColor(course)"
+            >
+              <div class="course-time">
+                {{ formatTime(course.course_start_hour || course.start_hour) }} - {{ formatTime(course.course_end_hour || course.end_hour) }}
+              </div>
+              <div class="course-name">
+                {{ course.course_name || course.name }}
+              </div>
+              <div class="course-room" *ngIf="course.course_room || course.room">
+                {{ course.course_room || course.room }}
+              </div>
+            </div>
+            <div class="no-courses" *ngIf="getCoursesForDay(day).length === 0">
+              <span>Aucun cours</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section du bas: TO-DO List et Modules -->
+  <div class="dashboard-bottom">
+    <!-- TO-DO List -->
+    <div class="todo-container">
+      <div class="section-header">
+        <div class="header-left">
+          <h2>TO-DO-LIST</h2>
+          <div class="filter-container">
+            <button class="filter-btn" (click)="toggleFilters()" title="Filtrer les tâches">
+              <span class="filter-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <ng-container [ngSwitch]="getFilterIconName()">
+                    <g *ngSwitchCase="'clock'"><circle cx="12" cy="12" r="10"></circle><polyline points="12,6 12,12 16,14"></polyline></g>
+                    <g *ngSwitchCase="'zap'"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></g>
+                    <g *ngSwitchCase="'check-circle'"><circle cx="12" cy="12" r="10"></circle><polyline points="20 6 9 17 4 12"></polyline></g>
+                    <g *ngSwitchDefault><rect x="8" y="3" width="8" height="4" rx="1"></rect><path d="M8 7h8v14H8z"></path></g>
+                  </ng-container>
+                </svg>
+              </span>
+              <span class="filter-text"
+                >{{ getFilterLabel() }} ({{ getFilteredTasksCount() }})</span
+              >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                [class.rotated]="showFilters"
+              >
+                <polyline points="6,9 12,15 18,9"></polyline>
+              </svg>
+            </button>
+
+            <div class="filter-dropdown" *ngIf="showFilters">
+              <button
+                class="filter-option"
+                [class.active]="activeFilter === 'all'"
+                (click)="setFilter('all')"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px"><rect x="8" y="3" width="8" height="4" rx="1"></rect><path d="M8 7h8v14H8z"></path></svg>
+                Toutes ({{ getAllTasksCount() }})
+              </button>
+              <button
+                class="filter-option"
+                [class.active]="activeFilter === 'pending'"
+                (click)="setFilter('pending')"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px"><circle cx="12" cy="12" r="10"></circle><polyline points="12,6 12,12 16,14"></polyline></svg>
+                Pas commencé ({{ getPendingTasksCount() }})
+              </button>
+              <button
+                class="filter-option"
+                [class.active]="activeFilter === 'in_progress'"
+                (click)="setFilter('in_progress')"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                En cours ({{ getInProgressTasksCount() }})
+              </button>
+              <button
+                class="filter-option"
+                [class.active]="activeFilter === 'completed'"
+                (click)="setFilter('completed')"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px"><circle cx="12" cy="12" r="10"></circle><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Terminé ({{ getCompletedTasksCount() }})
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="create-btn" (click)="openCreateModal()" title="Créer une nouvelle tâche">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Créer une tâche
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div class="todo-list loading-state" *ngIf="isLoadingTodos">
+        <p>Chargement des tâches...</p>
+      </div>
+
+      <!-- Error state -->
+      <div class="todo-list error-state" *ngIf="todoError && !isLoadingTodos">
+        <p>{{ todoError }}</p>
+        <button class="retry-btn" (click)="loadTodos()">Réessayer</button>
+      </div>
+
+      <!-- Empty state -->
+      <div
+        class="todo-list empty-state"
+        *ngIf="!isLoadingTodos && !todoError && todoItems.length === 0"
+      >
+        <p>Aucune tâche pour le moment</p>
+        <button class="create-first-btn" (click)="openCreateModal()">
+          Créer votre première tâche
+        </button>
+      </div>
+
+      <!-- Todo items -->
+      <div class="todo-list" *ngIf="!isLoadingTodos && !todoError && todoItems.length > 0">
+        <app-todo-item
+          *ngFor="let task of parentTasks"
+          [task]="task"
+          (taskUpdated)="onSubtaskUpdated($event)"
+        >
+        </app-todo-item>
+      </div>
+    </div>
+
+    <!-- Modules de la journée -->
+    <div class="modules-container">
+      <div class="section-header">
+        <h2>Modules de la journée</h2>
+      </div>
+
+      <!-- Loading state -->
+      <div class="modules-loading" *ngIf="isLoadingTodayModules">
+        <div class="loading-spinner"></div>
+        <p>Chargement des modules...</p>
+      </div>
+
+      <!-- Error state -->
+      <div class="modules-error" *ngIf="todayModulesError && !isLoadingTodayModules">
+        <p>{{ todayModulesError }}</p>
+        <button class="retry-btn" (click)="loadTodayModules()">Réessayer</button>
+      </div>
+
+      <!-- Empty state -->
+      <div class="modules-list empty-state" *ngIf="!isLoadingTodayModules && !todayModulesError && todayModules.length === 0">
+        <p>Aucun cours prévu aujourd'hui</p>
+      </div>
+
+      <!-- Modules content -->
+      <div class="modules-content" *ngIf="!isLoadingTodayModules && !todayModulesError && todayModules.length > 0">
+        
+        <!-- Module actuel -->
+        <div class="current-module" *ngIf="currentModule">
+          <div class="module-header">
+            <h3>Module actuel</h3>
+            <span class="status-badge" [class.done]="isModuleAttendanceDone(currentModule)">
+              {{ isModuleAttendanceDone(currentModule) ? "Appel validé" : "Appel à faire" }}
+            </span>
+          </div>
+          <div class="module-card current">
+            <div class="module-info">
+              <div class="module-time">{{ formatModuleTime(currentModule) }}</div>
+              <div class="module-name">{{ currentModule.course_name || currentModule.name }}</div>
+              <div class="module-room" *ngIf="currentModule.course_room || currentModule.room">
+                {{ currentModule.course_room || currentModule.room }}
+              </div>
+            </div>
+            <div class="module-actions">
+              <button 
+                class="attendance-btn" 
+                *ngIf="!isModuleAttendanceDone(currentModule)"
+                (click)="openAttendanceModal(currentModule)"
+              >
+                Faire l'appel
+              </button>
+              <span class="attendance-done" *ngIf="isModuleAttendanceDone(currentModule)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Appel validé
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prochain module -->
+        <div class="next-module" *ngIf="nextModule && !currentModule">
+          <div class="module-header">
+            <h3>Prochain module</h3>
+          </div>
+          <div class="module-card next">
+            <div class="module-info">
+              <div class="module-time">{{ formatModuleTime(nextModule) }}</div>
+              <div class="module-name">{{ nextModule.course_name || nextModule.name }}</div>
+              <div class="module-room" *ngIf="nextModule.course_room || nextModule.room">
+                {{ nextModule.course_room || nextModule.room }}
+              </div>
+              <div class="module-date">{{ formatModuleDate(nextModule) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aucun module actuel -->
+        <div class="no-current-module" *ngIf="!currentModule && nextModule">
+          <p>Aucun module en cours actuellement</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de création de tâche -->
+<app-create-todo-modal
+  [isOpen]="isCreateModalOpen"
+  [parentTasks]="parentTasks"
+  (close)="closeCreateModal()"
+  (submit)="onCreateTodo($event)"
+>
+</app-create-todo-modal>
+
+<!-- Ancienne modale d'appels supprimée -->
+<!-- Modale de prise d'appel (intégrée) -->
+<div class="modal-overlay" *ngIf="showAttendanceModal" (click)="closeAttendanceModal()"></div>
+<div class="modal-content-custom" *ngIf="showAttendanceModal" (click)="$event.stopPropagation()">
+  <div class="modal-header-custom">
+    <h5 class="modal-title">Prise d'appel</h5>
+    <button class="icon-btn" (click)="closeAttendanceModal()" aria-label="Fermer">×</button>
+  </div>
+  <div class="modal-body-custom">
+    <div class="attendance-page" [class.readonly]="attendanceData?.attendance_taken">
+      <div *ngIf="attendanceState==='loading'">Chargement…</div>
+      <div *ngIf="attendanceState==='error'" class="state error">{{attendanceError}}</div>
+      <ng-container *ngIf="attendanceState==='ready'">
+        <div class="toolbar">
+          <button class="btn primary" (click)="markAllAttendance('present')">Tout marquer présent</button>
+          <div class="hint">Astuce: cliquer un statut pour l’appliquer</div>
+        </div>
+        <div class="list">
+          <div class="row" *ngFor="let s of attendanceForm; index as i">
+            <div class="cell name">
+              <div class="avatar">{{ (attendanceData?.students[i]?.firstname || ' ')[0] }}</div>
+              <div class="fullname">{{attendanceData?.students[i]?.firstname}} {{attendanceData?.students[i]?.lastname}}</div>
+            </div>
+            <div class="cell status">
+              <div class="segmented hide-sm">
+                <button type="button" class="seg present" [class.active]="s.status==='present'" (click)="s.status='present'">Présent</button>
+                <button type="button" class="seg absent" [class.active]="s.status==='absent'" (click)="s.status='absent'">Absent</button>
+                <button type="button" class="seg justified" [class.active]="s.status==='justified'" (click)="s.status='justified'">Justifié</button>
+              </div>
+              <div class="show-sm select-wrap">
+                <select [(ngModel)]="s.status" aria-label="Statut">
+                  <option value="present">Présent</option>
+                  <option value="absent">Absent</option>
+                  <option value="justified">Justifié</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+  <div class="modal-footer-custom">
+    <button class="btn ghost" (click)="closeAttendanceModal()">Annuler</button>
+    <button class="btn primary" [disabled]="isSavingAttendance || attendanceState!=='ready'" (click)="submitAttendance()">Valider l'appel</button>
+  </div>
+</div>

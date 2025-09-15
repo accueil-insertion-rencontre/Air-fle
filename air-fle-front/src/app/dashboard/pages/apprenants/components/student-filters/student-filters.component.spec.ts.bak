@@ -1,0 +1,124 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
+import { StudentFiltersComponent } from './student-filters.component';
+import { Level } from '../../models/level.model';
+import { Status } from '../../models/status.model';
+import { Nationality } from '../../models/nationality.model';
+
+describe('StudentFiltersComponent', () => {
+  let component: StudentFiltersComponent;
+  let fixture: ComponentFixture<StudentFiltersComponent>;
+
+  const mockLevels: Level[] = [
+    { code: 'A1', name: 'Débutant', description: 'Niveau débutant', order: 1 },
+    { code: 'B2', name: 'Avancé', description: 'Niveau avancé', order: 4 },
+  ];
+
+  const mockStatuses: Status[] = [
+    { code: 'ACTIVE', name: 'Actif', description: 'Étudiant actif', color: '#28a745' },
+    { code: 'INACTIVE', name: 'Inactif', description: 'Étudiant inactif', color: '#dc3545' },
+  ];
+
+  const mockNationalities: Nationality[] = [
+    { code: 'FR', name: 'Française', countryCode: 'FR' },
+    { code: 'EN', name: 'Anglaise', countryCode: 'GB' },
+  ];
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [FormsModule, StudentFiltersComponent],
+    }).compileComponents();
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(StudentFiltersComponent);
+    component = fixture.componentInstance;
+    component.levels = mockLevels;
+    component.statuses = mockStatuses;
+    component.nationalities = mockNationalities;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should initialize with empty filters', () => {
+    expect(component.filters).toEqual({
+      firstName: '',
+      lastName: '',
+      email: '',
+      level: '',
+      status: '',
+      nationality: '',
+    });
+  });
+
+  it('should emit filter changes', () => {
+    spyOn(component.filtersChange, 'emit');
+    const newFilters = {
+      firstName: '',
+      lastName: '',
+      email: '',
+      level: 'B2',
+      status: 'ACTIVE',
+      nationality: 'FR',
+    };
+
+    component.filters = newFilters;
+    component.onFiltersChange();
+
+    expect(component.filtersChange.emit).toHaveBeenCalledWith(newFilters);
+  });
+
+  it('should clear filters', () => {
+    component.filters = {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john@example.com',
+      level: 'B2',
+      status: 'ACTIVE',
+      nationality: 'FR',
+    };
+    spyOn(component.filtersChange, 'emit');
+
+    component.clearFilters();
+
+    expect(component.filters).toEqual({
+      firstName: '',
+      lastName: '',
+      email: '',
+      level: '',
+      status: '',
+      nationality: '',
+    });
+    expect(component.filtersChange.emit).toHaveBeenCalled();
+  });
+
+  it('should display all levels in select options', () => {
+    const selectElement = fixture.nativeElement.querySelector('#level');
+    const options = selectElement.querySelectorAll('option');
+
+    expect(options.length).toBe(mockLevels.length + 1); // +1 for default option
+    expect(options[1].value).toBe(mockLevels[0].code);
+    expect(options[1].textContent.trim()).toBe(mockLevels[0].name);
+  });
+
+  it('should display all statuses in select options', () => {
+    const selectElement = fixture.nativeElement.querySelector('#status');
+    const options = selectElement.querySelectorAll('option');
+
+    expect(options.length).toBe(mockStatuses.length + 1); // +1 for default option
+    expect(options[1].value).toBe(mockStatuses[0].code);
+    expect(options[1].textContent.trim()).toBe(mockStatuses[0].name);
+  });
+
+  it('should display all nationalities in select options', () => {
+    const selectElement = fixture.nativeElement.querySelector('#nationality');
+    const options = selectElement.querySelectorAll('option');
+
+    expect(options.length).toBe(mockNationalities.length + 1); // +1 for default option
+    expect(options[1].value).toBe(mockNationalities[0].code);
+    expect(options[1].textContent.trim()).toBe(mockNationalities[0].name);
+  });
+});

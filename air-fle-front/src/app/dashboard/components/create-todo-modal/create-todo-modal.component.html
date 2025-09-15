@@ -1,0 +1,178 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onClose()">
+  <div class="modal-content" (click)="onModalContentClick($event)">
+    <div class="modal-header">
+      <h3>Créer une nouvelle tâche</h3>
+      <button type="button" class="close-btn" (click)="onClose()">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <form [formGroup]="todoForm" (ngSubmit)="onSubmit()" class="todo-form">
+      <div class="form-group">
+        <label for="title">Titre *</label>
+        <input
+          type="text"
+          id="title"
+          formControlName="title"
+          placeholder="Ex: Préparation cours A1"
+          [class.error]="title?.invalid && title?.touched"
+        />
+        <div class="error-message" *ngIf="title?.invalid && title?.touched">
+          <span *ngIf="title?.errors?.['required']">Le titre est obligatoire</span>
+          <span *ngIf="title?.errors?.['minlength']"
+            >Le titre doit contenir au moins 3 caractères</span
+          >
+          <span *ngIf="title?.errors?.['maxlength']"
+            >Le titre ne peut pas dépasser 100 caractères</span
+          >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          placeholder="Décrivez la tâche en détail..."
+          rows="3"
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="dueAt">Date d'échéance</label>
+        <input type="datetime-local" id="dueAt" formControlName="dueAt" />
+      </div>
+
+      <div class="form-group" *ngIf="parentTasks.length > 0">
+        <label for="parentTaskId">Tâche parent (optionnel)</label>
+        <select id="parentTaskId" formControlName="parentTaskId">
+          <option value="">-- Aucune (tâche principale) --</option>
+          <option *ngFor="let task of parentTasks" [value]="task.id">
+            {{ task.title }}
+          </option>
+        </select>
+        <small class="help-text">Sélectionnez une tâche principale pour créer une sous-tâche</small>
+      </div>
+
+      <!-- Information sur les sous-tâches obligatoires -->
+      <div class="form-group info-group" *ngIf="!todoForm.value.parentTaskId">
+        <div class="info-message">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;vertical-align:middle"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <strong>Les sous-tâches sont maintenant obligatoires</strong> - ajoutez au moins une
+          sous-tâche pour créer votre tâche.
+        </div>
+      </div>
+
+      <!-- Section des sous-tâches -->
+      <div class="subtasks-section" *ngIf="!todoForm.value.parentTaskId">
+        <div class="subtasks-header">
+          <h4>Sous-tâches</h4>
+          <button type="button" class="add-subtask-btn" (click)="addSubtask()">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Ajouter une sous-tâche
+          </button>
+        </div>
+
+        <div class="subtasks-list" formArrayName="subtasks">
+          <div
+            *ngFor="let subtask of subtasks.controls; let i = index"
+            class="subtask-item"
+            [formGroupName]="i"
+          >
+            <div class="subtask-header">
+              <span class="subtask-number">{{ i + 1 }}.</span>
+              <button
+                type="button"
+                class="remove-subtask-btn"
+                (click)="removeSubtask(i)"
+                *ngIf="subtasks.length > 1"
+                title="Supprimer cette sous-tâche"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div class="subtask-fields">
+              <div class="form-group">
+                <input
+                  type="text"
+                  formControlName="title"
+                  placeholder="Titre de la sous-tâche"
+                  [class.error]="subtask.get('title')?.invalid && subtask.get('title')?.touched"
+                />
+              </div>
+
+              <div class="form-group">
+                <textarea
+                  formControlName="description"
+                  placeholder="Description (optionnelle)"
+                  rows="2"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="subtask-info">
+               <small class="help-text" *ngIf="subtasks.length === 1">
+                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:-1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                 Au moins une sous-tâche est requise
+               </small>
+               <small class="help-text" *ngIf="todoForm.value.dueAt">
+                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:-1px"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                 Cette sous-tâche héritera de la date d'échéance de la tâche principale
+               </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onClose()"
+          [disabled]="isSubmitting"
+        >
+          Annuler
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="!isMainFormValid() || isSubmitting"
+        >
+          <span *ngIf="isSubmitting">Création...</span>
+          <span *ngIf="!isSubmitting">Créer la tâche</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

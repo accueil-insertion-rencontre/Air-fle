@@ -1,0 +1,58 @@
+<div class="exams-page">
+  <div class="header-card">
+    <div class="left">
+      <h1>{{ isEditMode ? 'Modifier la session' : 'Créer une nouvelle session' }}</h1>
+      <div class="subtitle">Saisissez les informations de la session</div>
+    </div>
+    <div class="actions">
+      <a class="btn ghost" [routerLink]="['/dashboard/sessions']">← Retour</a>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="card-body">
+          <div *ngIf="loading" class="text-center p-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Chargement...</span>
+            </div>
+          </div>
+
+          <form *ngIf="!loading" [formGroup]="sessionForm" (ngSubmit)="onSubmit()" class="form-grid">
+            <!-- Message d'erreur général -->
+            <div *ngIf="error" class="alert alert-danger">
+              {{ error }}
+            </div>
+
+            <!-- Nom de la session -->
+            <div class="field wide">
+              <label for="label">Nom de la session <span class="req">*</span></label>
+              <input type="text" id="label" formControlName="label" [class.invalid]="isFieldInvalid('label')" />
+              <div *ngIf="isFieldInvalid('label')" class="error">Nom obligatoire (3–255 caractères)</div>
+            </div>
+
+            <!-- Dates de début et fin -->
+            <div class="field">
+              <label for="started_at">Date de début <span class="req">*</span></label>
+              <input type="date" id="started_at" formControlName="started_at" [class.invalid]="isFieldInvalid('started_at')" />
+              <div *ngIf="isFieldInvalid('started_at')" class="error">Requis</div>
+            </div>
+            <div class="field">
+              <label for="finished_at">Date de fin <span class="req">*</span></label>
+              <input type="date" id="finished_at" formControlName="finished_at" [class.invalid]="isFieldInvalid('finished_at')" />
+              <div *ngIf="isFieldInvalid('finished_at')" class="error">Requis</div>
+            </div>
+
+            <!-- Boutons d'action -->
+            <div class="actions">
+              <a class="btn ghost" [routerLink]="['/dashboard/sessions']">Retour à la liste</a>
+              <div class="right">
+                <button type="submit" class="btn primary" [disabled]="loading || sessionForm.invalid">
+                  <span *ngIf="loading" class="spinner sm"></span>
+                  {{ isEditMode ? 'Mettre à jour' : 'Créer la session' }}
+                </button>
+              </div>
+            </div>
+          </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,98 @@
+# Utiliser des ARGs pour les versions et améliorer la maintenabilité
+ARG NODE_VERSION=20-alpine@sha256:c628bdc7ebc7f95b1b23249a445eb415ce68ae9def8b68364b35ee15e3065b0f
+ARG PRISMA_VERSION=6.6.0
+ARG NESTJS_CLI_VERSION=10.1.18
+
+# Stage 1: Dependencies
+FROM node:${NODE_VERSION} AS deps
+
+# Définir des variables d'environnement pour le build
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+# Copie des fichiers de dépendances uniquement
+COPY package*.json ./
+
+# Installation des dépendances avec version fixe et nettoyage du cache npm
+# Combiner les commandes pour réduire les couches
+RUN npm ci --only=production && \
+    npm cache clean --force
+
+# Copie des fichiers Prisma après l'installation des dépendances normales
+# pour optimiser le cache (ne réinstalle pas les dépendances si seul Prisma change)
+COPY prisma/schema.prisma ./prisma/
+RUN npx prisma@${PRISMA_VERSION} generate
+
+# Stage 2: Build
+FROM node:${NODE_VERSION} AS builder
+
+WORKDIR /app
+
+# Copie des dépendances du stage précédent
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package*.json ./
+COPY --from=deps /app/prisma ./prisma/
+
+# Copie des fichiers nécessaires pour le build - séparés pour optimiser le cache
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
+# Copie du code source en dernier car c'est ce qui change le plus souvent
+COPY src ./src/
+
+# Build de l'application avec NestJS CLI local sans dépendance globale
+RUN npx @nestjs/cli@${NESTJS_CLI_VERSION} build && \
+    # Optimisation pour supprimer les fichiers sources après build
+    rm -rf src
+
+# Stage 3: Production
+FROM node:${NODE_VERSION} AS production
+
+
+ENV PORT=3000
+
+# Métadonnées standard OCI pour améliorer la documentation
+LABEL maintainer="Abdel-Karim Boucharafa, Messaoud Houri, Enguerrand Smagghe, Martial Floquet, Gabriel Luttin"
+LABEL version="1.0"
+LABEL description="API de gestion pour Air-FLE"
+LABEL org.opencontainers.image.source="https://github.com/accueil-insertion-rencontre/air-fle-API.git"
+LABEL org.opencontainers.image.licenses="UNLICENSED"
+LABEL org.opencontainers.image.created="2025-04-30"
+
+# Créer un utilisateur non-root pour la sécurité et regrouper les commandes
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nestjs -u 1001 -G nodejs
+
+WORKDIR /app
+
+# Copie des fichiers de production uniquement - sélection précise pour réduire la taille
+COPY --from=builder /app/dist ./dist
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package*.json ./
+
+# Copier uniquement ce qui est nécessaire pour le runtime de Prisma
+COPY --from=deps /app/prisma/schema.prisma ./prisma/schema.prisma
+COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
+
+# Copier les migrations Prisma
+COPY prisma/migrations ./prisma/migrations/
+
+# Définir les variables d'environnement
+ENV NODE_ENV=production
+
+# Exposition du port
+EXPOSE 3000
+
+# Définir les permissions
+RUN chown -R nestjs:nodejs /app
+
+# Passer à l'utilisateur non-root
+USER nestjs
+
+# Healthcheck pour vérifier que l'API répond correctement
+# Utilise wget qui est plus léger et déjà inclus dans l'image node:alpine
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD wget -q --spider http://localhost:3000/api/v1/health || exit 1
+
+# Exécuter les migrations puis démarrer l'application
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]

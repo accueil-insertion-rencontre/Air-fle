@@ -1,0 +1,298 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { BehaviorSubject } from 'rxjs';
+import { ConfirmationModalComponent } from './confirmation-modal.component';
+import { ConfirmationService, ConfirmationConfig } from '../../../core/services/confirmation.service';
+
+// Mock Bootstrap Modal
+const mockModal = {
+  show: jasmine.createSpy('show'),
+  hide: jasmine.createSpy('hide'),
+  dispose: jasmine.createSpy('dispose')
+};
+
+declare global {
+  interface Window {
+    bootstrap: {
+      Modal: jasmine.Spy;
+    };
+  }
+}
+
+describe('ConfirmationModalComponent', () => {
+  let component: ConfirmationModalComponent;
+  let fixture: ComponentFixture<ConfirmationModalComponent>;
+  let confirmationServiceSpy: jasmine.SpyObj<ConfirmationService>;
+  let configSubject: BehaviorSubject<ConfirmationConfig | null>;
+
+  beforeEach(async () => {
+    configSubject = new BehaviorSubject<ConfirmationConfig | null>(null);
+    const confirmationSpy = jasmine.createSpyObj('ConfirmationService', ['getConfirmation', 'resolve']);
+    confirmationSpy.getConfirmation.and.returnValue(configSubject.asObservable());
+
+    // Mock Bootstrap
+    (window as any).bootstrap = {
+      Modal: jasmine.createSpy('Modal').and.returnValue(mockModal)
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [ConfirmationModalComponent],
+      providers: [
+        { provide: ConfirmationService, useValue: confirmationSpy }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(ConfirmationModalComponent);
+    component = fixture.componentInstance;
+    confirmationServiceSpy = TestBed.inject(ConfirmationService) as jasmine.SpyObj<ConfirmationService>;
+  });
+
+  afterEach(() => {
+    mockModal.show.calls.reset();
+    mockModal.hide.calls.reset();
+    mockModal.dispose.calls.reset();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  describe('Component initialization', () => {
+    it('should initialize with null config', () => {
+      expect(component.config).toBeNull();
+    });
+
+    it('should subscribe to confirmation service on init', () => {
+      component.ngOnInit();
+      
+      expect(confirmationServiceSpy.getConfirmation).toHaveBeenCalled();
+    });
+  });
+
+  describe('Configuration handling', () => {
+    beforeEach(() => {
+      component.ngOnInit();
+      // Mock modal element
+      spyOn(document, 'getElementById').and.returnValue(document.createElement('div'));
+    });
+
+    it('should show modal when config is provided', () => {
+      const config: ConfirmationConfig = {
+        title: 'Test Title',
+        message: 'Test Message',
+        confirmText: 'Confirmer',
+        cancelText: 'Annuler',
+        type: 'danger'
+      };
+
+      configSubject.next(config);
+
+      expect(component.config).toEqual(config);
+      expect(window.bootstrap.Modal).toHaveBeenCalled();
+      expect(mockModal.show).toHaveBeenCalled();
+    });
+
+    it('should hide modal when config is null', () => {
+      // D'abord montrer une config
+      const config: ConfirmationConfig = {
+        title: 'Test Title',
+        message: 'Test Message',
+        confirmText: 'Confirmer',
+        cancelText: 'Annuler',
+        type: 'danger'
+      };
+      configSubject.next(config);
+
+      // Puis la masquer
+      configSubject.next(null);
+
+      expect(component.config).toBeNull();
+      expect(mockModal.hide).toHaveBeenCalled();
+    });
+  });
+
+  describe('Button actions', () => {
+    it('should call confirmationService.resolve(true) when onConfirm is called', () => {
+      component.onConfirm();
+      
+      expect(confirmationServiceSpy.resolve).toHaveBeenCalledWith(true);
+    });
+
+    it('should call confirmationService.resolve(false) when onCancel is called', () => {
+      component.onCancel();
+      
+      expect(confirmationServiceSpy.resolve).toHaveBeenCalledWith(false);
+    });
+  });
+
+  describe('Button styling', () => {
+    it('should return correct button class for danger type', () => {
+      component.config = { title: 'Test', message: 'Test', confirmText: 'OK', cancelText: 'Cancel', type: 'danger' };
+      
+      expect(component.getButtonClass()).toBe('btn-danger');
+    });
+
+    it('should return correct button class for warning type', () => {
+      component.config = { title: 'Test', message: 'Test', confirmText: 'OK', cancelText: 'Cancel', type: 'warning' };
+      
+      expect(component.getButtonClass()).toBe('btn-warning');
+    });
+
+    it('should return correct button class for info type', () => {
+      component.config = { title: 'Test', message: 'Test', confirmText: 'OK', cancelText: 'Cancel', type: 'info' };
+      
+      expect(component.getButtonClass()).toBe('btn-info');
+    });
+
+    it('should return correct button class for primary type', () => {
+      component.config = { title: 'Test', message: 'Test', confirmText: 'OK', cancelText: 'Cancel', type: 'primary' };
+      
+      expect(component.getButtonClass()).toBe('btn-primary');
+    });
+
+    it('should return default button class for undefined type', () => {
+      component.config = { title: 'Test', message: 'Test', confirmText: 'OK', cancelText: 'Cancel', type: 'danger' };
+      
+      expect(component.getButtonClass()).toBe('btn-danger');
+    });
+  });
+
+  describe('Icon styling', () => {
+    it('should return correct icon class for danger type', () => {
+      component.config = { title: 'Test', message: 'Test', confirmText: 'OK', cancelText: 'Cancel', type: 'danger' };
+      
+      expect(component.getIconClass()).toBe('fas fa-exclamation-triangle text-danger');
+    });
+
+    it('should return correct icon class for warning type', () => {
+      component.config = { title: 'Test', message: 'Test', confirmText: 'OK', cancelText: 'Cancel', type: 'warning' };
+      
+      expect(component.getIconClass()).toBe('fas fa-exclamation-circle text-warning');
+    });
+
+    it('should return correct icon class for info type', () => {
+      component.config = { title: 'Test', message: 'Test', confirmText: 'OK', cancelText: 'Cancel', type: 'info' };
+      
+      expect(component.getIconClass()).toBe('fas fa-info-circle text-info');
+    });
+
+    it('should return correct icon class for primary type', () => {
+      component.config = { title: 'Test', message: 'Test', confirmText: 'OK', cancelText: 'Cancel', type: 'primary' };
+      
+      expect(component.getIconClass()).toBe('fas fa-question-circle text-primary');
+    });
+
+    it('should return default icon class for undefined type', () => {
+      component.config = { title: 'Test', message: 'Test', confirmText: 'OK', cancelText: 'Cancel', type: 'danger' };
+      
+      expect(component.getIconClass()).toBe('fas fa-exclamation-triangle text-danger');
+    });
+  });
+
+  describe('Template rendering', () => {
+    beforeEach(() => {
+      component.ngOnInit();
+      spyOn(document, 'getElementById').and.returnValue(document.createElement('div'));
+    });
+
+    it('should display title and message when config is provided', () => {
+      const config: ConfirmationConfig = {
+        title: 'Test Modal Title',
+        message: 'Are you sure you want to proceed?',
+        confirmText: 'Confirmer',
+        cancelText: 'Annuler',
+        type: 'danger'
+      };
+
+      component.config = config;
+      fixture.detectChanges();
+
+      const compiled = fixture.debugElement.nativeElement;
+      expect(compiled.textContent).toContain('Test Modal Title');
+      expect(compiled.textContent).toContain('Are you sure you want to proceed?');
+    });
+
+    it('should not display content when config is null', () => {
+      component.config = null;
+      fixture.detectChanges();
+
+      const modalElements = fixture.debugElement.queryAll(By.css('.modal-title, .modal-body'));
+      // Comme le template utilise *ngIf="config", ces éléments ne devraient pas être présents
+      expect(modalElements.length).toBe(0);
+    });
+  });
+
+  describe('Lifecycle', () => {
+    it('should unsubscribe and dispose modal on destroy', () => {
+      component.ngOnInit();
+      spyOn(component['subscription'], 'unsubscribe');
+      component['modal'] = mockModal;
+
+      component.ngOnDestroy();
+
+      expect(component['subscription'].unsubscribe).toHaveBeenCalled();
+      expect(mockModal.dispose).toHaveBeenCalled();
+    });
+
+    it('should handle destroy when modal is null', () => {
+      component.ngOnInit();
+      spyOn(component['subscription'], 'unsubscribe');
+      component['modal'] = null;
+
+      expect(() => component.ngOnDestroy()).not.toThrow();
+      expect(component['subscription'].unsubscribe).toHaveBeenCalled();
+    });
+  });
+
+  describe('Modal management', () => {
+    beforeEach(() => {
+      component.ngOnInit();
+    });
+
+    it('should create modal only once for the same element', () => {
+      const mockElement = document.createElement('div');
+      spyOn(document, 'getElementById').and.returnValue(mockElement);
+
+      // Première création
+      const config1: ConfirmationConfig = {
+        title: 'Test 1',
+        message: 'Message 1',
+        confirmText: 'OK',
+        cancelText: 'Cancel',
+        type: 'danger'
+      };
+      configSubject.next(config1);
+
+      expect(window.bootstrap.Modal).toHaveBeenCalledTimes(1);
+
+      // Deuxième configuration
+      const config2: ConfirmationConfig = {
+        title: 'Test 2',
+        message: 'Message 2',
+        confirmText: 'OK',
+        cancelText: 'Cancel',
+        type: 'warning'
+      };
+      configSubject.next(config2);
+
+      // Le modal ne devrait pas être recréé
+      expect(window.bootstrap.Modal).toHaveBeenCalledTimes(1);
+      expect(mockModal.show).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle missing modal element gracefully', () => {
+      spyOn(document, 'getElementById').and.returnValue(null);
+
+      const config: ConfirmationConfig = {
+        title: 'Test',
+        message: 'Message',
+        confirmText: 'OK',
+        cancelText: 'Cancel',
+        type: 'danger'
+      };
+
+      expect(() => configSubject.next(config)).not.toThrow();
+      expect(window.bootstrap.Modal).not.toHaveBeenCalled();
+    });
+  });
+}); 

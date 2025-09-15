@@ -1,0 +1,134 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { StudentProfileComponent } from './student-profile.component';
+import { StudentService } from '../../services/student.service';
+import { LevelService } from '../../services/level.service';
+import { of } from 'rxjs';
+import { Student } from '../../models/student.model';
+import { Level } from '../../models/level.model';
+import { ActivatedRoute, Router } from '@angular/router';
+
+describe('StudentProfileComponent', () => {
+  let component: StudentProfileComponent;
+  let fixture: ComponentFixture<StudentProfileComponent>;
+  let studentService: jasmine.SpyObj<StudentService>;
+  let levelService: jasmine.SpyObj<LevelService>;
+  let router: jasmine.SpyObj<Router>;
+
+  const mockStudent: Student = {
+    id: 1,
+    personalInfo: {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
+      birthDate: new Date('1990-01-01'),
+      phone: '+33612345678',
+    },
+    address: {
+      street: '123 Main St',
+      city: 'Paris',
+      zipCode: '75001',
+      country: 'France',
+    },
+    nationality: {
+      code: 'FR',
+      name: 'Française',
+      countryCode: 'FR',
+    },
+    level: {
+      code: 'B2',
+      name: 'Avancé',
+      description: 'Niveau avancé',
+      order: 4,
+    },
+    status: {
+      code: 'ACTIVE',
+      name: 'Actif',
+      description: 'Étudiant actif',
+      color: '#28a745',
+    },
+    statusHistory: [],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockNextLevel: Level = {
+    code: 'C1',
+    name: 'Autonome',
+    description: 'Niveau autonome',
+    order: 5,
+  };
+
+  beforeEach(async () => {
+    const studentServiceSpy = jasmine.createSpyObj('StudentService', [
+      'getStudentById',
+      'deleteStudent',
+    ]);
+    const levelServiceSpy = jasmine.createSpyObj('LevelService', ['getNextLevel']);
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+
+    studentServiceSpy.getStudentById.and.returnValue(of(mockStudent));
+    levelServiceSpy.getNextLevel.and.returnValue(of(mockNextLevel));
+    studentServiceSpy.deleteStudent.and.returnValue(of(void 0));
+
+    await TestBed.configureTestingModule({
+      imports: [RouterTestingModule, StudentProfileComponent],
+      providers: [
+        { provide: StudentService, useValue: studentServiceSpy },
+        { provide: LevelService, useValue: levelServiceSpy },
+        { provide: Router, useValue: routerSpy },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              params: { id: '1' },
+            },
+          },
+        },
+      ],
+    }).compileComponents();
+
+    studentService = TestBed.inject(StudentService) as jasmine.SpyObj<StudentService>;
+    levelService = TestBed.inject(LevelService) as jasmine.SpyObj<LevelService>;
+    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(StudentProfileComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should load student on init', () => {
+    expect(studentService.getStudentById).toHaveBeenCalledWith(1);
+    expect(component.student).toEqual(mockStudent);
+  });
+
+  it('should load next level after loading student', () => {
+    expect(levelService.getNextLevel).toHaveBeenCalledWith(mockStudent.level);
+    expect(component.nextLevel).toEqual(mockNextLevel);
+  });
+
+  it('should navigate to list if student not found', () => {
+    studentService.getStudentById.and.returnValue(of(null));
+    component.ngOnInit();
+    expect(router.navigate).toHaveBeenCalledWith(['/dashboard/apprenants']);
+  });
+
+  it('should delete student and navigate to list', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    component.deleteStudent();
+    expect(studentService.deleteStudent).toHaveBeenCalledWith(mockStudent.id);
+    expect(router.navigate).toHaveBeenCalledWith(['/dashboard/apprenants']);
+  });
+
+  it('should not delete student if not confirmed', () => {
+    spyOn(window, 'confirm').and.returnValue(false);
+    component.deleteStudent();
+    expect(studentService.deleteStudent).not.toHaveBeenCalled();
+  });
+});

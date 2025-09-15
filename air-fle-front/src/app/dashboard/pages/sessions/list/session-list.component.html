@@ -1,0 +1,61 @@
+<div class="exams-page">
+  <div class="header-card">
+    <div class="left">
+      <h1>Sessions</h1>
+      <div class="subtitle">Gestion des sessions annuelles</div>
+    </div>
+    <div class="actions">
+      <a class="btn primary" [routerLink]="['/dashboard/sessions/create']">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouvelle session
+      </a>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <div>Chargement des sessions…</div>
+  </div>
+
+  <!-- Liste des sessions (style Examens renommé) -->
+  <div class="session-list" *ngIf="!loading && sessions?.length">
+    <div class="session-item" *ngFor="let s of sessions">
+      <div class="session-header">
+        <div class="left">
+          <div class="title-row">
+            <strong>{{ s.session_label || s.label }}</strong>
+          </div>
+          <div class="meta-row">
+            <span class="muted">Du {{ formatDate(s.session_started_at || s.started_at) }}</span>
+            <span class="sep">•</span>
+            <span class="muted">au {{ formatDate(s.session_finished_at || s.finished_at) }}</span>
+            <span class="sep">•</span>
+            <span class="badge-type"><span class="dot"></span>{{ (s.groups?.length || 0) }} groupe(s)</span>
+          </div>
+        </div>
+        <div class="icons">
+          <button class="icon-btn" [routerLink]="['/dashboard/sessions', s.session_uuid || s.id || '']" title="Voir" aria-label="Voir">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button class="icon-btn" [routerLink]="['/dashboard/sessions/edit', s.session_uuid || s.id || '']" title="Modifier" aria-label="Modifier">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </button>
+          <button class="icon-btn danger" (click)="deleteSession(s.session_uuid || s.id || '')" title="Supprimer" aria-label="Supprimer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Etat vide -->
+  <div class="empty" *ngIf="!loading && (!sessions || sessions.length===0)">
+    <div class="icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
+    <h3>Aucune session</h3>
+    <p>Créez votre première session pour commencer.</p>
+    <a class="btn primary" [routerLink]="['/dashboard/sessions/create']">Créer une session</a>
+  </div>
+</div>

@@ -1,0 +1,156 @@
+<div class="french-levels-container">
+  <div class="french-levels-actions">
+    <button class="back-btn" (click)="goBack()">
+      <span class="btn-icon">←</span>
+      Retour
+    </button>
+    <h2>🇫🇷 Niveaux de Français</h2>
+    <button class="create-btn" (click)="openCreateModal()">
+      <span class="btn-icon">+</span>
+      Ajouter un niveau
+    </button>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    <p>{{ error }}</p>
+    <button (click)="error = null" class="close-error">×</button>
+  </div>
+
+  <div class="french-levels-content">
+    <div class="french-levels-list">
+      <div class="french-levels-header">
+        <div class="column code">CODE</div>
+        <div class="column description">DESCRIPTION</div>
+        <div class="column actions">ACTIONS</div>
+      </div>
+
+      <div *ngIf="isLoading" class="loading-indicator">
+        <div class="spinner"></div>
+        <span>Chargement des niveaux de français...</span>
+      </div>
+
+      <div *ngFor="let level of frenchLevels; trackBy: trackByLevelId" class="level-item">
+        <div class="column code">
+          <div class="level-code">{{ level.code }}</div>
+        </div>
+        <div class="column description">
+          <div class="level-description">{{ level.description }}</div>
+        </div>
+        <div class="column actions">
+          <button class="edit-btn" (click)="openEditModal(level)">Modifier</button>
+          <button class="delete-btn" (click)="deleteFrenchLevel(level)">Supprimer</button>
+        </div>
+      </div>
+
+      <div *ngIf="!isLoading && frenchLevels.length === 0" class="empty-state">
+        <p>Aucun niveau de français trouvé</p>
+        <button class="create-btn" (click)="openCreateModal()">
+          <span class="btn-icon">+</span>
+          Ajouter un niveau
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de création -->
+<div class="modal-overlay" *ngIf="isCreateModalOpen" (click)="closeCreateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Ajouter un niveau de français</h2>
+      <button class="close-btn" (click)="closeCreateModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="createForm" (ngSubmit)="createFrenchLevel()">
+        <div class="form-group">
+          <label for="createCode">Code *</label>
+          <input
+            id="createCode"
+            type="text"
+            formControlName="code"
+            placeholder="Ex: A1, A2, B1, B2, C1, C2"
+            [class.error]="createCode?.invalid && createCode?.touched"
+          />
+          <div *ngIf="createCode?.invalid && createCode?.touched" class="error-text">
+            <span *ngIf="createCode?.hasError('required')">Le code est requis</span>
+            <span *ngIf="createCode?.hasError('minlength')"
+              >Le code doit contenir au moins 2 caractères</span
+            >
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="createDescription">Description *</label>
+          <textarea
+            id="createDescription"
+            formControlName="description"
+            placeholder="Description du niveau selon le CECR"
+            [class.error]="createDescription?.invalid && createDescription?.touched"
+            rows="3"
+          ></textarea>
+          <div *ngIf="createDescription?.invalid && createDescription?.touched" class="error-text">
+            <span *ngIf="createDescription?.hasError('required')">La description est requise</span>
+            <span *ngIf="createDescription?.hasError('minlength')"
+              >La description doit contenir au moins 3 caractères</span
+            >
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" (click)="closeCreateModal()">Annuler</button>
+          <button type="submit" class="submit-btn" [disabled]="createForm.invalid">Créer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal d'édition -->
+<div class="modal-overlay" *ngIf="isEditModalOpen" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Modifier le niveau de français</h2>
+      <button class="close-btn" (click)="closeEditModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="editForm" (ngSubmit)="updateFrenchLevel()">
+        <div class="form-group">
+          <label for="editCode">Code *</label>
+          <input
+            id="editCode"
+            type="text"
+            formControlName="code"
+            placeholder="Ex: A1, A2, B1, B2, C1, C2"
+            [class.error]="editCode?.invalid && editCode?.touched"
+          />
+          <div *ngIf="editCode?.invalid && editCode?.touched" class="error-text">
+            <span *ngIf="editCode?.hasError('required')">Le code est requis</span>
+            <span *ngIf="editCode?.hasError('minlength')"
+              >Le code doit contenir au moins 2 caractères</span
+            >
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="editDescription">Description *</label>
+          <textarea
+            id="editDescription"
+            formControlName="description"
+            placeholder="Description du niveau selon le CECR"
+            [class.error]="editDescription?.invalid && editDescription?.touched"
+            rows="3"
+          ></textarea>
+          <div *ngIf="editDescription?.invalid && editDescription?.touched" class="error-text">
+            <span *ngIf="editDescription?.hasError('required')">La description est requise</span>
+            <span *ngIf="editDescription?.hasError('minlength')"
+              >La description doit contenir au moins 3 caractères</span
+            >
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="cancel-btn" (click)="closeEditModal()">Annuler</button>
+          <button type="submit" class="submit-btn" [disabled]="editForm.invalid">
+            Sauvegarder
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

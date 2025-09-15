@@ -1,0 +1,48 @@
+<!-- En-tête (seulement sur la page principale) -->
+<div class="reference-data-header" *ngIf="!isChildRouteActive">
+  <h1>Gestion des Données de Référence</h1>
+  <p class="subtitle">Administrez les listes déroulantes utilisées dans l'application</p>
+</div>
+
+<!-- Liste des sections (seulement sur la page principale) -->
+<div class="reference-data-content" *ngIf="!isChildRouteActive">
+  <div class="sections-list">
+    <div class="sections-header">
+      <div class="column name">SECTION</div>
+      <div class="column description">DESCRIPTION</div>
+      <div class="column actions">ACTIONS</div>
+    </div>
+
+    <div *ngFor="let config of referenceDataConfigs" class="section-item">
+      <div class="column name">
+        <div class="section-name">
+          <span class="section-icon" aria-hidden="true">
+            <ng-container [ngSwitch]="config.icon">
+              <svg *ngSwitchCase="'globe'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 0 0 20a15.3 15.3 0 0 0 0-20z"/></svg>
+              <svg *ngSwitchCase="'book-open'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a4 4 0 0 1 4 4v12a4 4 0 0 0-4-4H2z"/><path d="M22 4h-7a4 4 0 0 0-4 4v12a4 4 0 0 1 4-4h7z"/></svg>
+              <svg *ngSwitchCase="'users'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <svg *ngSwitchCase="'corner-up-right'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+              <svg *ngSwitchCase="'target'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              <svg *ngSwitchCase="'bar-chart-2'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              <svg *ngSwitchCase="'credit-card'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              <svg *ngSwitchCase="'activity'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <svg *ngSwitchDefault width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+            </ng-container>
+          </span>
+          {{ config.displayName }}
+        </div>
+      </div>
+
+      <div class="column description">
+        <div class="section-description">Gérer les {{ config.displayName.toLowerCase() }}</div>
+      </div>
+
+      <div class="column actions">
+        <button class="manage-btn" (click)="navigateToSection(config)">Gérer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Zone de contenu pour les routes enfants -->
+<router-outlet></router-outlet>

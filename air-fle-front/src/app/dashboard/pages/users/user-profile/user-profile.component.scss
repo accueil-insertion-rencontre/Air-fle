@@ -1,0 +1,1060 @@
+// Variables de couleurs
+$teal-300: #4fd1c5;
+$text-color: #333;
+$light-text: #718096;
+$white: #fff;
+$green: #48bb78;
+$red: #f56565;
+$blue: #4299e1;
+$gray-100: #f7fafc;
+$gray-200: #edf2f7;
+$gray-300: #e2e8f0;
+$gray-400: #cbd5e0;
+$gray-500: #a0aec0;
+
+// Import du module de couleur Sass
+@use 'sass:color';
+
+.profile-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 10px;
+  font-family: 'Roboto', sans-serif;
+  position: relative;
+
+  // Bannière principale
+  .banner {
+    background-color: $teal-300;
+    height: 150px;
+    border-radius: 12px;
+    margin-bottom: -40px;
+    position: relative;
+    z-index: 0;
+    width: 100%;
+    transition: background-color 0.3s ease;
+
+    &.inactive-banner {
+      background-color: $red;
+    }
+  }
+
+  // Boutons flottants
+  .floating-buttons {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 2;
+
+    // Bouton de retour
+    .back-button {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 8px;
+      color: $white;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    }
+
+    // Groupe de boutons d'action
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    // Bouton d'édition
+    .edit-button {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 8px;
+      color: $white;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    }
+
+    // Bouton de suppression
+    .delete-button {
+      background: rgba(255, 0, 0, 0.2);
+      border: none;
+      border-radius: 8px;
+      color: $white;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      &:hover {
+        background: rgba(255, 0, 0, 0.3);
+      }
+    }
+  }
+
+  // Carte transparente
+  .user-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 0;
+    margin-top: 0;
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+
+    .user-info {
+      padding: 15px 20px;
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: $teal-300;
+        color: $white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+      }
+
+      // Avatar rouge pour les comptes inactifs
+      .profile-container .inactive-banner ~ .user-card .avatar {
+        background-color: $red;
+      }
+
+      .name-container {
+        h2 {
+          font-weight: 600;
+          font-size: 16px;
+          margin: 0 0 3px;
+          color: $text-color;
+        }
+
+        p {
+          margin: 0;
+          font-size: 12px;
+          color: $light-text;
+        }
+
+        .status-badge {
+          display: inline-block;
+          font-size: 11px;
+          padding: 3px 8px;
+          border-radius: 12px;
+          margin-top: 8px;
+          font-weight: 500;
+
+          &.active {
+            background-color: rgba($green, 0.2);
+            color: $green;
+          }
+
+          &.inactive {
+            background-color: rgba($red, 0.2);
+            color: $red;
+          }
+        }
+      }
+    }
+  }
+
+  // Carte d'informations
+  .info-card {
+    background: $white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: $text-color;
+      margin: 0 0 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #edf2f7;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+
+      .info-item {
+        display: flex;
+        flex-direction: column;
+
+        .label {
+          font-size: 12px;
+          color: $light-text;
+          margin-bottom: 5px;
+        }
+
+        .value {
+          font-size: 14px;
+          color: $text-color;
+          font-weight: 500;
+
+          &.status-text {
+            &.active-text {
+              color: $green;
+            }
+
+            &.inactive-text {
+              color: $red;
+            }
+          }
+        }
+
+        &.status-switch-item {
+          .switch-container {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+
+            .switch-text {
+              margin-left: 10px;
+              font-size: 14px;
+              font-weight: 500;
+
+              &.active-text {
+                color: $green;
+              }
+
+              &.inactive-text {
+                color: $red;
+              }
+            }
+
+            /* The switch - the box around the slider */
+            .switch {
+              position: relative;
+              display: inline-block;
+              width: 50px;
+              height: 24px;
+
+              /* Hide default HTML checkbox */
+              input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+
+                &:checked + .slider {
+                  background-color: $green;
+                }
+
+                &:focus + .slider {
+                  box-shadow: 0 0 1px $green;
+                }
+
+                &:checked + .slider:before {
+                  transform: translateX(26px);
+                }
+
+                &:disabled + .slider {
+                  opacity: 0.7;
+                  cursor: default;
+                }
+              }
+
+              /* The slider */
+              .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #ccc;
+                transition: 0.4s;
+
+                &.inactive-slider {
+                  background-color: $red;
+                }
+
+                &:before {
+                  position: absolute;
+                  content: '';
+                  height: 16px;
+                  width: 16px;
+                  left: 4px;
+                  bottom: 4px;
+                  background-color: white;
+                  transition: 0.4s;
+                }
+
+                /* Rounded sliders */
+                &.round {
+                  border-radius: 24px;
+
+                  &:before {
+                    border-radius: 50%;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // État de chargement
+  .loading {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 0;
+    text-align: center;
+    color: $text-color;
+    font-size: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    position: relative;
+    z-index: 1;
+  }
+
+  // Message de succès
+  .success-message {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba($green, 0.9);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    animation: fadeInOut 3s ease;
+  }
+
+  @keyframes fadeInOut {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    10% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    90% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+  }
+
+  // Styles des modales
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .modal-container {
+    background-color: $white;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 500px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid $gray-200;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: $text-color;
+    }
+
+    .close-button {
+      background: none;
+      border: none;
+      font-size: 24px;
+      line-height: 1;
+      color: $gray-500;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+
+      &:hover {
+        color: $text-color;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 20px;
+
+    p {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: $text-color;
+    }
+
+    .user-summary {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background-color: $gray-100;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+
+      .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: $teal-300;
+        color: $white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      .user-info {
+        h4 {
+          margin: 0 0 5px;
+          font-size: 16px;
+          font-weight: 600;
+        }
+
+        p {
+          margin: 0 0 8px;
+          font-size: 14px;
+          color: $light-text;
+        }
+
+        .status-badge {
+          display: inline-block;
+          font-size: 12px;
+          padding: 3px 8px;
+          border-radius: 12px;
+          font-weight: 500;
+
+          &.active {
+            background-color: rgba($green, 0.2);
+            color: $green;
+          }
+
+          &.inactive {
+            background-color: rgba($red, 0.2);
+            color: $red;
+          }
+        }
+      }
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid $gray-300;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-top: 5px;
+
+      &:focus {
+        outline: none;
+        border-color: $teal-300;
+        box-shadow: 0 0 0 2px rgba($teal-300, 0.2);
+      }
+    }
+
+    .checkbox-group {
+      margin-top: 15px;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding-left: 30px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      user-select: none;
+      color: $text-color;
+
+      input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+
+        &:checked ~ .checkmark {
+          background-color: $red;
+          border-color: $red;
+
+          &:after {
+            display: block;
+          }
+        }
+      }
+
+      .checkmark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 20px;
+        width: 20px;
+        background-color: $white;
+        border: 1px solid $gray-300;
+        border-radius: 4px;
+        transition: all 0.2s;
+
+        &:after {
+          content: '';
+          position: absolute;
+          display: none;
+          left: 7px;
+          top: 3px;
+          width: 5px;
+          height: 10px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+        }
+      }
+
+      &:hover input ~ .checkmark {
+        background-color: $gray-100;
+      }
+    }
+
+    .error-message {
+      margin-top: 15px;
+      color: $red;
+      font-size: 14px;
+      background-color: rgba($red, 0.1);
+      padding: 10px;
+      border-radius: 8px;
+      border-left: 3px solid $red;
+    }
+  }
+
+  .modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid $gray-200;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+
+    button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &.cancel-button {
+        background-color: $white;
+        color: $text-color;
+        border: 1px solid $gray-300;
+
+        &:hover {
+          background-color: $gray-100;
+        }
+      }
+
+      &.confirm-button {
+        background-color: $blue;
+        color: $white;
+        border: none;
+
+        &:hover {
+          background-color: color.adjust($blue, $lightness: -5%);
+        }
+      }
+
+      &.delete-confirm-button {
+        background-color: $red;
+        color: $white;
+        border: none;
+
+        &:hover {
+          background-color: color.adjust($red, $lightness: -5%);
+        }
+
+        &:disabled {
+          background-color: $gray-400;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  // Formulaire d'édition
+  .edit-form-container {
+    margin-top: 60px;
+
+    .form-card {
+      background: $white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+
+      h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: $text-color;
+        margin: 0 0 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid $gray-200;
+      }
+
+      .form-error-message {
+        background-color: rgba($red, 0.1);
+        color: $red;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-size: 14px;
+        border-left: 3px solid $red;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
+        }
+
+        .form-group {
+          margin-bottom: 15px;
+
+          &.full-width {
+            grid-column: span 2;
+
+            @media (max-width: 768px) {
+              grid-column: span 1;
+            }
+          }
+
+          label {
+            display: block;
+            font-size: 12px;
+            color: $light-text;
+            margin-bottom: 5px;
+          }
+
+          .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid $gray-300;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+
+            &:focus {
+              outline: none;
+              border-color: $teal-300;
+              box-shadow: 0 0 0 2px rgba($teal-300, 0.2);
+            }
+
+            &.ng-invalid.ng-touched {
+              border-color: $red;
+            }
+          }
+
+          .error-message {
+            color: $red;
+            font-size: 12px;
+            margin-top: 5px;
+          }
+
+          &.status-group {
+            .switch-container {
+              margin-top: 10px;
+              display: flex;
+              align-items: center;
+
+              .switch-text {
+                margin-left: 10px;
+                font-size: 14px;
+                font-weight: 500;
+
+                &.active-text {
+                  color: $green;
+                }
+
+                &.inactive-text {
+                  color: $red;
+                }
+              }
+
+              /* The switch - the box around the slider */
+              .switch {
+                position: relative;
+                display: inline-block;
+                width: 50px;
+                height: 24px;
+
+                /* Hide default HTML checkbox */
+                input {
+                  opacity: 0;
+                  width: 0;
+                  height: 0;
+
+                  &:checked + .slider {
+                    background-color: $green;
+                  }
+
+                  &:focus + .slider {
+                    box-shadow: 0 0 1px $green;
+                  }
+
+                  &:checked + .slider:before {
+                    transform: translateX(26px);
+                  }
+                }
+
+                /* The slider */
+                .slider {
+                  position: absolute;
+                  cursor: pointer;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  bottom: 0;
+                  background-color: #ccc;
+                  transition: 0.4s;
+
+                  &.inactive-slider {
+                    background-color: $red;
+                  }
+
+                  &:before {
+                    position: absolute;
+                    content: '';
+                    height: 16px;
+                    width: 16px;
+                    left: 4px;
+                    bottom: 4px;
+                    background-color: white;
+                    transition: 0.4s;
+                  }
+
+                  /* Rounded sliders */
+                  &.round {
+                    border-radius: 24px;
+
+                    &:before {
+                      border-radius: 50%;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid $gray-200;
+
+        button {
+          padding: 8px 16px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+
+          &.cancel-button {
+            background-color: $white;
+            color: $text-color;
+            border: 1px solid $gray-300;
+
+            &:hover {
+              background-color: $gray-100;
+            }
+          }
+
+          &.save-button {
+            background-color: $teal-300;
+            color: $white;
+            border: none;
+
+            &:hover {
+              background-color: color.adjust($teal-300, $lightness: -5%);
+            }
+
+            &:disabled {
+              background-color: $gray-400;
+              cursor: not-allowed;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Styles pour la section de mot de passe
+  .password-section {
+    margin-top: 20px;
+
+    .toggle-password-button {
+      background-color: $white;
+      border: 1px solid $gray-300;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: $text-color;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: $gray-100;
+      }
+
+      svg {
+        color: $teal-300;
+      }
+    }
+
+    .password-form-container {
+      margin-top: 15px;
+      animation: slideDown 0.3s ease;
+
+      .form-card {
+        background: $white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+
+        h3 {
+          font-size: 18px;
+          font-weight: 600;
+          color: $text-color;
+          margin: 0 0 15px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid $gray-200;
+        }
+
+        .form-error-message {
+          background-color: rgba($red, 0.1);
+          color: $red;
+          padding: 10px;
+          border-radius: 8px;
+          margin-bottom: 15px;
+          font-size: 14px;
+          border-left: 3px solid $red;
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 15px;
+
+          @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+          }
+
+          .form-group {
+            margin-bottom: 15px;
+
+            &.full-width {
+              grid-column: span 2;
+
+              @media (max-width: 768px) {
+                grid-column: span 1;
+              }
+            }
+
+            label {
+              display: block;
+              font-size: 12px;
+              color: $light-text;
+              margin-bottom: 5px;
+            }
+
+            .form-control {
+              width: 100%;
+              padding: 8px 12px;
+              border: 1px solid $gray-300;
+              border-radius: 8px;
+              font-size: 14px;
+              transition: border-color 0.2s;
+
+              &:focus {
+                outline: none;
+                border-color: $teal-300;
+                box-shadow: 0 0 0 2px rgba($teal-300, 0.2);
+              }
+
+              &.ng-invalid.ng-touched {
+                border-color: $red;
+              }
+            }
+
+            .error-message {
+              color: $red;
+              font-size: 12px;
+              margin-top: 5px;
+            }
+          }
+        }
+
+        .form-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          margin-top: 20px;
+
+          button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+
+            &.cancel-button {
+              background-color: $white;
+              color: $text-color;
+              border: 1px solid $gray-300;
+
+              &:hover {
+                background-color: $gray-100;
+              }
+            }
+
+            &.save-button {
+              background-color: $teal-300;
+              color: $white;
+              border: none;
+
+              &:hover {
+                background-color: color.adjust($teal-300, $lightness: -5%);
+              }
+
+              &:disabled {
+                background-color: $gray-400;
+                cursor: not-allowed;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

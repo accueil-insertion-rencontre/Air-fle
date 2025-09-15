@@ -1,0 +1,66 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <h2>Calendrier des sessions et cours</h2>
+    </div>
+    <div class="col-md-6 text-end">
+      <div class="btn-group" role="group">
+        <a [routerLink]="['/dashboard/sessions/create']" class="btn btn-primary">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvelle session
+        </a>
+        <a [routerLink]="['/dashboard/courses/create']" class="btn btn-info">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouveau cours
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="row align-items-center">
+        <div class="col">
+          <h5 class="card-title">Planification</h5>
+        </div>
+        <div class="col-auto">
+          <div class="legend">
+            <span class="legend-item">
+              <span class="legend-color session-color"></span> Sessions
+            </span>
+            <span class="legend-item"> <span class="legend-color course-color"></span> Cours </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="calendar-container">
+        <div *ngIf="loading" class="calendar-loader">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Chargement...</span>
+          </div>
+        </div>
+        <full-calendar [options]="calendarOptions"></full-calendar>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-4">
+    <div class="card-header">
+      <h5 class="card-title">Instructions</h5>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-info">
+        <h6>
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Comment utiliser le calendrier
+        </h6>
+        <ul>
+          <li>Cliquez sur un événement pour voir ses détails</li>
+          <li>Glissez-déposez un événement pour le déplacer à une autre date ou heure</li>
+          <li>Le système détectera automatiquement les conflits de planning</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

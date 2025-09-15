@@ -1,0 +1,100 @@
+<div class="certificate-generator">
+  <div class="card">
+    <div class="card-header">
+      <h5 class="card-title">
+        <i class="fas fa-certificate"></i>
+        Certificat de Formation
+      </h5>
+    </div>
+    
+    <div class="card-body">
+      <!-- Informations de l'étudiant -->
+      <div class="student-info mb-3">
+        <p><strong>Étudiant :</strong> {{ studentName }}</p>
+        <p><strong>UUID :</strong> {{ student_uuid }}</p>
+      </div>
+
+      <!-- Messages d'erreur -->
+      <div *ngIf="error" class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ error }}
+      </div>
+
+      <!-- Loader -->
+      <div *ngIf="isLoading" class="text-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only">Chargement...</span>
+        </div>
+        <p class="mt-2">Traitement en cours...</p>
+      </div>
+
+      <!-- Données du certificat -->
+      <div *ngIf="certificateData && !isLoading" class="certificate-data mb-4">
+        <h6>Aperçu des données :</h6>
+        <div class="row">
+          <div class="col-md-6">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item">
+                <strong>Nom complet :</strong> {{ certificateData.studentName }}
+              </li>
+              <li class="list-group-item">
+                <strong>Date de naissance :</strong> {{ certificateData.birthDate }}
+              </li>
+              <li class="list-group-item">
+                <strong>Nationalité :</strong> {{ certificateData.nationality || 'Non renseignée' }}
+              </li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item">
+                <strong>Niveau français :</strong> {{ certificateData.frenchLevel }}
+              </li>
+              <li class="list-group-item">
+                <strong>Heures totales :</strong> {{ certificateData.totalHours }}h
+              </li>
+              <li class="list-group-item">
+                <strong>Taux de présence :</strong> {{ certificateData.attendanceRate }}%
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-2">
+          <small class="text-muted">
+            Période : du {{ certificateData.startDate }} au {{ certificateData.endDate }}
+          </small>
+        </div>
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="btn-group" role="group">
+        <button 
+          type="button" 
+          class="btn btn-primary"
+          [disabled]="isLoading"
+          (click)="downloadCertificate()">
+          <i class="fas fa-download"></i>
+          {{ isLoading ? 'Téléchargement...' : 'Télécharger PDF' }}
+        </button>
+
+        <button 
+          type="button" 
+          class="btn btn-secondary"
+          [disabled]="isLoading"
+          (click)="previewCertificate()">
+          <i class="fas fa-eye"></i>
+          Prévisualiser
+        </button>
+
+        <button 
+          type="button" 
+          class="btn btn-info"
+          [disabled]="isLoading"
+          (click)="loadCertificateData()">
+          <i class="fas fa-sync-alt"></i>
+          Actualiser
+        </button>
+      </div>
+    </div>
+  </div>
+</div> 

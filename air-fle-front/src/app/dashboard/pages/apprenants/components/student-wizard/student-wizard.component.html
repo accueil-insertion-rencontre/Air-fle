@@ -1,0 +1,405 @@
+<div class="wizard-container">
+  <!-- En-tête avec navigation étapes -->
+  <div class="wizard-header">
+    <h1>{{ isEditMode ? 'Modifier l\'étudiant' : 'Créer un nouvel étudiant' }}</h1>
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div
+        *ngFor="let step of steps"
+        class="step"
+        [class.active]="step.isActive"
+        [class.completed]="step.isCompleted"
+        [class.clickable]="step.isCompleted || step.id <= currentStep"
+        (click)="goToStep(step.id)"
+      >
+        <div class="step-circle">
+          <span class="step-icon">{{ getStepIcon(step) }}</span>
+        </div>
+        <div class="step-label desktop-only">{{ step.title }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenu du wizard -->
+  <div class="wizard-content">
+    <!-- Étape 1: Informations personnelles -->
+    <div *ngIf="currentStep === 1" class="step-content">
+      <h2>👤 Informations personnelles</h2>
+      <p class="step-description">{{ isEditMode ? 'Modifiez' : 'Renseignez' }} les informations de base de l'étudiant</p>
+
+      <form [formGroup]="personalInfoForm" class="wizard-form">
+        <div class="form-row">
+          <div class="form-group required">
+            <label for="firstname">Prénom *</label>
+            <input
+              type="text"
+              id="firstname"
+              formControlName="firstname"
+              placeholder="Prénom de l'étudiant"
+              [class.invalid]="isFieldInvalid(personalInfoForm, 'firstname')"
+            />
+            <div class="error-text" *ngIf="isFieldInvalid(personalInfoForm, 'firstname')">
+              {{ getFieldError(personalInfoForm, 'firstname') }}
+            </div>
+          </div>
+
+          <div class="form-group required">
+            <label for="lastname">Nom *</label>
+            <input
+              type="text"
+              id="lastname"
+              formControlName="lastname"
+              placeholder="Nom de famille"
+              [class.invalid]="isFieldInvalid(personalInfoForm, 'lastname')"
+            />
+            <div class="error-text" *ngIf="isFieldInvalid(personalInfoForm, 'lastname')">
+              {{ getFieldError(personalInfoForm, 'lastname') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group required">
+            <label for="birthdate">Date de naissance *</label>
+            <input
+              type="date"
+              id="birthdate"
+              formControlName="birthdate"
+              [class.invalid]="isFieldInvalid(personalInfoForm, 'birthdate')"
+            />
+            <div class="error-text" *ngIf="isFieldInvalid(personalInfoForm, 'birthdate')">
+              {{ getFieldError(personalInfoForm, 'birthdate') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="placeOfBirth">Lieu de naissance</label>
+            <input
+              type="text"
+              id="placeOfBirth"
+              formControlName="placeOfBirth"
+              placeholder="Ville, Pays"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group required">
+            <label for="gender_id">Genre *</label>
+            <select
+              id="gender_id"
+              formControlName="gender_id"
+              [class.invalid]="isFieldInvalid(personalInfoForm, 'gender_id')"
+            >
+              <option value="">Sélectionnez un genre</option>
+              <option *ngFor="let gender of genders" [value]="gender.id">
+                {{ gender.label }}
+              </option>
+            </select>
+            <div class="error-text" *ngIf="isFieldInvalid(personalInfoForm, 'gender_id')">
+              {{ getFieldError(personalInfoForm, 'gender_id') }}
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Étape 2: Contact & Adresse -->
+    <div *ngIf="currentStep === 2" class="step-content">
+      <h2>📞 Contact & Adresse</h2>
+      <p class="step-description">Informations de contact et d'adresse (optionnel)</p>
+
+      <form [formGroup]="contactForm" class="wizard-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              placeholder="exemple@email.com"
+              [class.invalid]="isFieldInvalid(contactForm, 'email')"
+            />
+            <div class="error-text" *ngIf="isFieldInvalid(contactForm, 'email')">
+              {{ getFieldError(contactForm, 'email') }}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Téléphone</label>
+            <input
+              type="tel"
+              id="phone"
+              formControlName="phone"
+              placeholder="+33 1 23 45 67 89"
+              [class.invalid]="isFieldInvalid(contactForm, 'phone')"
+            />
+            <div class="error-text" *ngIf="isFieldInvalid(contactForm, 'phone')">
+              {{ getFieldError(contactForm, 'phone') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="address">Adresse</label>
+            <input
+              type="text"
+              id="address"
+              formControlName="address"
+              placeholder="Numéro et nom de rue"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="city">Ville</label>
+            <input type="text" id="city" formControlName="city" placeholder="Nom de la ville" />
+          </div>
+
+          <div class="form-group">
+            <label for="postalCode">Code postal</label>
+            <input type="text" id="postalCode" formControlName="postalCode" placeholder="75000" />
+          </div>
+
+          <div class="form-group">
+            <label for="country">Pays</label>
+            <input
+              type="text"
+              id="country"
+              formControlName="country"
+              placeholder="Pays de résidence"
+            />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Étape 3: Informations administratives -->
+    <div *ngIf="currentStep === 3" class="step-content">
+      <h2>🏛️ Informations administratives</h2>
+      <p class="step-description">Informations obligatoires pour l'inscription</p>
+
+      <form [formGroup]="administrativeForm" class="wizard-form">
+        <div class="form-row">
+          <div class="form-group required">
+            <label for="nationality_id">Nationalité *</label>
+            <select
+              id="nationality_id"
+              formControlName="nationality_id"
+              [class.invalid]="isFieldInvalid(administrativeForm, 'nationality_id')"
+            >
+              <option value="">Sélectionnez une nationalité</option>
+              <option *ngFor="let nationality of nationalities" [value]="nationality.id">
+                {{ nationality.label }}
+              </option>
+            </select>
+            <div class="error-text" *ngIf="isFieldInvalid(administrativeForm, 'nationality_id')">
+              {{ getFieldError(administrativeForm, 'nationality_id') }}
+            </div>
+          </div>
+
+          <div class="form-group required">
+            <label for="initial_level_id">Niveau d'entrée *</label>
+            <select
+              id="initial_level_id"
+              formControlName="initial_level_id"
+              [class.invalid]="isFieldInvalid(administrativeForm, 'initial_level_id')"
+            >
+              <option value="">Sélectionnez un niveau</option>
+              <option *ngFor="let level of frenchLevels" [value]="level.id">
+                {{ level.code }} - {{ level.description }}
+              </option>
+            </select>
+            <div class="error-text" *ngIf="isFieldInvalid(administrativeForm, 'initial_level_id')">
+              {{ getFieldError(administrativeForm, 'initial_level_id') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="current_level_id">Niveau actuel</label>
+            <select id="current_level_id" formControlName="current_level_id">
+              <option value="">Sélectionnez un niveau</option>
+              <option *ngFor="let level of frenchLevels" [value]="level.id">
+                {{ level.code }} - {{ level.description }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group required">
+            <label for="status_id">Statut *</label>
+            <select
+              id="status_id"
+              formControlName="status_id"
+              [class.invalid]="isFieldInvalid(administrativeForm, 'status_id')"
+            >
+              <option value="">Sélectionnez un statut</option>
+              <option *ngFor="let status of statuses" [value]="status.id">
+                {{ status.label }}
+              </option>
+            </select>
+            <div class="error-text" *ngIf="isFieldInvalid(administrativeForm, 'status_id')">
+              {{ getFieldError(administrativeForm, 'status_id') }}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group required">
+            <label for="financing_id">Type de financement *</label>
+            <select
+              id="financing_id"
+              formControlName="financing_id"
+              [class.invalid]="isFieldInvalid(administrativeForm, 'financing_id')"
+            >
+              <option value="">Sélectionnez un financement</option>
+              <option *ngFor="let financing of financings" [value]="financing.id">
+                {{ financing.type }}
+              </option>
+            </select>
+            <div class="error-text" *ngIf="isFieldInvalid(administrativeForm, 'financing_id')">
+              {{ getFieldError(administrativeForm, 'financing_id') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Dates administratives -->
+        <div class="form-section">
+          <h3>Dates administratives</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="date_entree_france">Date d'entrée en France</label>
+              <input type="date" id="date_entree_france" formControlName="date_entree_france" />
+            </div>
+
+            <div class="form-group">
+              <label for="date_titre_sejour">Date de titre de séjour</label>
+              <input type="date" id="date_titre_sejour" formControlName="date_titre_sejour" />
+            </div>
+
+            <div class="form-group">
+              <label for="date_cir">Date CIR</label>
+              <input type="date" id="date_cir" formControlName="date_cir" />
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Étape 4: Informations complémentaires -->
+    <div *ngIf="currentStep === 4" class="step-content">
+      <h2>➕ Informations complémentaires</h2>
+      <p class="step-description">Informations additionnelles et optionnelles</p>
+
+      <form [formGroup]="additionalForm" class="wizard-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date_test_initial">Date du test initial</label>
+            <input type="date" id="date_test_initial" formControlName="date_test_initial" />
+          </div>
+
+          <div class="form-group">
+            <label for="orientation_id">Orientation</label>
+            <select id="orientation_id" formControlName="orientation_id">
+              <option value="">Sélectionnez une orientation</option>
+              <option *ngFor="let orientation of orientations" [value]="orientation.id">
+                {{ orientation.type }}
+                <span *ngIf="orientation.description"> - {{ orientation.description }}</span>
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Handicaps (sélection multiple) -->
+        <div class="form-section" *ngIf="disabilities.length > 0">
+          <h3>Handicaps reconnus</h3>
+          <p class="section-description">
+            Sélectionnez tous les handicaps qui s'appliquent (optionnel)
+          </p>
+          <div class="checkbox-grid">
+            <label
+              *ngFor="let disability of disabilities"
+              class="checkbox-item"
+              [class.selected]="isDisabilitySelected(disability.id)"
+            >
+              <input
+                type="checkbox"
+                [checked]="isDisabilitySelected(disability.id)"
+                (change)="toggleDisability(disability.id)"
+              />
+              <span class="checkbox-label">{{ disability.label }}</span>
+              <span class="checkbox-description" *ngIf="disability.description">
+                {{ disability.description }}
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Commentaires -->
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="commentaire">Commentaires</label>
+            <textarea
+              id="commentaire"
+              formControlName="commentaire"
+              placeholder="Informations complémentaires..."
+              rows="4"
+            ></textarea>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Actions du wizard -->
+  <div class="wizard-actions">
+    <div class="actions-left">
+      <button type="button" class="btn btn-secondary" (click)="cancel()">Annuler</button>
+    </div>
+
+    <div class="actions-center">
+      <span class="step-indicator"> Étape {{ currentStep }} sur {{ totalSteps }} </span>
+    </div>
+
+    <div class="actions-right">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        *ngIf="currentStep > 1"
+        (click)="previousStep()"
+      >
+        ← Précédent
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        *ngIf="currentStep < totalSteps"
+        (click)="nextStep()"
+      >
+        Suivant →
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-success"
+        *ngIf="currentStep === totalSteps"
+        [disabled]="isSubmitting || !areAllFormsValid()"
+        (click)="onSubmit()"
+      >
+                  <span *ngIf="!isSubmitting">✓ {{ isEditMode ? 'Mettre à jour' : 'Créer l\'étudiant' }}</span>
+                  <span *ngIf="isSubmitting">{{ isEditMode ? 'Mise à jour en cours...' : 'Création en cours...' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="error" class="error-message">
+    <div class="error-content"><strong>Erreur :</strong> {{ error }}</div>
+    <button class="close-error" (click)="error = null">×</button>
+  </div>
+</div> 

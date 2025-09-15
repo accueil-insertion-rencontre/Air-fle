@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Exams" ADD COLUMN     "exam_created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;

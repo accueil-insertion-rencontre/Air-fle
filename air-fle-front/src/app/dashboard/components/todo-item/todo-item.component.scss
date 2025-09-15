@@ -1,0 +1,301 @@
+// Palette et tokens (alignés projet)
+$primary-color: #4fd1c5;
+$text-color: #2d3748;
+$muted-text: #718096;
+$border-color: #e2e8f0;
+$border-strong: #d4dbe5;
+$bg-soft: #f8fafc;
+$bg-hover: #f7fafc;
+$white: #ffffff;
+$radius-lg: 14px;
+$radius-md: 10px;
+$shadow-sm: 0 2px 8px rgba(16, 24, 40, 0.06);
+$shadow-md: 0 6px 18px rgba(16, 24, 40, 0.08);
+$space: 20px;
+
+// Statuts
+$success-color: #38a169;
+$warning-color: #f59e0b;
+$pending-color: #9aa4b2;
+
+// Carte raffinée
+.todo-item {
+  position: relative;
+  background: $white;
+  border-radius: $radius-lg;
+  border: 1px solid $border-color;
+  box-shadow: $shadow-sm;
+  margin-bottom: 14px;
+  transition: box-shadow 0.2s ease, transform 0.18s ease;
+
+  // Liseré décoratif gauche
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-top-left-radius: $radius-lg;
+    border-bottom-left-radius: $radius-lg;
+    background: linear-gradient(180deg, $primary-color, #38b2ac);
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: $shadow-md;
+  }
+
+  // Styles pour les sous-tâches
+  &.subtask {
+    background: $bg-soft;
+    margin: 10px 0 10px 26px;
+    border: 1px dashed $border-color;
+    box-shadow: none;
+
+    .task-content { padding: 12px 14px; }
+    .task-title { font-size: 14px; font-weight: 600; }
+    .status-indicator { width: 16px; height: 16px; }
+  }
+
+  &.completed {
+    opacity: 0.7;
+
+    .task-title {
+      text-decoration: line-through;
+      color: $muted-text;
+    }
+  }
+
+  .task-content { padding: $space; }
+
+  .task-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  // Indicateur de statut simple
+  .status-indicator-wrapper {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .status-indicator {
+    display: inline-block; // important pour que width/height s'appliquent au span
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid $border-strong;
+    background: $white;
+    transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+
+    &.clickable {
+      cursor: pointer;
+      &:hover { border-color: $primary-color; transform: scale(1.06); }
+      &:active { transform: scale(0.98); }
+    }
+    &.completed { background: $success-color; border-color: $success-color; }
+    &.pending { border-color: $pending-color; }
+    &.in-progress { background: $warning-color; border-color: $warning-color; }
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  // Contenu de la tâche
+  .task-details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .title-section {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-title { font-size: 16px; font-weight: 700; color: $text-color; margin: 0 0 8px 0; }
+
+  .task-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+
+  .priority-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #fed7d7;
+    color: #c53030;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    padding: 6px 10px;
+    border-radius: 9999px;
+    color: #0b1829; // le texte restera lisible même si bg inline change
+    box-shadow: 0 1px 0 rgba(16,24,40,.06), inset 0 0 0 1px rgba(16,24,40,.04);
+    backdrop-filter: saturate(1.2);
+  }
+
+  .task-description { color: $muted-text; font-size: 14px; line-height: 1.55; margin: 0 0 12px 0; }
+
+  // Section de progression simple
+  .progress-section { margin: 14px 0 10px; padding: 10px 12px; background: $bg-soft; border-radius: $radius-md; border: 1px solid $border-color; }
+
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .progress-stats {
+    font-size: 13px;
+    color: $muted-text;
+
+    .completed-count {
+      font-weight: 600;
+      color: $success-color;
+    }
+  }
+
+  .percentage {
+    font-size: 14px;
+    font-weight: 600;
+    color: $primary-color;
+  }
+
+  .progress-bar { height: 10px; background: #e6edf5; border-radius: 9999px; overflow: hidden; position: relative; }
+  .progress-bar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,.25), rgba(255,255,255,0)); pointer-events: none; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, $primary-color, #38b2ac); border-radius: 9999px; transition: width 250ms ease; }
+  .progress-fill.completed { background: linear-gradient(90deg, $success-color, #3fb07c); }
+
+  // Date d'échéance simple
+  .task-meta { margin-top: 8px; }
+
+  .due-date-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: $muted-text;
+
+    svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+    }
+
+    .due-date.overdue {
+      color: #e53e3e;
+      font-weight: 500;
+    }
+  }
+
+  // Bouton d'expansion simple
+  .expand-controls {
+    flex-shrink: 0;
+  }
+
+  .expand-btn {
+    background: transparent;
+    border: 1px solid $border-color;
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: $bg-hover;
+      border-color: $primary-color;
+    }
+
+    &.expanded svg {
+      transform: rotate(180deg);
+    }
+
+    svg {
+      width: 14px;
+      height: 14px;
+      stroke: $muted-text;
+      transition: transform 0.2s ease;
+    }
+  }
+
+  // Container des sous-tâches simple
+  .subtasks-container {
+    border-top: 1px solid $border-color;
+    background: #fbfdfe;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+
+    &.expanded {
+      max-height: 600px;
+    }
+  }
+
+  .subtasks-list {
+    padding: 12px $space 8px;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .todo-item {
+    .task-content {
+      padding: 16px;
+    }
+
+    .task-main {
+      gap: 10px;
+    }
+
+    .task-title { font-size: 15px; }
+
+    .progress-info {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    &.subtask { margin-left: 14px; .task-content { padding: 12px; } }
+  }
+}
+
+// Mobile compact
+@media (max-width: 480px) {
+  .todo-item {
+    &::before { width: 3px; }
+
+    .task-content { padding: 12px; }
+    .task-title { font-size: 14px; }
+    .status-badge { padding: 4px 8px; font-size: 10px; }
+
+    .progress-section { margin: 10px 0 6px; padding: 8px 10px; }
+    .progress-bar { height: 8px; }
+
+    .status-indicator { width: 16px; height: 16px; }
+    .expand-btn { width: 26px; height: 26px; }
+  }
+}

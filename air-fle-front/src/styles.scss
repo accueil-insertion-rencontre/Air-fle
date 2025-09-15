@@ -1,0 +1,295 @@
+/* Font Awesome supprimé: utiliser des SVG inline. */
+
+/* You can add global styles to this file, and also import other style files */
+
+/* Reset CSS et styles de base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  font-family: Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #f5f7fa;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #2d3748;
+  min-height: 100vh;
+}
+
+/* Assurez-vous que le composant racine prend toute la hauteur */
+app-root {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Styles pour les appareils mobiles */
+@media (max-width: 599px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Styles pour les écrans à haute résolution */
+@media (min-width: 1800px) {
+  html {
+    font-size: 18px;
+  }
+}
+
+/* Prévention de l'overflow pour les images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* reset global bouton supprimé: chaque composant doit définir son propre style */
+
+/* Styles pour les scrollbars personnalisées */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Styles de base pour les icônes Feather */
+.feather {
+  width: 20px;
+  height: 20px;
+  stroke: #818181;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.active-icon {
+  stroke: #4fd1c5;
+}
+
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
+
+/* Styles d'indicateurs de sécurité pour la directive AutoSanitize */
+.sanitized-input {
+  border: 2px solid #28a745 !important;
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  animation: sanitizedPulse 0.5s ease-in-out;
+}
+
+.contains-html {
+  border: 2px solid #ffc107 !important;
+  background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.unsafe-content {
+  border: 2px solid #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  animation: dangerShake 0.5s ease-in-out;
+}
+
+.content-safe {
+  border: 1px solid #28a745 !important;
+  background-color: rgba(40, 167, 69, 0.05) !important;
+}
+
+.validation-success {
+  border: 2px solid #28a745 !important;
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+}
+
+.validation-error {
+  border: 2px solid #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  animation: errorPulse 0.5s ease-in-out;
+}
+
+.validation-warning {
+  border: 2px solid #ffc107 !important;
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  position: relative;
+}
+
+.validation-warning::after {
+  content: '';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/></svg>') center/contain no-repeat;
+  mask: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/></svg>') center/contain no-repeat;
+  background: #d39e00;
+}
+
+/* Animations pour le feedback visuel */
+@keyframes sanitizedPulse {
+  0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+@keyframes dangerShake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+  20%, 40%, 60%, 80% { transform: translateX(3px); }
+}
+
+@keyframes errorPulse {
+  0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+/* Styles pour les notifications de sécurité */
+.security-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 16px;
+  border-radius: 4px;
+  color: white;
+  font-weight: 500;
+  z-index: 9999;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.security-notification.danger {
+  background-color: #dc3545;
+  border-left: 4px solid #a71e2a;
+}
+
+.security-notification.warning {
+  background-color: #ffc107;
+  color: #212529;
+  border-left: 4px solid #d39e00;
+}
+
+.security-notification.success {
+  background-color: #28a745;
+  border-left: 4px solid #1e7e34;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Styles pour les champs de formulaire sécurisés */
+.secure-input {
+  position: relative;
+}
+
+.secure-input.has-security-indicator::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px; height: 14px; background:#28a745;
+  -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"white\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/></svg>') center/contain no-repeat;
+  mask: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"white\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/></svg>') center/contain no-repeat;
+}
+
+/* Mode sombre pour les indicateurs de sécurité */
+@media (prefers-color-scheme: dark) {
+  .sanitized-input {
+    background-color: rgba(40, 167, 69, 0.2) !important;
+  }
+  
+  .contains-html {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+  }
+  
+  .unsafe-content {
+    background-color: rgba(220, 53, 69, 0.2) !important;
+  }
+  
+  .content-safe {
+    background-color: rgba(40, 167, 69, 0.1) !important;
+  }
+  
+  .validation-success {
+    background-color: rgba(40, 167, 69, 0.2) !important;
+  }
+  
+  .validation-error {
+    background-color: rgba(220, 53, 69, 0.2) !important;
+  }
+  
+  .validation-warning {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+  }
+}
+
+/* Responsive pour mobile */
+@media (max-width: 768px) {
+  .security-notification {
+    right: 10px;
+    left: 10px;
+    top: 10px;
+  }
+  
+  .validation-warning::after {
+    right: 5px;
+    font-size: 14px;
+  }
+}
+
+/* Transition douce pour tous les indicateurs */
+input, textarea, select {
+  transition: all 0.3s ease-in-out;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
+/* Accessibilité - focus visible pour la sécurité */
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}

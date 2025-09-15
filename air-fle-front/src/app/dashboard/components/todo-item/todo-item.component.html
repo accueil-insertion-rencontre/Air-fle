@@ -1,0 +1,99 @@
+<div class="todo-item" [class.subtask]="isSubTask" [class.completed]="task.status === 'completed'">
+  <div class="task-content">
+    <div class="task-main">
+      <!-- Bouton d'expansion (seulement si sous-tâches) -->
+      <button
+        class="expand-btn"
+        type="button"
+        *ngIf="hasSubtasks()"
+        [class.expanded]="isExpanded"
+        (click)="toggleExpand()"
+        aria-label="Afficher/Masquer les sous-tâches"
+        [attr.aria-expanded]="isExpanded"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9,18 15,12 9,6"></polyline>
+        </svg>
+      </button>
+
+      <!-- Indicateur/Toggle de statut (cliquable pour sous‑tâches) -->
+      <div class="status-indicator-wrapper">
+        <span
+          class="status-indicator"
+          [class.completed]="task.status === 'completed'"
+          [class.pending]="task.status === 'pending'"
+          [class.in-progress]="task.status === 'in_progress'"
+          [class.clickable]="isSubTask"
+          role="switch"
+          [attr.aria-checked]="task.status === 'completed'"
+          (click)="isSubTask ? toggleSubtaskStatus() : null"
+        >
+          <!-- cercle visuel si styles externes interfèrent -->
+          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+            <circle cx="10" cy="10" r="8" fill="currentColor" opacity="0"></circle>
+          </svg>
+        </span>
+      </div>
+
+      <div class="task-details">
+        <div class="task-header">
+          <div class="title-section">
+            <h4 class="task-title" [class.completed]="task.status === 'completed'">{{ task.title }}</h4>
+            <p class="task-description" *ngIf="task.description">{{ task.description }}</p>
+          </div>
+
+          <!-- Badge de statut pour les tâches parentes -->
+          <span class="status-badge" *ngIf="!isSubTask" [style.background-color]="getStatusColor()">
+            {{ getStatusLabel() }}
+          </span>
+        </div>
+
+        <!-- Progression -->
+        <div
+          class="progress-section"
+          *ngIf="!isSubTask && isMainTask() && getMainTask().subtasks && getMainTask().subtasks!.length > 0"
+        >
+          <div class="progress-info">
+            <div class="progress-stats">
+              <span class="completed-count">{{ getMainTask().statistics?.completed || 0 }}</span>
+              /{{ getMainTask().statistics?.total || getMainTask().subtasks!.length }} sous-tâches
+            </div>
+            <span class="percentage">{{ getCompletionPercentage() }}%</span>
+          </div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              [class.completed]="getCompletionPercentage() === 100"
+              [style.width.%]="getCompletionPercentage()"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Échéance -->
+        <div class="task-meta" *ngIf="isMainTask() && getMainTask().dueAt">
+          <div class="due-date-section">
+            <svg viewBox="0 0 24 24"><path d="M8 7V3m8 4V3M3 11h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            <span class="due-date" [class.overdue]="isOverdue(getMainTask().dueAt)">
+              {{ formatDueDate(getMainTask().dueAt) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sous-tâches -->
+  <div
+    class="subtasks-container"
+    [class.expanded]="isExpanded && isMainTask() && getMainTask().subtasks && getMainTask().subtasks!.length > 0"
+  >
+    <div class="subtasks-list" *ngIf="isExpanded && isMainTask() && getMainTask().subtasks">
+      <app-todo-item
+        *ngFor="let subTask of getMainTask().subtasks"
+        [task]="subTask"
+        [isSubTask]="true"
+        (taskUpdated)="taskUpdated.emit($event)"
+      ></app-todo-item>
+    </div>
+  </div>
+</div>
