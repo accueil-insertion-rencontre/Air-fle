@@ -121,7 +121,7 @@ export class StudentService {
    */
   getStudentCount(): Observable<number> {
     // Appeler l'API pour obtenir le vrai total d'étudiants
-    let params = new HttpParams().set('skip', '0').set('take', '1');
+    const params = new HttpParams().set('skip', '0').set('take', '1');
     return this.http.get<any>(this.apiUrl, { params }).pipe(
       map(response => {
         if (response.success && response.data && typeof response.data.total === 'number') {

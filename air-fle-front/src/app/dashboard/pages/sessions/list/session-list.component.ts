@@ -15,8 +15,8 @@ import {
 } from '@angular/forms';
 
 // Déclaration de jQuery qui est maintenant disponible globalement
-declare var $: any;
-declare var bootstrap: any;
+declare let $: any;
+declare let bootstrap: any;
 
 @Component({
   selector: 'app-session-list',

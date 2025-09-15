@@ -87,7 +87,7 @@ export class StudentWizardComponent implements OnInit {
     // Étape 2 : Contact & Adresse
     this.contactForm = this.fb.group({
       email: ['', [Validators.email]],
-      phone: ['', [Validators.pattern(/^[+]?[0-9\s\-\(\)]{8,15}$/)]],
+      phone: ['', [Validators.pattern(/^[+]?[0-9\s\-()]{8,15}$/)]],
       address: [''],
       city: [''],
       postalCode: [''],

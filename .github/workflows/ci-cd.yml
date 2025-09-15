@@ -16,7 +16,7 @@ jobs:
   # DÉTECTION DES CHANGEMENTS
   # =============================================================================
   detect-changes:
-    name: 🔍 Detect Changes
+    name: Detect Changes
     runs-on: ubuntu-latest
     outputs:
       api: ${{ steps.changes.outputs.api }}
@@ -43,7 +43,7 @@ jobs:
   # TESTS ET BUILD API
   # =============================================================================
   api-tests:
-    name: 🧪 API Tests
+    name: API Tests
     runs-on: ubuntu-latest
     needs: detect-changes
     if: needs.detect-changes.outputs.api == 'true'
@@ -67,45 +67,45 @@ jobs:
           - 5432:5432
 
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: air-fle-api/package-lock.json
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: 🏗️ Generate Prisma Client
+      - name: Generate Prisma Client
         run: npx prisma generate
 
-      - name: 🗃️ Run database migrations
+      - name: Run database migrations
         run: npx prisma migrate deploy
         env:
           DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/airfle_test
 
-      - name: 🌱 Seed test database
+      - name: Seed test database
         run: npm run seed
         env:
           DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/airfle_test
           NODE_ENV: test
 
-      - name: 🔍 Run linting
+      - name: Run linting
         run: npm run lint
 
-      - name: 🧪 Run tests
+      - name: Run tests
         run: npm run test
         env:
           DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/airfle_test
 
-      - name: 🏗️ Build application
+      - name: Build application
         run: npm run build
 
-      - name: 📊 Upload coverage reports
+      - name: Upload coverage reports
         uses: codecov/codecov-action@v4
         if: always()
         with:
@@ -115,7 +115,7 @@ jobs:
   # TESTS ET BUILD FRONTEND
   # =============================================================================
   frontend-tests:
-    name: 🎨 Frontend Tests
+    name: Frontend Tests
     runs-on: ubuntu-latest
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend == 'true'
@@ -124,29 +124,29 @@ jobs:
         working-directory: ./air-fle-front
 
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: air-fle-front/package-lock.json
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: 🔍 Run linting
+      - name: Run linting
         run: npm run lint
 
-      - name: 🧪 Run unit tests
+      - name: Run unit tests
         run: npm run test:headless
 
-      - name: 🏗️ Build application
+      - name: Build application
         run: npm run build
 
-      - name: 📁 Upload build artifacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
@@ -156,7 +156,7 @@ jobs:
   # TESTS E2E (Cypress)
   # =============================================================================
   e2e-tests:
-    name: 🎭 E2E Tests
+    name: E2E Tests
     runs-on: ubuntu-latest
     needs: [api-tests, frontend-tests]
     if: always() && (needs.api-tests.result == 'success' || needs.frontend-tests.result == 'success')
@@ -177,24 +177,24 @@ jobs:
           - 5432:5432
 
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🟢 Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: 📦 Install API dependencies
+      - name: Install API dependencies
         run: npm ci
         working-directory: ./air-fle-api
 
-      - name: 📦 Install Frontend dependencies
+      - name: Install Frontend dependencies
         run: npm ci
         working-directory: ./air-fle-front
 
-      - name: 🗃️ Setup test database
+      - name: Setup test database
         working-directory: ./air-fle-api
         run: |
           npx prisma generate
@@ -204,7 +204,7 @@ jobs:
           DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/airfle_e2e
           NODE_ENV: test
 
-      - name: 🚀 Start application
+      - name: Start application
         run: |
           npm run start &
           sleep 30
@@ -213,7 +213,7 @@ jobs:
           DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/airfle_e2e
           PORT: 3000
 
-      - name: 🎭 Run Cypress tests
+      - name: Run Cypress tests
         uses: cypress-io/github-action@v6
         with:
           working-directory: ./air-fle-front
@@ -223,7 +223,7 @@ jobs:
           browser: chrome
           record: false
 
-      - name: 📊 Upload Cypress screenshots
+      - name: Upload Cypress screenshots
         uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -234,26 +234,26 @@ jobs:
   # BUILD ET PUSH DOCKER IMAGES
   # =============================================================================
   docker-build:
-    name: 🐳 Docker Build & Push
+    name: Docker Build & Push
     runs-on: ubuntu-latest
     needs: [api-tests, frontend-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🏗️ Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 🔐 Login to Container Registry
+      - name: Login to Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 📝 Extract metadata for API
+      - name: Extract metadata for API
         id: meta-api
         uses: docker/metadata-action@v5
         with:
@@ -263,7 +263,7 @@ jobs:
             type=sha,prefix=sha-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: 📝 Extract metadata for Frontend
+      - name: Extract metadata for Frontend
         id: meta-frontend
         uses: docker/metadata-action@v5
         with:
@@ -273,7 +273,7 @@ jobs:
             type=sha,prefix=sha-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: 🏗️ Build and push API image
+      - name: Build and push API image
         uses: docker/build-push-action@v5
         with:
           context: ./air-fle-api
@@ -284,7 +284,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: 🏗️ Build and push Frontend image
+      - name: Build and push Frontend image
         uses: docker/build-push-action@v5
         with:
           context: ./air-fle-front
@@ -299,7 +299,7 @@ jobs:
   # DÉPLOIEMENT EN PRODUCTION
   # =============================================================================
   deploy-production:
-    name: 🚀 Deploy to Production
+    name: Deploy to Production
     runs-on: ubuntu-latest
     needs: [docker-build, e2e-tests]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -308,22 +308,22 @@ jobs:
       url: http://46.62.162.199
 
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🔐 Setup SSH
+      - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: 📦 Create deployment package
+      - name: Create deployment package
         run: |
           mkdir -p deploy
           cp docker-compose.prod.yml deploy/
           cp nginx.conf deploy/
           cp -r air-fle-api/scripts deploy/
 
-      - name: 🚀 Deploy to server
+      - name: Deploy to server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd /opt/air-fle
@@ -355,10 +355,10 @@ jobs:
             sleep 30
             curl -f http://localhost/api/v1/health || exit 1
             
-            echo "✅ Deployment successful!"
+            echo "Deployment successful!"
           EOF
 
-      - name: 🧹 Cleanup old images
+      - name: Cleanup old images
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
             docker image prune -f
@@ -369,18 +369,18 @@ jobs:
   # NOTIFICATIONS
   # =============================================================================
   notify:
-    name: 📢 Notifications
+    name: Notifications
     runs-on: ubuntu-latest
     needs: [deploy-production]
     if: always()
     
     steps:
-      - name: 📧 Send success notification
+      - name: Send success notification
         if: needs.deploy-production.result == 'success'
         run: |
-          echo "✅ Déploiement réussi sur http://46.62.162.199"
+          echo "Déploiement réussi sur http://46.62.162.199"
           
-      - name: 📧 Send failure notification
+      - name: Send failure notification
         if: needs.deploy-production.result == 'failure'
         run: |
-          echo "❌ Échec du déploiement - Vérifiez les logs"
+          echo "Échec du déploiement - Vérifiez les logs"

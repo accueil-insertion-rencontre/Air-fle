@@ -64,7 +64,7 @@ export class GroupListComponent implements OnInit, AfterViewInit {
       (window as any).feather.replace();
       
     } else {
-      
+      // Feather not available
     }
   }
 
@@ -342,7 +342,7 @@ export class GroupListComponent implements OnInit, AfterViewInit {
         );
         // On continue quand même avec la suppression du groupe
       } else {
-
+        // No courses to delete
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des cours du groupe:', error);

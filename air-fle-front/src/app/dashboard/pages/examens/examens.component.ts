@@ -211,11 +211,12 @@ export class ExamensComponent implements OnInit, OnDestroy {
         case 'student':
           compareValue = a.studentName.localeCompare(b.studentName);
           break;
-        case 'score':
+        case 'score': {
           const scoreA = a.score || '';
           const scoreB = b.score || '';
           compareValue = scoreA.localeCompare(scoreB);
           break;
+        }
       }
 
       return this.sortDirection === 'desc' ? -compareValue : compareValue;

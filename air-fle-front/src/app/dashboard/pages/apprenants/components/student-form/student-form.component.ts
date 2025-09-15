@@ -105,7 +105,7 @@ export class StudentFormComponent implements OnInit {
         this.validationService.noHtmlValidator()
       ]],
       phone: ['', [
-        Validators.pattern(/^\+?[0-9\s\-\(\)]{8,}$/),
+        Validators.pattern(/^\+?[0-9\s\-()]{8,}$/),
         this.validationService.validSanitizedPhoneValidator(),
         this.validationService.noHtmlValidator()
       ]],

@@ -112,7 +112,7 @@ export class StudentProfileComponent implements OnInit {
           // récupérer les données étudiant pour cet examen
           let score: string | undefined;
           let status: string | undefined;
-          let date: string | Date | undefined = exam.exam?.exam_taked_at || exam.exam_taked_at || exam.taken_at;
+          const date: string | Date | undefined = exam.exam?.exam_taked_at || exam.exam_taked_at || exam.taken_at;
           const label = exam.exam?.exam_label || exam.exam_label || 'Examen';
 
           if (exam.students && Array.isArray(exam.students)) {

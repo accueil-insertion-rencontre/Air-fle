@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
-declare var bootstrap: any;
+declare let bootstrap: any;
 
 @Component({
   selector: 'app-group-details',
@@ -199,7 +199,7 @@ export class GroupDetailsComponent implements OnInit {
         );
         // On continue quand même avec la suppression du groupe
       } else {
-        
+        // No courses to delete
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des cours du groupe:', error);

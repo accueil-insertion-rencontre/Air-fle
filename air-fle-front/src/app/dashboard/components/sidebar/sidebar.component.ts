@@ -8,7 +8,7 @@ import {
   EventEmitter,
   AfterViewChecked,
   NgZone,
-  ChangeDetectorRef,
+  ChangeDetectorRef, OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd, Event } from '@angular/router';
@@ -31,7 +31,7 @@ interface MenuItem {
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss'],
 })
-export class SidebarComponent implements OnInit, AfterViewChecked {
+export class SidebarComponent implements OnInit, AfterViewChecked, OnDestroy {
   @Input() isOpen: boolean = true;
   @Output() isOpenChange = new EventEmitter<boolean>();
 

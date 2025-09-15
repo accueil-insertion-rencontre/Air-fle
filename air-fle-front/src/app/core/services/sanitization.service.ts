@@ -115,7 +115,7 @@ export class SanitizationService {
     if (!phone) return '';
     
     const sanitized = this.sanitizeText(phone);
-    const cleanPhone = sanitized.replace(/[^0-9\s\-\(\)+.]/g, '').trim();
+    const cleanPhone = sanitized.replace(/[^0-9\s\-()+.]/g, '').trim();
     
     return cleanPhone.length > 20 ? '' : cleanPhone;
   }

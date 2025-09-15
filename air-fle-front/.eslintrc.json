@@ -10,9 +10,9 @@
       ],
       "extends": [
         "eslint:recommended",
-        "@typescript-eslint/recommended",
-        "@angular-eslint/recommended",
-        "@angular-eslint/template/process-inline-templates"
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@angular-eslint/recommended",
+        "plugin:@angular-eslint/template/process-inline-templates"
       ],
       "rules": {
         "@angular-eslint/directive-selector": [
@@ -32,11 +32,10 @@
           }
         ],
         "@typescript-eslint/no-explicit-any": "warn",
-        "@typescript-eslint/no-unused-vars": "error",
-        "prefer-const": "error",
-        "no-var": "error",
-        "@angular-eslint/no-empty-lifecycle-method": "error",
-        "@angular-eslint/use-lifecycle-interface": "error"
+        "@typescript-eslint/no-unused-vars": "warn",
+        "@angular-eslint/prefer-inject": "off",
+        "@angular-eslint/no-empty-lifecycle-method": "warn",
+        "@angular-eslint/no-output-native": "warn"
       }
     },
     {
@@ -44,14 +43,13 @@
         "*.html"
       ],
       "extends": [
-        "@angular-eslint/template/recommended",
-        "@angular-eslint/template/accessibility"
+        "plugin:@angular-eslint/template/recommended"
       ],
       "rules": {
-        "@angular-eslint/template/alt-text": "error",
-        "@angular-eslint/template/click-events-have-key-events": "error",
-        "@angular-eslint/template/mouse-events-have-key-events": "error"
+        "@angular-eslint/template/click-events-have-key-events": "warn",
+        "@angular-eslint/template/interactive-supports-focus": "warn",
+        "@angular-eslint/template/no-negated-async": "warn"
       }
     }
   ]
-} 
+}

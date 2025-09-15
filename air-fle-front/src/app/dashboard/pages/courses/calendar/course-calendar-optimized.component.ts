@@ -38,7 +38,7 @@ import { Course, Session, Group, Student, User, UserDisplayInfo, Schedule } from
 
 import { environment } from '@environments/environment';
 
-declare var bootstrap: any;
+declare let bootstrap: any;
 
 interface WeekDay {
   date: Date;

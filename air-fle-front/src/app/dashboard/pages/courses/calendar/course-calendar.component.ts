@@ -24,7 +24,7 @@ import {
   FormsModule,
 } from '@angular/forms';
 
-declare var bootstrap: any;
+declare let bootstrap: any;
 
 interface WeekDay {
   date: Date;
@@ -720,7 +720,7 @@ export class CourseCalendarComponent implements OnInit {
         const failed = results.filter(result => result.status === 'rejected');
 
         if (failed.length > 0) {
-  
+          console.error('Failed to create some courses', failed);
         }
 
         if (successful.length > 0) {

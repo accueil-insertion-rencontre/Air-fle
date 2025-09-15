@@ -20,7 +20,7 @@ import { CreateTodoModalComponent } from '../../components/create-todo-modal/cre
 import { TodoItemComponent } from '../../components/todo-item/todo-item.component';
 import { Subscription } from 'rxjs';
 
-declare var feather: any;
+declare let feather: any;
 
 interface StatCard {
   title: string;

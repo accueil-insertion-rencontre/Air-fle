@@ -22,7 +22,7 @@ import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map, startWith, catchError } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-declare var feather: any;
+declare let feather: any;
 
 interface StatCard {
   title: string;

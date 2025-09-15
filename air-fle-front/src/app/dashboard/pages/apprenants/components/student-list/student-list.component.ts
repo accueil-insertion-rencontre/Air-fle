@@ -214,7 +214,7 @@ export class StudentListComponent implements OnInit {
     const maxPagesToShow = 5;
 
     let startPage = Math.max(1, this.currentPage - Math.floor(maxPagesToShow / 2));
-    let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
+    const endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
 
     // Ajuster le début si on est proche de la fin
     if (endPage - startPage + 1 < maxPagesToShow) {

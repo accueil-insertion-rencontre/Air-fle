@@ -13,7 +13,7 @@ import {
 } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 
-declare var bootstrap: any;
+declare let bootstrap: any;
 
 @Component({
   selector: 'app-group-create',
