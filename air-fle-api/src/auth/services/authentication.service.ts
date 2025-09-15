@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  Inject,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import {
   IAuthenticationService,
   ITokenService,
@@ -11,10 +6,12 @@ import {
   IAuditService,
   IPermissionService,
   AuthResult,
+  ValidatedUser,
 } from '../interfaces/auth.interface';
 import { LoginDto } from '../dto/login.dto';
 import { UserService } from '../../user/user.service';
 import * as argon2 from 'argon2';
+import { getErrorMessage, getErrorStack } from '../../common/types/error.types';
 
 @Injectable()
 export class AuthenticationService implements IAuthenticationService {
@@ -29,7 +26,10 @@ export class AuthenticationService implements IAuthenticationService {
     private readonly permissionService: IPermissionService,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<ValidatedUser | null> {
     try {
       const user = await this.userService.findByEmailWithPassword(email);
       if (!user) {
@@ -44,12 +44,12 @@ export class AuthenticationService implements IAuthenticationService {
       let isPasswordValid = false;
       try {
         isPasswordValid = await argon2.verify(user.user_password, password);
-      } catch (error) {
+      } catch (error: unknown) {
         // Utiliser le service d'audit au lieu de console.error
         await this.auditService.logAuthEvent(
           null,
           'password_verification_error',
-          `Erreur lors de la vérification du mot de passe: ${error.message}`,
+          `Erreur lors de la vérification du mot de passe: ${getErrorMessage(error)}`,
           'internal',
         );
         return null;
@@ -59,14 +59,20 @@ export class AuthenticationService implements IAuthenticationService {
         return null;
       }
 
-      const { user_password: _, ...result } = user;
-      return result;
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { user_password, ...userWithoutPassword } = user;
+      return {
+        id: userWithoutPassword.user_uuid,
+        email: userWithoutPassword.user_mail,
+        role: userWithoutPassword.role?.role_name || '',
+        isActive: userWithoutPassword.user_isactive,
+      };
+    } catch (error: unknown) {
       // Utiliser le service d'audit au lieu de console.error
       await this.auditService.logAuthEvent(
         null,
         'user_validation_error',
-        `Erreur lors de la validation de l'utilisateur: ${error.message}`,
+        `Erreur lors de la validation de l'utilisateur: ${getErrorMessage(error)}`,
         'internal',
       );
       return null;
@@ -111,14 +117,13 @@ export class AuthenticationService implements IAuthenticationService {
       }
 
       // 3. Générer le token
-      const permissions = this.permissionService.getPermissionsByRole(
-        user.role?.role_name,
-      );
+      const roleName = user.role || '';
+      const permissions = this.permissionService.getPermissionsByRole(roleName);
 
       const payload = {
-        sub: user.user_uuid,
-        email: user.user_mail,
-        role: user.role?.role_name,
+        sub: user.id,
+        email: user.email,
+        role: roleName,
         permissions,
       };
 
@@ -127,7 +132,7 @@ export class AuthenticationService implements IAuthenticationService {
       await this.securityService.resetLoginAttempt(ip);
 
       await this.auditService.logAuthEvent(
-        user.user_uuid,
+        user.id,
         'login_success',
         'Connexion réussie',
         ip,
@@ -137,21 +142,22 @@ export class AuthenticationService implements IAuthenticationService {
         success: true,
         access_token,
         user: {
-          id: user.user_uuid,
-          email: user.user_mail,
-          firstname: user.user_firstname,
-          lastname: user.user_lastname,
-          role: user.role?.role_name,
+          id: user.id,
+          email: user.email,
+          firstname: (user as any).user_firstname,
+          lastname: (user as any).user_lastname,
+          role: roleName,
           permissions,
+          isActive: user.isActive,
         },
       };
-    } catch (error) {
+    } catch (error: unknown) {
       // Pas de console en prod, on loggue via audit + logger API HTTP
 
       await this.auditService.logAuthEvent(
         null,
         'login_failed',
-        `Erreur système lors de la connexion: ${error?.message}`,
+        `Erreur système lors de la connexion: ${getErrorMessage(error)}`,
         ip,
       );
 
@@ -174,10 +180,10 @@ export class AuthenticationService implements IAuthenticationService {
         'Déconnexion réussie',
         ip,
       );
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(
-        `Erreur lors de la déconnexion: ${error?.message}`,
-        error?.stack,
+        `Erreur lors de la déconnexion: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
       throw error;
     }

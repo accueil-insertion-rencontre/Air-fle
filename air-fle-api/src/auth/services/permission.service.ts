@@ -1,8 +1,9 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IPermissionService } from '../interfaces/auth.interface';
 import { UserService } from '../../user/user.service';
 import { PERMISSIONS_CONFIG } from '../config/permissions.config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { getErrorMessage, getErrorStack } from '../../common/types/error.types';
 
 @Injectable()
 export class PermissionService implements IPermissionService {
@@ -26,8 +27,8 @@ export class PermissionService implements IPermissionService {
       return this.getPermissionsByRole(user.role.role_name);
     } catch (error) {
       this.logger.error(
-        `Erreur lors de la récupération des permissions utilisateur: ${error?.message}`,
-        error?.stack,
+        `Erreur lors de la récupération des permissions utilisateur: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
       return [];
     }
@@ -39,8 +40,8 @@ export class PermissionService implements IPermissionService {
       return userPermissions.includes(permission);
     } catch (error) {
       this.logger.error(
-        `Erreur lors de la vérification des permissions: ${error?.message}`,
-        error?.stack,
+        `Erreur lors de la vérification des permissions: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
       return false;
     }
@@ -90,8 +91,8 @@ export class PermissionService implements IPermissionService {
       );
     } catch (error) {
       this.logger.error(
-        `Erreur lors de la vérification des permissions multiples: ${error?.message}`,
-        error?.stack,
+        `Erreur lors de la vérification des permissions multiples: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
       return false;
     }
@@ -108,8 +109,8 @@ export class PermissionService implements IPermissionService {
       );
     } catch (error) {
       this.logger.error(
-        `Erreur lors de la vérification des permissions complètes: ${error?.message}`,
-        error?.stack,
+        `Erreur lors de la vérification des permissions complètes: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
       return false;
     }
@@ -207,7 +208,6 @@ export class PermissionService implements IPermissionService {
   async getAllRolesFromDb(): Promise<
     { role_uuid: string; role_name: string }[]
   > {
-    // @ts-ignore: accès direct au prisma du module
     return this.prisma.role.findMany({
       select: { role_uuid: true, role_name: true },
     });

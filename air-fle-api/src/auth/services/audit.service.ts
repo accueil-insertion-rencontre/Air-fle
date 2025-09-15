@@ -1,6 +1,27 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { IAuditService, SecurityEvent } from '../interfaces/auth.interface';
 import { PrismaService } from '../../prisma/prisma.service';
+import { getErrorMessage, getErrorStack } from '../../common/types/error.types';
+
+interface AuditLogEntry {
+  id: string;
+  user_id: string | null;
+  event_type: string;
+  event_details: string;
+  ip_address: string;
+  timestamp: Date;
+  success: boolean;
+}
+
+interface SecurityMetrics {
+  totalLogins: number;
+  successfulLogins: number;
+  failedLogins: number;
+  passwordResets: number;
+  accountLocks: number;
+  period: string;
+  error?: string;
+}
 
 @Injectable()
 export class AuditService implements IAuditService {
@@ -38,12 +59,14 @@ export class AuditService implements IAuditService {
           timestamp: new Date().toISOString(),
         }),
       );
+      return Promise.resolve();
     } catch (error) {
       this.logger.error(
-        `Erreur lors de l'enregistrement de l'audit: ${error?.message}`,
-        error?.stack,
+        `Erreur lors de l'enregistrement de l'audit: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
       // Ne pas faire échouer l'opération principale à cause d'un problème d'audit
+      return Promise.resolve();
     }
   }
 
@@ -60,7 +83,7 @@ export class AuditService implements IAuditService {
 
   // Méthodes d'analyse des logs
 
-  async getRecentFailedLogins(limit: number = 100): Promise<any[]> {
+  getRecentFailedLogins(): Promise<AuditLogEntry[]> {
     try {
       // TODO: Implémenter avec votre modèle d'audit
       // return await this.prisma.authLog.findMany({
@@ -74,17 +97,17 @@ export class AuditService implements IAuditService {
       //   take: limit,
       // });
 
-      return [];
+      return Promise.resolve([]);
     } catch (error) {
       this.logger.error(
-        `Erreur lors de la récupération des échecs de connexion: ${error?.message}`,
-        error?.stack,
+        `Erreur lors de la récupération des échecs de connexion: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
-      return [];
+      return Promise.resolve([]);
     }
   }
 
-  async getLoginsByUser(userId: string, days: number = 30): Promise<any[]> {
+  getLoginsByUser(): Promise<AuditLogEntry[]> {
     try {
       // TODO: Implémenter avec votre modèle d'audit
       // const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -102,17 +125,17 @@ export class AuditService implements IAuditService {
       //   orderBy: { timestamp: 'desc' },
       // });
 
-      return [];
+      return Promise.resolve([]);
     } catch (error) {
       this.logger.error(
-        `Erreur lors de la récupération de l'historique utilisateur: ${error?.message}`,
-        error?.stack,
+        `Erreur lors de la récupération de l'historique utilisateur: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
-      return [];
+      return Promise.resolve([]);
     }
   }
 
-  async getSuspiciousIPs(threshold: number = 10): Promise<any[]> {
+  getSuspiciousIPs(): Promise<string[]> {
     try {
       // TODO: Implémenter avec votre modèle d'audit
       // Rechercher les IPs avec beaucoup d'échecs de connexion
@@ -141,17 +164,17 @@ export class AuditService implements IAuditService {
       //   },
       // });
 
-      return [];
+      return Promise.resolve([]);
     } catch (error) {
       this.logger.error(
-        `Erreur lors de la recherche d'IPs suspectes: ${error?.message}`,
-        error?.stack,
+        `Erreur lors de la recherche d'IPs suspectes: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
-      return [];
+      return Promise.resolve([]);
     }
   }
 
-  async getSecurityMetrics(days: number = 7): Promise<any> {
+  getSecurityMetrics(): Promise<SecurityMetrics> {
     try {
       // TODO: Implémenter avec votre modèle d'audit
       // const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -168,34 +191,34 @@ export class AuditService implements IAuditService {
       //   },
       // });
 
-      return {
+      return Promise.resolve({
         totalLogins: 0,
         successfulLogins: 0,
         failedLogins: 0,
         passwordResets: 0,
         accountLocks: 0,
-        period: `${days} derniers jours`,
-      };
+        period: `7 derniers jours`,
+      });
     } catch (error) {
       this.logger.error(
-        `Erreur lors du calcul des métriques de sécurité: ${error?.message}`,
-        error?.stack,
+        `Erreur lors du calcul des métriques de sécurité: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
-      return {
+      return Promise.resolve({
         totalLogins: 0,
         successfulLogins: 0,
         failedLogins: 0,
         passwordResets: 0,
         accountLocks: 0,
-        period: `${days} derniers jours`,
+        period: `7 derniers jours`,
         error: 'Erreur lors du calcul',
-      };
+      });
     }
   }
 
   // Méthodes de nettoyage
 
-  async cleanupOldLogs(retentionDays: number = 90): Promise<number> {
+  cleanupOldLogs(): Promise<number> {
     try {
       // TODO: Implémenter avec votre modèle d'audit
       // const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
@@ -210,13 +233,13 @@ export class AuditService implements IAuditService {
       //
       // return result.count;
 
-      return 0;
+      return Promise.resolve(0);
     } catch (error) {
       this.logger.error(
-        `Erreur lors du nettoyage des logs: ${error?.message}`,
-        error?.stack,
+        `Erreur lors du nettoyage des logs: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
-      return 0;
+      return Promise.resolve(0);
     }
   }
 
@@ -225,14 +248,14 @@ export class AuditService implements IAuditService {
   async shouldTriggerSecurityAlert(
     event: SecurityEvent,
     userId: string | null,
-    ip: string,
   ): Promise<boolean> {
     // Logique pour décider si un événement doit déclencher une alerte
     switch (event) {
-      case 'login_failed':
+      case 'login_failed': {
         // Alerte si trop d'échecs pour cette IP
-        const recentFailures = await this.getRecentFailuresByIP(ip);
+        const recentFailures = await this.getRecentFailuresByIP();
         return recentFailures >= 5;
+      }
 
       case 'account_locked':
         // Toujours alerter en cas de verrouillage de compte
@@ -241,7 +264,7 @@ export class AuditService implements IAuditService {
       case 'password_reset_requested':
         // Alerte si trop de demandes de reset pour cet utilisateur
         if (userId) {
-          const recentResets = await this.getRecentPasswordResetsByUser(userId);
+          const recentResets = await this.getRecentPasswordResetsByUser();
           return recentResets >= 3;
         }
         return false;
@@ -251,13 +274,13 @@ export class AuditService implements IAuditService {
     }
   }
 
-  private async getRecentFailuresByIP(ip: string): Promise<number> {
+  private getRecentFailuresByIP(): Promise<number> {
     // TODO: Implémenter la logique de comptage
-    return 0;
+    return Promise.resolve(0);
   }
 
-  private async getRecentPasswordResetsByUser(userId: string): Promise<number> {
+  private getRecentPasswordResetsByUser(): Promise<number> {
     // TODO: Implémenter la logique de comptage
-    return 0;
+    return Promise.resolve(0);
   }
 }

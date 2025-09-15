@@ -13,6 +13,7 @@ import {
 } from '../interfaces/auth.interface';
 import { UserService } from '../../user/user.service';
 import { ChangePasswordDto } from '../dto/change-password.dto';
+import { getErrorStack } from '../../common/types/error.types';
 import {
   ResetPasswordRequestDto,
   ResetPasswordConfirmDto,
@@ -96,8 +97,8 @@ export class PasswordService implements IPasswordService {
       }
 
       this.logger.error(
-        `Erreur lors du changement de mot de passe: ${error.message}`,
-        error?.stack,
+        `Erreur lors du changement de mot de passe: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        getErrorStack(error),
       );
       throw new BadRequestException(
         'Erreur lors du changement de mot de passe',
@@ -158,14 +159,14 @@ export class PasswordService implements IPasswordService {
       // TODO: Envoyer l'email avec le token de réinitialisation
     } catch (error) {
       this.logger.error(
-        `Erreur lors de la demande de réinitialisation: ${error.message}`,
-        error?.stack,
+        `Erreur lors de la demande de réinitialisation: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        getErrorStack(error),
       );
 
       await this.auditService.logAuthEvent(
         null,
         'password_reset_requested',
-        `Erreur lors de la demande de réinitialisation pour ${email}: ${error.message}`,
+        `Erreur lors de la demande de réinitialisation pour ${email}: ${error instanceof Error ? error.message : 'Unknown error'}`,
         ip,
       );
     }
@@ -239,8 +240,8 @@ export class PasswordService implements IPasswordService {
       }
 
       this.logger.error(
-        `Erreur lors de la confirmation de réinitialisation: ${error.message}`,
-        error?.stack,
+        `Erreur lors de la confirmation de réinitialisation: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        getErrorStack(error),
       );
       throw new BadRequestException(
         'Erreur lors de la réinitialisation du mot de passe',

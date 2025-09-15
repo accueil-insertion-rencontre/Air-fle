@@ -1,6 +1,7 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { ISecurityService, ICacheService } from '../interfaces/auth.interface';
 import { SECURITY_CONFIG } from '../config/permissions.config';
+import { getErrorMessage, getErrorStack } from '../../common/types/error.types';
 
 @Injectable()
 export class SecurityService implements ISecurityService {
@@ -72,8 +73,8 @@ export class SecurityService implements ISecurityService {
       return tokenIssuedTime < changeTime;
     } catch (error) {
       this.logger.error(
-        `Erreur lors de la vérification du timestamp: ${error?.message}`,
-        error?.stack,
+        `Erreur lors de la vérification du timestamp: ${getErrorMessage(error)}`,
+        getErrorStack(error),
       );
       return false;
     }
@@ -94,12 +95,11 @@ export class SecurityService implements ISecurityService {
     return attempts ? parseInt(attempts, 10) : 0;
   }
 
-  async getRemainingLockTime(ip: string): Promise<number> {
+  getRemainingLockTime(): Promise<number> {
     // Cette méthode nécessiterait une implémentation spécifique selon le cache utilisé
     // Pour Redis, on pourrait utiliser TTL
-    const key = `login_attempts:${ip}`;
     // TODO: Implémenter avec la méthode TTL du cache
-    return 0;
+    return Promise.resolve(0);
   }
 
   async cleanupExpiredTokens(): Promise<void> {
@@ -121,10 +121,7 @@ export class SecurityService implements ISecurityService {
   }
 
   // Détection d'activité suspecte
-  async detectSuspiciousActivity(
-    ip: string,
-    userId?: string,
-  ): Promise<boolean> {
+  async detectSuspiciousActivity(ip: string): Promise<boolean> {
     const attempts = await this.getLoginAttempts(ip);
 
     // Activité suspecte si plus de 3 tentatives en peu de temps
