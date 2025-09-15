@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Disability, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 // Type pour un handicap avec ses relations
 type DisabilityWithRelations = Prisma.DisabilityGetPayload<{
@@ -96,7 +96,7 @@ export class DisabilityService {
       );
       return disability;
     } catch (error) {
-      if (error.code === 'P2025') {
+      if ((error as { code?: string }).code === 'P2025') {
         throw new NotFoundException(`Handicap avec l'ID ${id} non trouvé`);
       }
       throw error;
@@ -123,7 +123,7 @@ export class DisabilityService {
       );
       return disability;
     } catch (error) {
-      if (error.code === 'P2025') {
+      if ((error as { code?: string }).code === 'P2025') {
         throw new NotFoundException(`Handicap avec l'ID ${id} non trouvé`);
       }
       throw error;

@@ -6,6 +6,11 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import {
+  isPrismaError,
+  getErrorMessage,
+  getErrorStack,
+} from '../common/types/error.types';
 
 @Injectable()
 export class AbsenceService {
@@ -34,7 +39,7 @@ export class AbsenceService {
       );
       return absence;
     } catch (error) {
-      if (error.code === 'P2002') {
+      if (isPrismaError(error) && error.code === 'P2002') {
         // Erreur de contrainte unique
         throw new ConflictException(
           "Une absence existe déjà pour cet étudiant et ce cours. Un étudiant ne peut avoir qu'une seule absence par cours.",
@@ -43,8 +48,8 @@ export class AbsenceService {
       this.logger.error(
         JSON.stringify({
           event: 'absence_create_failed',
-          error: error?.message,
-          stack: error?.stack,
+          error: getErrorMessage(error),
+          stack: getErrorStack(error),
         }),
       );
       throw error;
@@ -118,8 +123,8 @@ export class AbsenceService {
     data: Prisma.AbsenceUpdateInput,
     updatedByUserId?: string,
   ) {
-    // Récupérer l'absence actuelle
-    const currentAbsence = await this.findOne(id);
+    // Vérifier que l'absence existe
+    await this.findOne(id);
 
     try {
       const updatedAbsence = await this.prisma.absence.update({
@@ -143,15 +148,15 @@ export class AbsenceService {
       );
       return updatedAbsence;
     } catch (error) {
-      if (error.code === 'P2025') {
+      if (isPrismaError(error) && error.code === 'P2025') {
         throw new NotFoundException(`Absence with ID ${id} not found`);
       }
       this.logger.error(
         JSON.stringify({
           event: 'absence_update_failed',
           absence_uuid: id,
-          error: error?.message,
-          stack: error?.stack,
+          error: getErrorMessage(error),
+          stack: getErrorStack(error),
         }),
       );
       throw error;
@@ -179,15 +184,15 @@ export class AbsenceService {
       );
       return deletedAbsence;
     } catch (error) {
-      if (error.code === 'P2025') {
+      if (isPrismaError(error) && error.code === 'P2025') {
         throw new NotFoundException(`Absence with ID ${id} not found`);
       }
       this.logger.error(
         JSON.stringify({
           event: 'absence_delete_failed',
           absence_uuid: id,
-          error: error?.message,
-          stack: error?.stack,
+          error: getErrorMessage(error),
+          stack: getErrorStack(error),
         }),
       );
       throw error;

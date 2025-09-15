@@ -81,12 +81,13 @@ export class ContinuationController {
     @Query('skip') skip?: string,
     @Query('take') take?: string,
   ) {
-    const filters = {
-      student_uuid: studentUuid,
-      student_name: studentName,
-      date_from: dateFrom,
-      date_to: dateTo,
-    };
+    // TODO: These filters should be used when the service method is updated to accept them
+    // const filters = {
+    //   student_uuid: studentUuid,
+    //   student_name: studentName,
+    //   date_from: dateFrom,
+    //   date_to: dateTo,
+    // };
 
     const pagination = {
       skip: skip ? parseInt(skip, 10) : undefined,

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, Continuation } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { ContinuationStatsDto } from './dto/continuation-stats.dto';
 
 // Type pour une continuation avec ses relations
@@ -28,7 +28,7 @@ export class ContinuationService {
   async findAllWithFilters(
     filters: ContinuationFilters,
   ): Promise<ContinuationWithRelations[]> {
-    const where: any = {};
+    const where: Prisma.ContinuationWhereInput = {};
 
     // Filtre par UUID d'étudiant
     if (filters.student_uuid) {
@@ -125,7 +125,7 @@ export class ContinuationService {
     where?: Prisma.ContinuationWhereInput;
     orderBy?: Prisma.ContinuationOrderByWithRelationInput;
   }): Promise<{
-    data: any[];
+    data: ContinuationWithRelations[];
     meta: { total: number; skip: number; take: number };
   }> {
     const {

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, StudentExam, Student, Exam } from '@prisma/client';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { CreateStudentExamDto } from './dto/create-student-exam.dto';
@@ -120,7 +120,7 @@ export class ExamService {
       throw new NotFoundException(`Examen avec l'ID ${id} non trouvé`);
     }
 
-    const { students, ...examData } = updateExamDto;
+    const { ...examData } = updateExamDto;
 
     const exam = await this.prisma.$transaction(async (tx) => {
       // Mettre à jour l'examen
@@ -393,7 +393,11 @@ export class ExamService {
     }
 
     const addedStudentExams = await this.prisma.$transaction(async (tx) => {
-      const results: any[] = [];
+      type StudentExamWithRelations = StudentExam & {
+        student: Student;
+        exam: Exam;
+      };
+      const results: StudentExamWithRelations[] = [];
 
       for (const student of studentsInGroup) {
         // Vérifier si l'étudiant n'est pas déjà dans l'examen

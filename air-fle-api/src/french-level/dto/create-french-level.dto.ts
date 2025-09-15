@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
+import { IsString, IsOptional, MaxLength } from 'class-validator';
 import { Escape } from 'class-sanitizer';
 
 export class CreateFrenchLevelDto {

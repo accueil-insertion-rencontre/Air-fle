@@ -50,7 +50,7 @@ export class FrenchLevelService {
     const normalizedData = this.normalizeLevelData(data);
 
     // ✅ Création via repository
-    const level = await this.frenchLevelRepository.create(normalizedData);
+    const level = await this.frenchLevelRepository.create(normalizedData as Prisma.FrenchLevelCreateInput);
     this.logger.log(
       JSON.stringify({
         event: 'french_level_created',
@@ -179,18 +179,21 @@ export class FrenchLevelService {
     }
   }
 
-  private normalizeLevelData(data: any): any {
-    const normalized = { ...data };
+  private normalizeLevelData(
+    data: Prisma.FrenchLevelCreateInput | Prisma.FrenchLevelUpdateInput,
+  ): Prisma.FrenchLevelCreateInput | Prisma.FrenchLevelUpdateInput {
+    const normalized = { ...data } as Record<string, unknown>;
 
     if (data.french_level_code) {
-      normalized.french_level_code = data.french_level_code
+      normalized.french_level_code = (data.french_level_code as string)
         .trim()
         .toUpperCase();
     }
 
     if (data.french_level_description) {
-      normalized.french_level_description =
-        data.french_level_description.trim();
+      normalized.french_level_description = (
+        data.french_level_description as string
+      ).trim();
     }
 
     return normalized;

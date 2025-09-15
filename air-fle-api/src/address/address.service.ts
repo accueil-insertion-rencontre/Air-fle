@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Address, Prisma } from '@prisma/client';
+import { getErrorMessage, getErrorStack } from '../common/types/error.types';
 
 @Injectable()
 export class AddressService {
@@ -33,8 +34,8 @@ export class AddressService {
       this.logger.error(
         JSON.stringify({
           event: 'address_create_failed',
-          error: error?.message,
-          stack: error?.stack,
+          error: getErrorMessage(error),
+          stack: getErrorStack(error),
         }),
       );
       throw error;
@@ -60,8 +61,8 @@ export class AddressService {
         JSON.stringify({
           event: 'address_update_failed',
           address_uuid: id,
-          error: error?.message,
-          stack: error?.stack,
+          error: getErrorMessage(error),
+          stack: getErrorStack(error),
         }),
       );
       throw error;
@@ -85,8 +86,8 @@ export class AddressService {
         JSON.stringify({
           event: 'address_delete_failed',
           address_uuid: id,
-          error: error?.message,
-          stack: error?.stack,
+          error: getErrorMessage(error),
+          stack: getErrorStack(error),
         }),
       );
       throw error;
