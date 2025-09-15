@@ -70,11 +70,10 @@ services:
   frontend-prod:
     build:
       context: ./air-fle-front
-      dockerfile: Dockerfile
-      target: production
+      dockerfile: Dockerfile.prod
     container_name: air-fle-front-prod
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       - api-prod
     networks:
