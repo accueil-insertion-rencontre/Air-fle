@@ -25,11 +25,24 @@ import {
   ApiQuery,
   ApiBody,
 } from '@nestjs/swagger';
-import { Prisma, Course } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { AttendancePostBody } from './dto/attendance.dto';
 import { Request } from 'express';
+
+// Define authenticated user interface
+interface AuthenticatedUser {
+  user_uuid: string;
+  user_mail: string;
+  user_firstname: string;
+  user_lastname: string;
+  role: string;
+}
+
+interface AuthenticatedRequest extends Request {
+  user: AuthenticatedUser;
+}
 
 @ApiTags('courses')
 @ApiBearerAuth()
@@ -160,9 +173,9 @@ export class CourseController {
 
     // Filtre par jour exact OU par plage de dates
     if (course_day) {
-      where.course_day = { equals: new Date(course_day) } as any;
+      where.course_day = { equals: new Date(course_day) };
     } else if (start_date || end_date) {
-      const range: any = {};
+      const range: { gte?: Date; lte?: Date } = {};
       if (start_date) range.gte = new Date(start_date);
       if (end_date) {
         // inclure la fin de journée
@@ -175,7 +188,7 @@ export class CourseController {
 
     // Filtrer par session via la relation group.session
     if (session_uuid) {
-      where.group = { is: { session_uuid } } as any;
+      where.group = { is: { session_uuid } };
     }
 
     // Pagination: priorité à page/pageSize, sinon skip/take classiques
@@ -194,7 +207,9 @@ export class CourseController {
       skip: computedSkip,
       take: computedTake,
       where,
-      orderBy: orderBy ? JSON.parse(orderBy) : { course_day: 'desc' as const },
+      orderBy: orderBy
+        ? (JSON.parse(orderBy) as Prisma.CourseOrderByWithRelationInput)
+        : { course_day: 'desc' as const },
     };
 
     // ✅ Gestion intelligente de l'expansion
@@ -261,7 +276,7 @@ export class CourseController {
   async addTeacher(
     @Param('id') courseId: string,
     @Param('teacher_uuid') teacher_uuid: string,
-  ) {
+  ): Promise<{ user_uuid: string; course_uuid: string }> {
     return this.courseService.addTeacher(courseId, teacher_uuid);
   }
 
@@ -285,7 +300,29 @@ export class CourseController {
     summary: "Récupérer l'état de la prise d'appel pour un cours",
   })
   @ApiResponse({ status: 200, description: "État d'appel pour le cours" })
-  async getAttendance(@Param('id') courseId: string) {
+  async getAttendance(@Param('id') courseId: string): Promise<{
+    course_uuid: string;
+    attendance_taken: boolean;
+    attendance_taken_at: string | undefined;
+    attendance_taken_by: {
+      user_uuid: string;
+      user_firstname: string;
+      user_lastname: string;
+    } | null;
+    students: {
+      student_uuid: string;
+      firstname: string;
+      lastname: string;
+      status: string;
+      notes: string | null;
+    }[];
+    summary: {
+      present: number;
+      absent: number;
+      justified: number;
+      late: number;
+    };
+  }> {
     return this.courseService.getCourseAttendance(courseId);
   }
 
@@ -297,10 +334,10 @@ export class CourseController {
   async submitAttendance(
     @Param('id') courseId: string,
     @Body() body: AttendancePostBody,
-    @Req() req: Request,
+    @Req() req: AuthenticatedRequest,
   ) {
-    const user = req.user as any;
-    const takenByUserUuid = user?.user_uuid;
+    const user = req.user;
+    const takenByUserUuid = user.user_uuid;
     return this.courseService.submitCourseAttendance(
       courseId,
       body,

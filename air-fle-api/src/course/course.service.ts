@@ -5,7 +5,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma, Course } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { AttendancePostBody, NewAttendanceStatus } from './dto/attendance.dto';
 
 // Type pour un cours avec ses relations
@@ -64,7 +64,9 @@ export class CourseService {
         event: 'course_created',
         course_uuid: course.course_uuid,
         course_name: course.course_name,
-        group_uuid: (course as any).group_uuid ?? undefined,
+        group_uuid: courseData.group?.connect
+          ? (courseData.group.connect as { group_uuid?: string }).group_uuid
+          : undefined,
       }),
     );
 
@@ -113,14 +115,24 @@ export class CourseService {
       this.prisma.course.count({ where }),
     ]);
 
-    const meta = {
+    const meta: {
+      data: CourseWithSession[];
+      meta: {
+        total: number;
+        skip: number;
+        take: number;
+        page?: number;
+        pageSize?: number;
+        totalPages?: number;
+      };
+    } = {
       data: courses,
       meta: {
         total,
         skip: skip || 0,
         take: take || total,
-      } as any,
-    } as any;
+      },
+    };
     if (typeof skip === 'number' && typeof take === 'number' && take > 0) {
       meta.meta.page = Math.floor((skip || 0) / take) + 1;
       meta.meta.pageSize = take;
@@ -129,7 +141,10 @@ export class CourseService {
     return meta;
   }
 
-  async addTeacher(courseId: string, userId: string): Promise<any> {
+  async addTeacher(
+    courseId: string,
+    userId: string,
+  ): Promise<Prisma.UserCourseGetPayload<Record<string, never>>> {
     return this.prisma.userCourse.create({
       data: {
         user_uuid: userId,
@@ -175,14 +190,24 @@ export class CourseService {
       this.prisma.course.count({ where }),
     ]);
 
-    const meta = {
+    const meta: {
+      data: CourseWithRelations[];
+      meta: {
+        total: number;
+        skip: number;
+        take: number;
+        page?: number;
+        pageSize?: number;
+        totalPages?: number;
+      };
+    } = {
       data: courses,
       meta: {
         total,
         skip: skip || 0,
         take: take || total,
-      } as any,
-    } as any;
+      },
+    };
     if (typeof skip === 'number' && typeof take === 'number' && take > 0) {
       meta.meta.page = Math.floor((skip || 0) / take) + 1;
       meta.meta.pageSize = take;
@@ -239,7 +264,10 @@ export class CourseService {
     });
   }
 
-  async addTeacherToCourse(courseId: string, userId: string): Promise<any> {
+  async addTeacherToCourse(
+    courseId: string,
+    userId: string,
+  ): Promise<Prisma.UserCourseGetPayload<Record<string, never>>> {
     return this.prisma.userCourse.create({
       data: {
         user_uuid: userId,
@@ -342,7 +370,29 @@ export class CourseService {
       };
     }
 
-    const response = {
+    const response: {
+      course_uuid: string;
+      attendance_taken: boolean;
+      attendance_taken_at: string | undefined;
+      attendance_taken_by: {
+        user_uuid: string;
+        user_firstname: string;
+        user_lastname: string;
+      } | null;
+      students: {
+        student_uuid: string;
+        firstname: string;
+        lastname: string;
+        status: NewAttendanceStatus;
+        notes: string | null;
+      }[];
+      summary: {
+        present: number;
+        absent: number;
+        justified: number;
+        late: number;
+      };
+    } = {
       course_uuid: course.course_uuid,
       attendance_taken: course.attendance_taken,
       attendance_taken_at: course.attendance_taken_at?.toISOString(),
@@ -374,7 +424,8 @@ export class CourseService {
           notes: absence?.absence_notes ?? null,
         };
       }),
-    } as any;
+      summary: { present: 0, absent: 0, justified: 0, late: 0 },
+    };
 
     // Calcul du résumé
     const summary = { present: 0, absent: 0, justified: 0, late: 0 };
