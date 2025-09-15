@@ -5,8 +5,30 @@ import {
   Logger,
 } from '@nestjs/common';
 import { StudentRepository } from './student.repository';
+import { CreateStudentDto } from './dto/create-student.dto';
+import { UpdateStudentDto } from './dto/update-student.dto';
+import {
+  Student,
+  Prisma,
+  Status,
+  Orientation,
+  ExitReason,
+  Disability,
+  FrenchLevel,
+} from '@prisma/client';
 
-import { Student } from '@prisma/client';
+// Type for Student with relations
+type StudentWithRelations = Student & {
+  gender?: { gender_uuid: string; gender_label: string } | null;
+  frenchLevel?: FrenchLevel | null;
+  status?: Status | null;
+  financing?: { financing_uuid: string; financing_label: string } | null;
+  orientation?: Orientation | null;
+  exitReason?: ExitReason | null;
+  nationalities?: Array<{
+    nationality: { nationality_uuid: string; nationality_label: string };
+  }> | null;
+};
 
 @Injectable()
 export class StudentService {
@@ -18,7 +40,7 @@ export class StudentService {
   ) {}
 
   async create(
-    data: any,
+    data: CreateStudentDto,
     createdByUserId?: string,
   ): Promise<Student> {
     try {
@@ -28,7 +50,7 @@ export class StudentService {
 
       // Créer l'étudiant d'abord
       const student = await this.studentRepository.create(
-        prismaData as any,
+        prismaData,
         this.studentRepository.getStandardIncludes(),
       );
 
@@ -93,8 +115,8 @@ export class StudentService {
   async findAll(params?: {
     skip?: number;
     take?: number;
-    where?: Record<string, any>;
-    orderBy?: Record<string, any>;
+    where?: Prisma.StudentWhereInput;
+    orderBy?: Prisma.StudentOrderByWithRelationInput;
   }): Promise<Student[]> {
     try {
       const { skip, take, where, orderBy } = params || {};
@@ -130,7 +152,7 @@ export class StudentService {
   }
 
   async findOne(
-    studentWhereUniqueInput: any,
+    studentWhereUniqueInput: Prisma.StudentWhereUniqueInput,
   ): Promise<Student | null> {
     try {
       const student = await this.studentRepository.findUnique({
@@ -173,8 +195,8 @@ export class StudentService {
 
   async update(
     params: {
-      where: any;
-      data: any;
+      where: Prisma.StudentWhereUniqueInput;
+      data: UpdateStudentDto;
     },
     updatedByUserId?: string,
   ): Promise<Student> {
@@ -236,7 +258,7 @@ export class StudentService {
     }
   }
 
-  async count(where?: Record<string, any>): Promise<number> {
+  async count(where?: Prisma.StudentWhereInput): Promise<number> {
     try {
       const count = await this.studentRepository.count(where);
 
@@ -265,9 +287,9 @@ export class StudentService {
 
   // ✅ Tracking des changements organisé
   private async trackStudentChanges(
-    previous: any,
-    updated: any,
-    updateData: any,
+    previous: StudentWithRelations,
+    updated: StudentWithRelations,
+    updateData: UpdateStudentDto,
     updatedByUserId?: string,
   ): Promise<void> {
     const changes: Promise<void>[] = [];
@@ -339,8 +361,8 @@ export class StudentService {
 
   private recordLevelChange(
     studentId: string,
-    previousLevel: any,
-    newLevel: any,
+    previousLevel: FrenchLevel | null | undefined,
+    newLevel: FrenchLevel | null | undefined,
     updatedByUserId?: string,
   ): Promise<void> {
     // Historique supprimé - parameters kept for interface compatibility
@@ -353,8 +375,8 @@ export class StudentService {
 
   private recordStatusChange(
     studentId: string,
-    previousStatus: any,
-    newStatus: any,
+    previousStatus: Status | null | undefined,
+    newStatus: Status | null | undefined,
     updatedByUserId?: string,
   ): Promise<void> {
     // Historique supprimé - parameters kept for interface compatibility
@@ -367,8 +389,8 @@ export class StudentService {
 
   private recordOrientationChange(
     studentId: string,
-    previousOrientation: any,
-    newOrientation: any,
+    previousOrientation: Orientation | null | undefined,
+    newOrientation: Orientation | null | undefined,
     updatedByUserId?: string,
   ): Promise<void> {
     // Historique supprimé - parameters kept for interface compatibility
@@ -380,11 +402,12 @@ export class StudentService {
   }
 
   private detectPersonalInfoChanges(
-    previous: any,
-    updated: any,
-    updateData: any,
-  ): { field: string; from: any; to: any }[] {
-    const changes: { field: string; from: any; to: any }[] = [];
+    previous: StudentWithRelations,
+    updated: StudentWithRelations,
+    updateData: UpdateStudentDto,
+  ): { field: string; from: string | null; to: string | null }[] {
+    const changes: { field: string; from: string | null; to: string | null }[] =
+      [];
 
     if (
       updateData.student_firstname &&
@@ -435,7 +458,7 @@ export class StudentService {
 
   private recordPersonalInfoChanges(
     studentId: string,
-    changes: { field: string; from: any; to: any }[],
+    changes: { field: string; from: string | null; to: string | null }[],
     updatedByUserId?: string,
   ): Promise<void> {
     // Historique supprimé - parameters kept for interface compatibility
@@ -446,7 +469,7 @@ export class StudentService {
   }
 
   async remove(
-    where: any,
+    where: Prisma.StudentWhereUniqueInput,
     deletedByUserId?: string,
   ): Promise<Student> {
     const student = await this.findOne(where);
@@ -518,9 +541,11 @@ export class StudentService {
   // ===============================
 
   // ✅ Validation métier centralisée
-  private validateStudentData(data: any): void {
+  private validateStudentData(data: CreateStudentDto | UpdateStudentDto): void {
     if (data.student_birthdate) {
-      const age = this.calculateAge(new Date(data.student_birthdate as string | number | Date));
+      const age = this.calculateAge(
+        new Date(data.student_birthdate as string | number | Date),
+      );
       if (age < 16) {
         throw new BadRequestException("L'étudiant doit avoir au moins 16 ans");
       }
@@ -529,7 +554,7 @@ export class StudentService {
       }
     }
 
-    if (data.student_mail && !this.isValidEmail(data.student_mail as string)) {
+    if (data.student_mail && !this.isValidEmail(data.student_mail)) {
       throw new BadRequestException('Format email invalide');
     }
   }
@@ -557,7 +582,7 @@ export class StudentService {
 
   private recordDisabilityChange(
     studentId: string,
-    previousDisabilities: any[],
+    previousDisabilities: Disability[],
     newDisabilityIds: string[],
     updatedByUserId?: string,
   ): void {
@@ -601,9 +626,9 @@ export class StudentService {
 
   // ✅ Nouvelle méthode pour transformer le DTO en format Prisma
   private transformDtoToPrismaCreateInput(
-    data: any,
-  ): any {
-    const prismaData: any = {
+    data: CreateStudentDto,
+  ): Prisma.StudentCreateInput {
+    const prismaData: Prisma.StudentCreateInput = {
       // Champs directs
       student_firstname: data.student_firstname,
       student_lastname: data.student_lastname,

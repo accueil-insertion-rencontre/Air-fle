@@ -144,8 +144,8 @@ export class AuthenticationService implements IAuthenticationService {
         user: {
           id: user.id,
           email: user.email,
-          firstname: (user as any).user_firstname,
-          lastname: (user as any).user_lastname,
+          firstname: user.user_firstname,
+          lastname: user.user_lastname,
           role: roleName,
           permissions,
           isActive: user.isActive,
