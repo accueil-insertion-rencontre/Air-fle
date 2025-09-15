@@ -7,23 +7,23 @@ const prisma = new PrismaClient();
 const config = {
   adminEmail: process.env.ADMIN_EMAIL || 'm.brocquet@asso-air.org',
   adminPassword: process.env.ADMIN_PASSWORD || 'Admin123!',
-  teacherEmail: process.env.TEACHER_EMAIL || 'l.decriem@asso-air.org', 
+  teacherEmail: process.env.TEACHER_EMAIL || 'l.decriem@asso-air.org',
   teacherPassword: process.env.TEACHER_PASSWORD || 'Teacher123!',
   isProduction: process.env.NODE_ENV === 'production',
 };
 
 // Logger avec gestion d'environnement
 const logger = {
-  info: (message: string, ...args: any[]) => {
+  info: (message: string, ...args: unknown[]) => {
     console.log(`ℹ️  ${message}`, ...args);
   },
-  success: (message: string, ...args: any[]) => {
+  success: (message: string, ...args: unknown[]) => {
     console.log(`✅ ${message}`, ...args);
   },
-  warning: (message: string, ...args: any[]) => {
+  warning: (message: string, ...args: unknown[]) => {
     console.log(`⚠️  ${message}`, ...args);
   },
-  error: (message: string, ...args: any[]) => {
+  error: (message: string, ...args: unknown[]) => {
     console.error(`❌ ${message}`, ...args);
   },
 };
@@ -43,24 +43,34 @@ async function checkPrerequisites() {
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL manquante en production');
     }
-    if (config.adminPassword === 'Admin123!' || config.teacherPassword === 'Teacher123!') {
-      logger.warning('⚠️  SÉCURITÉ: Mots de passe par défaut détectés en production!');
-      logger.warning('Définissez ADMIN_PASSWORD et TEACHER_PASSWORD dans vos variables d\'environnement');
+    if (
+      config.adminPassword === 'Admin123!' ||
+      config.teacherPassword === 'Teacher123!'
+    ) {
+      logger.warning(
+        '⚠️  SÉCURITÉ: Mots de passe par défaut détectés en production!',
+      );
+      logger.warning(
+        "Définissez ADMIN_PASSWORD et TEACHER_PASSWORD dans vos variables d'environnement",
+      );
     }
   }
 }
 
 // Fonction helper pour créer des données avec feedback
-async function createReferenceData<T extends Record<string, any>>(
+async function createReferenceData<T extends Record<string, unknown>>(
   tableName: string,
   data: T[],
-  prismaModel: any,
+  prismaModel: {
+    findFirst: (args: { where: Record<string, unknown> }) => Promise<T | null>;
+    create: (args: { data: T }) => Promise<T>;
+  },
   uniqueField: keyof T,
-  displayName: string
+  displayName: string,
 ): Promise<void> {
   logger.info(`${displayName}...`);
   let createdCount = 0;
-  
+
   for (const item of data) {
     const existing = await prismaModel.findFirst({
       where: { [uniqueField]: item[uniqueField] },
@@ -70,13 +80,15 @@ async function createReferenceData<T extends Record<string, any>>(
       createdCount++;
     }
   }
-  
-  logger.success(`${tableName}: ${createdCount} créés, ${data.length - createdCount} existants`);
+
+  logger.success(
+    `${tableName}: ${createdCount} créés, ${data.length - createdCount} existants`,
+  );
 }
 
 async function main() {
   logger.info('🌱 Initialisation du seed Air-FLE...');
-  
+
   if (config.isProduction) {
     logger.warning('🔒 MODE PRODUCTION DÉTECTÉ');
     logger.warning('Emails admin:', config.adminEmail);
@@ -89,7 +101,7 @@ async function main() {
   // Utiliser une transaction pour garantir la cohérence
   await prisma.$transaction(async (tx) => {
     logger.info('📋 Création des rôles système...');
-    
+
     // Créer les rôles par défaut s'ils n'existent pas déjà
     let adminRole = await tx.role.findFirst({
       where: { role_name: 'admin' },
@@ -144,23 +156,61 @@ async function main() {
       genderCount++;
     }
   }
-  logger.success(`Genres: ${genderCount} créés, ${genders.length - genderCount} existants`);
+  logger.success(
+    `Genres: ${genderCount} créés, ${genders.length - genderCount} existants`,
+  );
 
   // 2. NIVEAUX DE FRANÇAIS (CECR)
   const frenchLevels = [
-    { french_level_code: 'A0', french_level_description: 'Débutant absolu - Aucune connaissance' },
-    { french_level_code: 'A1', french_level_description: 'Utilisateur élémentaire - Niveau découverte' },
-    { french_level_code: 'A1+', french_level_description: 'Utilisateur élémentaire - A1 renforcé' },
-    { french_level_code: 'A2', french_level_description: 'Utilisateur élémentaire - Niveau de survie' },
-    { french_level_code: 'A2+', french_level_description: 'Utilisateur élémentaire - A2 renforcé' },
-    { french_level_code: 'B1', french_level_description: 'Utilisateur indépendant - Niveau seuil' },
-    { french_level_code: 'B1+', french_level_description: 'Utilisateur indépendant - B1 renforcé' },
-    { french_level_code: 'B2', french_level_description: 'Utilisateur indépendant - Niveau avancé' },
-    { french_level_code: 'C1', french_level_description: 'Utilisateur expérimenté - Niveau autonome' },
-    { french_level_code: 'C2', french_level_description: 'Utilisateur expérimenté - Niveau maîtrise' },
-    { french_level_code: 'FLE-P', french_level_description: 'Français Langue Étrangère - Professionnel' },
+    {
+      french_level_code: 'A0',
+      french_level_description: 'Débutant absolu - Aucune connaissance',
+    },
+    {
+      french_level_code: 'A1',
+      french_level_description: 'Utilisateur élémentaire - Niveau découverte',
+    },
+    {
+      french_level_code: 'A1+',
+      french_level_description: 'Utilisateur élémentaire - A1 renforcé',
+    },
+    {
+      french_level_code: 'A2',
+      french_level_description: 'Utilisateur élémentaire - Niveau de survie',
+    },
+    {
+      french_level_code: 'A2+',
+      french_level_description: 'Utilisateur élémentaire - A2 renforcé',
+    },
+    {
+      french_level_code: 'B1',
+      french_level_description: 'Utilisateur indépendant - Niveau seuil',
+    },
+    {
+      french_level_code: 'B1+',
+      french_level_description: 'Utilisateur indépendant - B1 renforcé',
+    },
+    {
+      french_level_code: 'B2',
+      french_level_description: 'Utilisateur indépendant - Niveau avancé',
+    },
+    {
+      french_level_code: 'C1',
+      french_level_description: 'Utilisateur expérimenté - Niveau autonome',
+    },
+    {
+      french_level_code: 'C2',
+      french_level_description: 'Utilisateur expérimenté - Niveau maîtrise',
+    },
+    {
+      french_level_code: 'FLE-P',
+      french_level_description: 'Français Langue Étrangère - Professionnel',
+    },
     { french_level_code: 'Alpha', french_level_description: 'Alphabétisation' },
-    { french_level_code: 'Post-Alpha', french_level_description: 'Post-Alphabétisation' },
+    {
+      french_level_code: 'Post-Alpha',
+      french_level_description: 'Post-Alphabétisation',
+    },
   ];
 
   await createReferenceData(
@@ -168,7 +218,7 @@ async function main() {
     frenchLevels,
     prisma.frenchLevel,
     'french_level_code',
-    '📚 Traitement des niveaux de français'
+    '📚 Traitement des niveaux de français',
   );
 
   // 3. TYPES DE FINANCEMENT
@@ -597,11 +647,13 @@ async function main() {
 
   // Récupérer les rôles pour les utilisateurs
   const roles = await prisma.role.findMany();
-  const adminRole = roles.find(r => r.role_name === 'admin');
-  const teacherRole = roles.find(r => r.role_name === 'teacher');
+  const adminRole = roles.find((r) => r.role_name === 'admin');
+  const teacherRole = roles.find((r) => r.role_name === 'teacher');
 
   if (!adminRole || !teacherRole) {
-    throw new Error('Rôles admin/teacher non trouvés. Problème avec la création des rôles.');
+    throw new Error(
+      'Rôles admin/teacher non trouvés. Problème avec la création des rôles.',
+    );
   }
 
   // Créer un utilisateur admin par défaut
@@ -648,7 +700,7 @@ async function main() {
 
   // RÉSUMÉ FINAL
   logger.success('🎉 SEED TERMINÉ AVEC SUCCÈS !');
-  
+
   // Compter les données créées pour le rapport
   const counts = await Promise.all([
     prisma.role.count(),
@@ -674,37 +726,46 @@ async function main() {
   logger.info(`   - Raisons de sortie: ${counts[7]}`);
   logger.info(`   - Nationalités: ${counts[8]}`);
   logger.info(`   - Utilisateurs: ${counts[9]}`);
-  
+
   if (config.isProduction) {
-    logger.warning('🚨 IMPORTANT: Changez les mots de passe dès la première connexion !');
-    logger.warning('🔒 Utilisez des mots de passe forts et uniques pour chaque environnement.');
+    logger.warning(
+      '🚨 IMPORTANT: Changez les mots de passe dès la première connexion !',
+    );
+    logger.warning(
+      '🔒 Utilisez des mots de passe forts et uniques pour chaque environnement.',
+    );
   }
-  
-  logger.success('✅ Base de données Air-FLE initialisée et prête pour la production !');
+
+  logger.success(
+    '✅ Base de données Air-FLE initialisée et prête pour la production !',
+  );
 }
 
 main()
-  .catch((e) => {
+  .catch((e: unknown) => {
     logger.error('💥 ERREUR CRITIQUE LORS DU SEED');
-    logger.error('Détails de l\'erreur:', e);
-    
-    if (e.code === 'P1001') {
+    logger.error("Détails de l'erreur:", e);
+
+    const error = e as { code?: string };
+    if (error.code === 'P1001') {
       logger.error('❌ Impossible de se connecter à la base de données');
       logger.error('Vérifiez que PostgreSQL est démarré et accessible');
       logger.error('Vérifiez la variable DATABASE_URL');
-    } else if (e.code?.startsWith('P2')) {
+    } else if (error.code?.startsWith('P2')) {
       logger.error('❌ Erreur de contrainte de base de données');
-      logger.error('Il y a peut-être des données corrompues ou des contraintes non respectées');
+      logger.error(
+        'Il y a peut-être des données corrompues ou des contraintes non respectées',
+      );
     }
-    
+
     logger.error('🔧 Actions suggérées:');
     logger.error('1. Vérifiez la connexion à la base de données');
     logger.error('2. Vérifiez que les migrations Prisma ont été appliquées');
     logger.error('3. Si nécessaire, videz la base et relancez les migrations');
-    
+
     process.exit(1);
   })
-  .finally(async () => {
+  .finally(() => {
     logger.info('🔌 Fermeture de la connexion Prisma...');
-    await prisma.$disconnect();
+    void prisma.$disconnect();
   });

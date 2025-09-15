@@ -4,7 +4,6 @@ import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { getCorsConfig } from './auth/config/cors.config';
 import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
@@ -46,4 +45,4 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+void bootstrap();
