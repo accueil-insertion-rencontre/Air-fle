@@ -1,12 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { IGroupStudentManager } from '../interfaces/group.interface';
+import { StudentGroup, Student, Group } from '@prisma/client';
 
 @Injectable()
 export class GroupStudentManagerService implements IGroupStudentManager {
   constructor(private readonly prisma: PrismaService) {}
 
-  async addStudent(groupId: string, studentId: string): Promise<any> {
+  async addStudent(
+    groupId: string,
+    studentId: string,
+  ): Promise<
+    StudentGroup & {
+      group: Group;
+      student: Pick<
+        Student,
+        'student_uuid' | 'student_firstname' | 'student_lastname'
+      >;
+    }
+  > {
     return this.prisma.studentGroup.create({
       data: {
         group_uuid: groupId,
@@ -25,7 +37,10 @@ export class GroupStudentManagerService implements IGroupStudentManager {
     });
   }
 
-  async removeStudent(groupId: string, studentId: string): Promise<any> {
+  async removeStudent(
+    groupId: string,
+    studentId: string,
+  ): Promise<StudentGroup> {
     return this.prisma.studentGroup.delete({
       where: {
         student_uuid_group_uuid: {
@@ -36,7 +51,17 @@ export class GroupStudentManagerService implements IGroupStudentManager {
     });
   }
 
-  async getStudentsByGroup(groupId: string): Promise<any[]> {
+  async getStudentsByGroup(
+    groupId: string,
+  ): Promise<
+    Pick<
+      Student,
+      | 'student_uuid'
+      | 'student_firstname'
+      | 'student_lastname'
+      | 'student_birthdate'
+    >[]
+  > {
     const result = await this.prisma.studentGroup.findMany({
       where: {
         group_uuid: groupId,

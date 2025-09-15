@@ -1,4 +1,4 @@
-import { Group, Prisma } from '@prisma/client';
+import { Group, Prisma, StudentGroup, Student } from '@prisma/client';
 
 export const GROUP_REPOSITORY = Symbol('IGroupRepository');
 export const GROUP_STUDENT_MANAGER = Symbol('IGroupStudentManager');
@@ -37,9 +37,30 @@ export interface IGroupRepository {
 
 // Interface pour la gestion des étudiants dans les groupes (ISP)
 export interface IGroupStudentManager {
-  addStudent(groupId: string, studentId: string): Promise<any>;
-  removeStudent(groupId: string, studentId: string): Promise<any>;
-  getStudentsByGroup(groupId: string): Promise<any[]>;
+  addStudent(
+    groupId: string,
+    studentId: string,
+  ): Promise<
+    StudentGroup & {
+      group: Group;
+      student: Pick<
+        Student,
+        'student_uuid' | 'student_firstname' | 'student_lastname'
+      >;
+    }
+  >;
+  removeStudent(groupId: string, studentId: string): Promise<StudentGroup>;
+  getStudentsByGroup(
+    groupId: string,
+  ): Promise<
+    Pick<
+      Student,
+      | 'student_uuid'
+      | 'student_firstname'
+      | 'student_lastname'
+      | 'student_birthdate'
+    >[]
+  >;
 }
 
 // Interface pour les opérations métier sur les groupes

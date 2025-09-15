@@ -1,5 +1,5 @@
 import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
-import { Group, Prisma } from '@prisma/client';
+import { Group, Prisma, StudentGroup, Student } from '@prisma/client';
 import {
   IGroupRepository,
   IGroupStudentManager,
@@ -118,7 +118,18 @@ export class GroupService implements IGroupBusinessService {
   }
 
   // Méthodes de gestion des étudiants (délégation)
-  async addStudent(groupId: string, studentId: string): Promise<any> {
+  async addStudent(
+    groupId: string,
+    studentId: string,
+  ): Promise<
+    StudentGroup & {
+      group: Group;
+      student: Pick<
+        Student,
+        'student_uuid' | 'student_firstname' | 'student_lastname'
+      >;
+    }
+  > {
     // Vérifier que le groupe existe
     await this.findById(groupId);
     const result = await this.studentManager.addStudent(groupId, studentId);
@@ -132,7 +143,10 @@ export class GroupService implements IGroupBusinessService {
     return result;
   }
 
-  async removeStudent(groupId: string, studentId: string): Promise<any> {
+  async removeStudent(
+    groupId: string,
+    studentId: string,
+  ): Promise<StudentGroup> {
     // Vérifier que le groupe existe
     await this.findById(groupId);
     const result = await this.studentManager.removeStudent(groupId, studentId);
@@ -146,7 +160,17 @@ export class GroupService implements IGroupBusinessService {
     return result;
   }
 
-  async getStudentsByGroup(groupId: string): Promise<any[]> {
+  async getStudentsByGroup(
+    groupId: string,
+  ): Promise<
+    Pick<
+      Student,
+      | 'student_uuid'
+      | 'student_firstname'
+      | 'student_lastname'
+      | 'student_birthdate'
+    >[]
+  > {
     // Vérifier que le groupe existe
     await this.findById(groupId);
     return this.studentManager.getStudentsByGroup(groupId);
