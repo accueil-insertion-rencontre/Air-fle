@@ -1,0 +1,245 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.2.3)'
+        required: true
+        type: string
+
+jobs:
+  # =============================================================================
+  # CRÉATION DE RELEASE
+  # =============================================================================
+  create-release:
+    name: 🏷️ Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release_url: ${{ steps.create_release.outputs.html_url }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏷️ Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📝 Generate changelog
+        id: changelog
+        run: |
+          # Récupérer le tag précédent
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          
+          if [ -z "$PREV_TAG" ]; then
+            echo "Premier release - incluant tous les commits"
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            echo "Changelog depuis $PREV_TAG"
+            CHANGELOG=$(git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+          
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Air-FLE ${{ steps.version.outputs.version }}
+          body: |
+            ## 🚀 Air-FLE Release ${{ steps.version.outputs.version }}
+            
+            ### 📋 Changements
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### 🐳 Images Docker
+            - API: `ghcr.io/${{ github.repository }}/api:${{ steps.version.outputs.version }}`
+            - Frontend: `ghcr.io/${{ github.repository }}/frontend:${{ steps.version.outputs.version }}`
+            
+            ### 📦 Déploiement
+            Cette version sera automatiquement déployée sur la production après validation.
+            
+            ### 🔗 Liens utiles
+            - [Documentation](https://github.com/${{ github.repository }}/tree/${{ steps.version.outputs.version }}/docs)
+            - [API Documentation](http://46.62.162.199/api/docs)
+            - [Application](http://46.62.162.199)
+          draft: false
+          prerelease: false
+
+  # =============================================================================
+  # BUILD ET TAG DOCKER IMAGES
+  # =============================================================================
+  docker-release:
+    name: 🐳 Docker Release
+    runs-on: ubuntu-latest
+    needs: create-release
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏗️ Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./air-fle-api
+          file: ./air-fle-api/Dockerfile.prod
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/api:${{ needs.create-release.outputs.version }}
+            ghcr.io/${{ github.repository }}/api:latest
+          labels: |
+            org.opencontainers.image.title=Air-FLE API
+            org.opencontainers.image.description=API NestJS pour la gestion des apprenants FLE
+            org.opencontainers.image.version=${{ needs.create-release.outputs.version }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🏗️ Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./air-fle-front
+          file: ./air-fle-front/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/frontend:${{ needs.create-release.outputs.version }}
+            ghcr.io/${{ github.repository }}/frontend:latest
+          labels: |
+            org.opencontainers.image.title=Air-FLE Frontend
+            org.opencontainers.image.description=Interface Angular pour la gestion des apprenants FLE
+            org.opencontainers.image.version=${{ needs.create-release.outputs.version }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # =============================================================================
+  # DÉPLOIEMENT DE RELEASE
+  # =============================================================================
+  deploy-release:
+    name: 🚀 Deploy Release
+    runs-on: ubuntu-latest
+    needs: [create-release, docker-release]
+    environment:
+      name: production
+      url: http://46.62.162.199
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: 🚀 Deploy release to production
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd /opt/air-fle
+            
+            # Backup actuel
+            docker-compose -f docker-compose.prod.yml down
+            
+            # Création sauvegarde de la base
+            docker run --rm -v air-fle_postgres_data:/data -v $(pwd):/backup ubuntu tar czf /backup/db-backup-${{ needs.create-release.outputs.version }}.tar.gz /data
+            
+            # Pull des nouvelles images avec tag de version
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker pull ghcr.io/${{ github.repository }}/api:${{ needs.create-release.outputs.version }}
+            docker pull ghcr.io/${{ github.repository }}/frontend:${{ needs.create-release.outputs.version }}
+            
+            # Tag comme latest localement
+            docker tag ghcr.io/${{ github.repository }}/api:${{ needs.create-release.outputs.version }} ghcr.io/${{ github.repository }}/api:latest
+            docker tag ghcr.io/${{ github.repository }}/frontend:${{ needs.create-release.outputs.version }} ghcr.io/${{ github.repository }}/frontend:latest
+            
+            # Déploiement
+            export DATABASE_URL="${{ secrets.DATABASE_URL }}"
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            export ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"
+            export ADMIN_PASSWORD="${{ secrets.ADMIN_PASSWORD }}"
+            export TEACHER_EMAIL="${{ secrets.TEACHER_EMAIL }}"
+            export TEACHER_PASSWORD="${{ secrets.TEACHER_PASSWORD }}"
+            
+            docker-compose -f docker-compose.prod.yml up -d
+            
+            # Migrations et vérifications
+            sleep 30
+            docker-compose -f docker-compose.prod.yml exec -T api-prod npx prisma migrate deploy
+            docker-compose -f docker-compose.prod.yml exec -T api-prod npm run seed
+            
+            # Health check complet
+            curl -f http://localhost/api/v1/health || exit 1
+            curl -f http://localhost/ || exit 1
+            
+            echo "✅ Release ${{ needs.create-release.outputs.version }} déployée avec succès!"
+            
+            # Nettoyage des anciennes images (garder les 3 dernières versions)
+            docker images ghcr.io/${{ github.repository }}/api --format "table {{.Tag}}" | tail -n +2 | head -n -3 | xargs -I {} docker rmi ghcr.io/${{ github.repository }}/api:{} || true
+            docker images ghcr.io/${{ github.repository }}/frontend --format "table {{.Tag}}" | tail -n +2 | head -n -3 | xargs -I {} docker rmi ghcr.io/${{ github.repository }}/frontend:{} || true
+          EOF
+
+      - name: 📊 Update release with deployment info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: '${{ needs.create-release.outputs.version }}'
+            });
+
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release.id,
+              body: release.body + `\n\n### ✅ Statut du déploiement\n- **Déployé le**: ${new Date().toLocaleString('fr-FR')}\n- **URL**: http://46.62.162.199\n- **Status**: 🟢 En ligne`
+            });
+
+  # =============================================================================
+  # NOTIFICATIONS
+  # =============================================================================
+  notify-release:
+    name: 📢 Release Notifications
+    runs-on: ubuntu-latest
+    needs: [create-release, deploy-release]
+    if: always()
+    
+    steps:
+      - name: 📧 Success notification
+        if: needs.deploy-release.result == 'success'
+        run: |
+          echo "🎉 Release ${{ needs.create-release.outputs.version }} déployée avec succès!"
+          echo "🔗 URL: ${{ needs.create-release.outputs.release_url }}"
+          
+      - name: 📧 Failure notification  
+        if: needs.deploy-release.result == 'failure'
+        run: |
+          echo "❌ Échec du déploiement de la release ${{ needs.create-release.outputs.version }}"
+          echo "🔧 Vérifiez les logs et effectuez un rollback si nécessaire"

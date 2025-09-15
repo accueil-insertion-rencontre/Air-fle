@@ -1,0 +1,188 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  # =============================================================================
+  # VALIDATION DES PR
+  # =============================================================================
+  pr-validation:
+    name: 🔍 PR Validation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏷️ Check PR title format
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+
+      - name: 📝 Check for breaking changes
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}..HEAD | grep -E "(prisma/schema.prisma|package\.json|docker-compose.*\.yml)"; then
+            echo "⚠️ Breaking changes detected - Review required"
+            echo "breaking_changes=true" >> $GITHUB_ENV
+          else
+            echo "✅ No breaking changes detected"
+            echo "breaking_changes=false" >> $GITHUB_ENV
+          fi
+
+      - name: 📊 Add PR size label
+        uses: codelytv/pr-size-labeler@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          xs_label: 'size/XS'
+          s_label: 'size/S'
+          m_label: 'size/M'
+          l_label: 'size/L'
+          xl_label: 'size/XL'
+          xs_max_size: 10
+          s_max_size: 100
+          m_max_size: 500
+          l_max_size: 1000
+
+      - name: 📋 Auto-assign reviewers
+        uses: kentaro-m/auto-assign-action@v1.2.5
+        with:
+          configuration-path: '.github/auto-assign.yml'
+
+  # =============================================================================
+  # ANALYSE DE SÉCURITÉ
+  # =============================================================================
+  security-check:
+    name: 🛡️ Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Run CodeQL Analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, typescript
+
+      - name: 🏗️ Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: 📊 Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      - name: 🔒 Check for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  # =============================================================================
+  # ANALYSE DE PERFORMANCE
+  # =============================================================================
+  performance-check:
+    name: 📈 Performance Check
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.changed_files, 'air-fle-front')
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: air-fle-front/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: npm ci
+        working-directory: ./air-fle-front
+
+      - name: 🏗️ Build for performance test
+        run: npm run build
+        working-directory: ./air-fle-front
+
+      - name: 📊 Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          configPath: './air-fle-front/.lighthouserc.json'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+  # =============================================================================
+  # COMMENTAIRE AUTOMATIQUE
+  # =============================================================================
+  pr-comment:
+    name: 💬 PR Comment
+    runs-on: ubuntu-latest
+    needs: [pr-validation, security-check]
+    if: always()
+    
+    steps:
+      - name: 💬 Comment PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+
+            let comment = `## 🤖 Validation automatique PR #${context.issue.number}\n\n`;
+            
+            comment += `### 📊 Résumé\n`;
+            comment += `- **Auteur**: @${pr.user.login}\n`;
+            comment += `- **Branche**: \`${pr.head.ref}\` → \`${pr.base.ref}\`\n`;
+            comment += `- **Commits**: ${pr.commits}\n`;
+            comment += `- **Fichiers modifiés**: ${pr.changed_files}\n`;
+            comment += `- **Lignes ajoutées**: +${pr.additions}\n`;
+            comment += `- **Lignes supprimées**: -${pr.deletions}\n\n`;
+
+            if ('${{ needs.pr-validation.result }}' === 'success') {
+              comment += `✅ **Validation PR**: Réussie\n`;
+            } else {
+              comment += `❌ **Validation PR**: Échec\n`;
+            }
+
+            if ('${{ needs.security-check.result }}' === 'success') {
+              comment += `✅ **Sécurité**: Aucun problème détecté\n`;
+            } else {
+              comment += `⚠️ **Sécurité**: Problèmes potentiels détectés\n`;
+            }
+
+            comment += `\n### 🚀 Prochaines étapes\n`;
+            if (pr.base.ref === 'main') {
+              comment += `- Cette PR sera déployée automatiquement après merge\n`;
+              comment += `- URL de production: http://46.62.162.199\n`;
+            } else {
+              comment += `- Cette PR sera testée automatiquement\n`;
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

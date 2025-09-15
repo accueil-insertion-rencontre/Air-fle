@@ -1,10 +1,16 @@
 {
   "name": "air-fle-api",
   "version": "2.0.0",
-  "description": "",
-  "author": "",
+  "description": "API NestJS pour la gestion des apprenants FLE",
+  "author": "Association Air",
   "private": true,
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/accueil-insertion-rencontre/Air-fle.git",
+    "directory": "air-fle-api"
+  },
+  "homepage": "https://github.com/accueil-insertion-rencontre/Air-fle#readme",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

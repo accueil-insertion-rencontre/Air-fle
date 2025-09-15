@@ -1,0 +1,22 @@
+# Configuration d'auto-assignation des reviewers
+
+# Assignés par défaut pour toutes les PR
+addReviewers: true
+addAssignees: true
+
+# Liste des reviewers
+reviewers:
+  - # Ajoutez vos usernames GitHub ici
+
+# Liste des assignés
+assignees:
+  - # Ajoutez vos usernames GitHub ici
+
+# Nombre de reviewers à assigner
+numberOfReviewers: 1
+
+# Nombre d'assignés à assigner  
+numberOfAssignees: 1
+
+# Ignorer les drafts
+skipDrafts: true
