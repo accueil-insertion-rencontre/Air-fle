@@ -6,8 +6,7 @@ import {
 } from '@nestjs/common';
 import { StudentRepository } from './student.repository';
 
-// Type par défaut pour corriger les problèmes de linter
-type Student = any;
+import { Student } from '@prisma/client';
 
 @Injectable()
 export class StudentService {
@@ -18,7 +17,10 @@ export class StudentService {
     // learner history removed
   ) {}
 
-  async create(data: any, createdByUserId?: string): Promise<Student> {
+  async create(
+    data: any,
+    createdByUserId?: string,
+  ): Promise<Student> {
     try {
       this.validateStudentData(data);
 
@@ -26,7 +28,7 @@ export class StudentService {
 
       // Créer l'étudiant d'abord
       const student = await this.studentRepository.create(
-        prismaData,
+        prismaData as any,
         this.studentRepository.getStandardIncludes(),
       );
 
@@ -45,10 +47,7 @@ export class StudentService {
           });
 
         if (studentWithNationalities) {
-          await this.recordStudentCreation(
-            studentWithNationalities,
-            createdByUserId,
-          );
+          this.recordStudentCreation(studentWithNationalities, createdByUserId);
 
           this.logger.log(
             JSON.stringify({
@@ -81,8 +80,8 @@ export class StudentService {
       this.logger.error(
         JSON.stringify({
           event: 'student_creation_failed',
-          message: error.message,
-          stack: error.stack,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
           createdBy: createdByUserId ?? 'system',
           timestamp: new Date().toISOString(),
         }),
@@ -94,8 +93,8 @@ export class StudentService {
   async findAll(params?: {
     skip?: number;
     take?: number;
-    where?: any;
-    orderBy?: any;
+    where?: Record<string, any>;
+    orderBy?: Record<string, any>;
   }): Promise<Student[]> {
     try {
       const { skip, take, where, orderBy } = params || {};
@@ -121,8 +120,8 @@ export class StudentService {
       this.logger.error(
         JSON.stringify({
           event: 'students_list_failed',
-          message: error.message,
-          stack: error.stack,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
           timestamp: new Date().toISOString(),
         }),
       );
@@ -130,7 +129,9 @@ export class StudentService {
     }
   }
 
-  async findOne(studentWhereUniqueInput: any): Promise<Student | null> {
+  async findOne(
+    studentWhereUniqueInput: any,
+  ): Promise<Student | null> {
     try {
       const student = await this.studentRepository.findUnique({
         where: studentWhereUniqueInput,
@@ -161,8 +162,8 @@ export class StudentService {
         JSON.stringify({
           event: 'student_retrieval_failed',
           search_criteria: JSON.stringify(studentWhereUniqueInput),
-          message: error.message,
-          stack: error.stack,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
           timestamp: new Date().toISOString(),
         }),
       );
@@ -225,8 +226,8 @@ export class StudentService {
         JSON.stringify({
           event: 'student_update_failed',
           search_criteria: JSON.stringify(params.where),
-          message: error.message,
-          stack: error.stack,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
           updatedBy: updatedByUserId ?? 'system',
           timestamp: new Date().toISOString(),
         }),
@@ -235,7 +236,7 @@ export class StudentService {
     }
   }
 
-  async count(where?: any): Promise<number> {
+  async count(where?: Record<string, any>): Promise<number> {
     try {
       const count = await this.studentRepository.count(where);
 
@@ -253,8 +254,8 @@ export class StudentService {
       this.logger.error(
         JSON.stringify({
           event: 'students_count_failed',
-          message: error.message,
-          stack: error.stack,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
           timestamp: new Date().toISOString(),
         }),
       );
@@ -336,34 +337,46 @@ export class StudentService {
     await Promise.all(changes);
   }
 
-  private async recordLevelChange(
+  private recordLevelChange(
     studentId: string,
     previousLevel: any,
     newLevel: any,
     updatedByUserId?: string,
   ): Promise<void> {
-    // Historique supprimé
-    return;
+    // Historique supprimé - parameters kept for interface compatibility
+    void studentId;
+    void previousLevel;
+    void newLevel;
+    void updatedByUserId;
+    return Promise.resolve();
   }
 
-  private async recordStatusChange(
+  private recordStatusChange(
     studentId: string,
     previousStatus: any,
     newStatus: any,
     updatedByUserId?: string,
   ): Promise<void> {
-    // Historique supprimé
-    return;
+    // Historique supprimé - parameters kept for interface compatibility
+    void studentId;
+    void previousStatus;
+    void newStatus;
+    void updatedByUserId;
+    return Promise.resolve();
   }
 
-  private async recordOrientationChange(
+  private recordOrientationChange(
     studentId: string,
     previousOrientation: any,
     newOrientation: any,
     updatedByUserId?: string,
   ): Promise<void> {
-    // Historique supprimé
-    return;
+    // Historique supprimé - parameters kept for interface compatibility
+    void studentId;
+    void previousOrientation;
+    void newOrientation;
+    void updatedByUserId;
+    return Promise.resolve();
   }
 
   private detectPersonalInfoChanges(
@@ -420,16 +433,22 @@ export class StudentService {
     return changes;
   }
 
-  private async recordPersonalInfoChanges(
+  private recordPersonalInfoChanges(
     studentId: string,
-    changes: any[],
+    changes: { field: string; from: any; to: any }[],
     updatedByUserId?: string,
   ): Promise<void> {
-    // Historique supprimé
-    return;
+    // Historique supprimé - parameters kept for interface compatibility
+    void studentId;
+    void changes;
+    void updatedByUserId;
+    return Promise.resolve();
   }
 
-  async remove(where: any, deletedByUserId?: string): Promise<Student> {
+  async remove(
+    where: any,
+    deletedByUserId?: string,
+  ): Promise<Student> {
     const student = await this.findOne(where);
     if (!student) {
       throw new NotFoundException('Étudiant non trouvé');
@@ -457,9 +476,9 @@ export class StudentService {
     updatedByUserId?: string,
   ): Promise<void> {
     try {
-      // Récupérer les handicaps actuels
-      const currentDisabilities =
-        await this.studentRepository.findStudentDisabilities(studentId);
+      // Récupérer les handicaps actuels (désactivé)
+      // const _currentDisabilities =
+      //   await this.studentRepository.findStudentDisabilities(studentId);
 
       // ✅ Mise à jour via repository
       await this.studentRepository.updateStudentDisabilities(
@@ -484,8 +503,8 @@ export class StudentService {
         JSON.stringify({
           event: 'student_disabilities_update_failed',
           student_uuid: studentId,
-          message: error.message,
-          stack: error.stack,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
           updatedBy: updatedByUserId ?? 'system',
           timestamp: new Date().toISOString(),
         }),
@@ -501,7 +520,7 @@ export class StudentService {
   // ✅ Validation métier centralisée
   private validateStudentData(data: any): void {
     if (data.student_birthdate) {
-      const age = this.calculateAge(new Date(data.student_birthdate));
+      const age = this.calculateAge(new Date(data.student_birthdate as string | number | Date));
       if (age < 16) {
         throw new BadRequestException("L'étudiant doit avoir au moins 16 ans");
       }
@@ -510,35 +529,43 @@ export class StudentService {
       }
     }
 
-    if (data.student_mail && !this.isValidEmail(data.student_mail)) {
+    if (data.student_mail && !this.isValidEmail(data.student_mail as string)) {
       throw new BadRequestException('Format email invalide');
     }
   }
 
   // ✅ Enregistrement historique spécialisé
-  private async recordStudentCreation(
+  private recordStudentCreation(
     student: Student,
     createdByUserId?: string,
-  ): Promise<void> {
-    // Historique supprimé
+  ): void {
+    // Historique supprimé - parameters kept for interface compatibility
+    void student;
+    void createdByUserId;
     return;
   }
 
-  private async recordStudentDeletion(
+  private recordStudentDeletion(
     student: Student,
     deletedByUserId?: string,
-  ): Promise<void> {
-    // Historique supprimé
+  ): void {
+    // Historique supprimé - parameters kept for interface compatibility
+    void student;
+    void deletedByUserId;
     return;
   }
 
-  private async recordDisabilityChange(
+  private recordDisabilityChange(
     studentId: string,
     previousDisabilities: any[],
     newDisabilityIds: string[],
     updatedByUserId?: string,
-  ): Promise<void> {
-    // Historique supprimé
+  ): void {
+    // Historique supprimé - parameters kept for interface compatibility
+    void studentId;
+    void previousDisabilities;
+    void newDisabilityIds;
+    void updatedByUserId;
     return;
   }
 
@@ -573,7 +600,9 @@ export class StudentService {
   }
 
   // ✅ Nouvelle méthode pour transformer le DTO en format Prisma
-  private transformDtoToPrismaCreateInput(data: any): any {
+  private transformDtoToPrismaCreateInput(
+    data: any,
+  ): any {
     const prismaData: any = {
       // Champs directs
       student_firstname: data.student_firstname,

@@ -137,7 +137,13 @@ export class StudentController {
     @Query('financing_uuid') financing_uuid?: string,
     @Query('orientation_uuid') orientation_uuid?: string,
     @Query('search') search?: string,
-  ): Promise<any> {
+  ): Promise<{
+    students: Student[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> {
     const where: Prisma.StudentWhereInput = {};
 
     if (search) {
@@ -232,7 +238,7 @@ export class StudentController {
       take: take ? parseInt(take) : undefined,
       where,
       orderBy: orderBy
-        ? JSON.parse(orderBy)
+        ? (JSON.parse(orderBy) as Record<string, unknown>)
         : { student_created_at: 'desc' as const },
     });
     // Calcul du total réel
@@ -297,8 +303,8 @@ export class StudentController {
         where: { student_uuid: student_uuid },
         data: updateStudentDto,
       });
-    } catch (error) {
-      if (error.code === 'P2025') {
+    } catch (error: unknown) {
+      if ((error as { code?: string }).code === 'P2025') {
         throw new NotFoundException(
           `Étudiant avec l'UUID ${student_uuid} non trouvé`,
         );
@@ -324,8 +330,8 @@ export class StudentController {
     try {
       await this.studentService.remove({ student_uuid: student_uuid });
       return;
-    } catch (error) {
-      if (error.code === 'P2025') {
+    } catch (error: unknown) {
+      if ((error as { code?: string }).code === 'P2025') {
         throw new NotFoundException(
           `Étudiant avec l'UUID ${student_uuid} non trouvé`,
         );
@@ -350,7 +356,7 @@ export class StudentController {
     @Param('student_uuid') student_uuid: string,
     @Body() studentDisabilityDto: StudentDisabilityDto,
   ) {
-    const student = await this.studentService.findOne(student_uuid);
+    const student = await this.studentService.findOne({ student_uuid });
     if (!student) {
       throw new NotFoundException(
         `Étudiant avec l'UUID ${student_uuid} non trouvé`,

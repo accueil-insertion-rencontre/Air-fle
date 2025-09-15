@@ -2,6 +2,8 @@ import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
+type StudentInclude = Prisma.StudentInclude;
+
 @Injectable()
 export class StudentRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
@@ -10,7 +12,7 @@ export class StudentRepository {
   // OPÉRATIONS CRUD DE BASE
   // ===============================
 
-  async create(data: Prisma.StudentCreateInput, include?: any) {
+  async create(data: Prisma.StudentCreateInput, include?: StudentInclude) {
     return this.prisma.student.create({
       data,
       include,
@@ -22,7 +24,7 @@ export class StudentRepository {
     take?: number;
     where?: Prisma.StudentWhereInput;
     orderBy?: Prisma.StudentOrderByWithRelationInput;
-    include?: any;
+    include?: StudentInclude;
   }) {
     const { skip, take, where, orderBy, include } = params;
     return this.prisma.student.findMany({
@@ -36,7 +38,7 @@ export class StudentRepository {
 
   async findUnique(params: {
     where: Prisma.StudentWhereUniqueInput;
-    include?: any;
+    include?: StudentInclude;
   }) {
     const { where, include } = params;
     return this.prisma.student.findUnique({
@@ -48,7 +50,7 @@ export class StudentRepository {
   async update(params: {
     where: Prisma.StudentWhereUniqueInput;
     data: Prisma.StudentUpdateInput;
-    include?: any;
+    include?: StudentInclude;
   }) {
     const { where, data, include } = params;
     return this.prisma.student.update({
