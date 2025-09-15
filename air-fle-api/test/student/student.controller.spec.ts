@@ -107,7 +107,8 @@ describe('StudentController - Tests Simples', () => {
       headers: {},
     };
 
-    const hasAuthorization = mockRequest.headers.authorization;
+    const hasAuthorization = (mockRequest.headers as { authorization?: string })
+      .authorization;
 
     // Simulation middleware auth
     const response = {

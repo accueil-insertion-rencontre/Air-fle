@@ -11,6 +11,18 @@ import { RolesGuard } from '../../src/auth/guards/roles.guard';
 import { TransformInterceptor } from '../../src/common/interceptors/transform.interceptor';
 import { AllExceptionsFilter } from '../../src/common/filters/http-exception.filter';
 
+// Types for API responses
+interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  message?: string;
+}
+
+interface FinancingData {
+  financing_uuid: string;
+  financing_type: string;
+}
+
 // Mock Guards qui laissent passer toutes les requêtes pour les tests
 class MockJwtAuthGuard {
   constructor() {}
@@ -83,7 +95,7 @@ describe("Tests d'intégration Financing - Endpoints HTTP", () => {
         await prismaService.financing.delete({
           where: { financing_uuid: testFinancingId },
         });
-      } catch (error) {
+      } catch {
         // Le financement a peut-être déjà été supprimé
       }
     }
@@ -95,18 +107,21 @@ describe("Tests d'intégration Financing - Endpoints HTTP", () => {
 
   // TEST 1: Récupérer la liste des financements
   it('devrait permettre de récupérer la liste des financements', async () => {
-    const res = await request(app.getHttpServer()).get('/api/v1/financings');
+    const res = await request(app.getHttpServer() as unknown).get(
+      '/api/v1/financings',
+    );
+    const body = res.body as ApiResponse<FinancingData[]>;
 
     // Debug en cas d'erreur
     if (res.status !== 200) {
-      console.log('❌ Erreur 500 détails:', res.body);
+      console.log('❌ Erreur 500 détails:', body);
     }
 
     expect(res.status).toBe(200);
-    expect(res.body.success).toBe(true);
-    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(body.success).toBe(true);
+    expect(Array.isArray(body.data)).toBe(true);
     console.log(
-      `✅ GET /financings: ${res.body.data.length} financements trouvés`,
+      `✅ GET /financings: ${body.data?.length ?? 0} financements trouvés`,
     );
   });
 
@@ -116,16 +131,17 @@ describe("Tests d'intégration Financing - Endpoints HTTP", () => {
       financing_type: 'Test Intégration HTTP',
     };
 
-    const res = await request(app.getHttpServer())
+    const res = await request(app.getHttpServer() as unknown)
       .post('/api/v1/financings')
       .send(financingData)
       .expect(201);
+    const body = res.body as ApiResponse<FinancingData>;
 
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.financing_type).toBe('Test Intégration HTTP');
-    expect(res.body.data.financing_uuid).toBeDefined();
+    expect(body.success).toBe(true);
+    expect(body.data?.financing_type).toBe('Test Intégration HTTP');
+    expect(body.data?.financing_uuid).toBeDefined();
 
-    testFinancingId = res.body.data.financing_uuid;
+    testFinancingId = body.data?.financing_uuid ?? null;
     console.log(`✅ POST /financings: Créé avec UUID ${testFinancingId}`);
   });
 
@@ -135,13 +151,14 @@ describe("Tests d'intégration Financing - Endpoints HTTP", () => {
       throw new Error('Aucun financement créé pour ce test');
     }
 
-    const res = await request(app.getHttpServer())
+    const res = await request(app.getHttpServer() as unknown)
       .get(`/api/v1/financings/${testFinancingId}`)
       .expect(200);
+    const body = res.body as ApiResponse<FinancingData>;
 
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.financing_uuid).toBe(testFinancingId);
-    expect(res.body.data.financing_type).toBe('Test Intégration HTTP');
+    expect(body.success).toBe(true);
+    expect(body.data?.financing_uuid).toBe(testFinancingId);
+    expect(body.data?.financing_type).toBe('Test Intégration HTTP');
     console.log(`✅ GET /financings/${testFinancingId}: Récupéré avec succès`);
   });
 
@@ -155,13 +172,14 @@ describe("Tests d'intégration Financing - Endpoints HTTP", () => {
       financing_type: 'Test HTTP Modifié',
     };
 
-    const res = await request(app.getHttpServer())
+    const res = await request(app.getHttpServer() as unknown)
       .patch(`/api/v1/financings/${testFinancingId}`)
       .send(updateData)
       .expect(200);
+    const body = res.body as ApiResponse<FinancingData>;
 
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.financing_type).toBe('Test HTTP Modifié');
+    expect(body.success).toBe(true);
+    expect(body.data?.financing_type).toBe('Test HTTP Modifié');
     console.log(`✅ PATCH /financings/${testFinancingId}: Modifié avec succès`);
   });
 
@@ -169,11 +187,12 @@ describe("Tests d'intégration Financing - Endpoints HTTP", () => {
   it('devrait retourner 404 pour un financement inexistant', async () => {
     const fakeUuid = '00000000-0000-0000-0000-000000000000';
 
-    const res = await request(app.getHttpServer())
+    const res = await request(app.getHttpServer() as unknown)
       .get(`/api/v1/financings/${fakeUuid}`)
       .expect(404);
+    const body = res.body as ApiResponse;
 
-    expect(res.body.success).toBe(false);
+    expect(body.success).toBe(false);
     console.log(`✅ GET /financings/${fakeUuid}: 404 OK`);
   });
 
@@ -183,15 +202,16 @@ describe("Tests d'intégration Financing - Endpoints HTTP", () => {
       throw new Error('Aucun financement créé pour ce test');
     }
 
-    const res = await request(app.getHttpServer())
+    const res = await request(app.getHttpServer() as unknown)
       .delete(`/api/v1/financings/${testFinancingId}`)
       .expect(200);
+    const body = res.body as ApiResponse<FinancingData>;
 
-    expect(res.body.success).toBe(true);
-    expect(res.body.data.financing_uuid).toBe(testFinancingId);
+    expect(body.success).toBe(true);
+    expect(body.data?.financing_uuid).toBe(testFinancingId);
 
     // Vérifier que le financement n'existe plus
-    await request(app.getHttpServer())
+    await request(app.getHttpServer() as unknown)
       .get(`/api/v1/financings/${testFinancingId}`)
       .expect(404);
 
@@ -208,40 +228,43 @@ describe("Tests d'intégration Financing - Endpoints HTTP", () => {
       financing_type: 'Test CRUD HTTP Complet',
     };
 
-    const createRes = await request(app.getHttpServer())
+    const createRes = await request(app.getHttpServer() as unknown)
       .post('/api/v1/financings')
       .send(createData)
       .expect(201);
+    const createBody = createRes.body as ApiResponse<FinancingData>;
 
-    const createdId = createRes.body.data.financing_uuid;
-    expect(createRes.body.data.financing_type).toBe('Test CRUD HTTP Complet');
+    const createdId = createBody.data?.financing_uuid;
+    expect(createBody.data?.financing_type).toBe('Test CRUD HTTP Complet');
 
     // 2. Lire
-    const readRes = await request(app.getHttpServer())
+    const readRes = await request(app.getHttpServer() as unknown)
       .get(`/api/v1/financings/${createdId}`)
       .expect(200);
+    const readBody = readRes.body as ApiResponse<FinancingData>;
 
-    expect(readRes.body.data.financing_type).toBe('Test CRUD HTTP Complet');
+    expect(readBody.data?.financing_type).toBe('Test CRUD HTTP Complet');
 
     // 3. Modifier
     const updateData = {
       financing_type: 'Test CRUD HTTP Modifié',
     };
 
-    const updateRes = await request(app.getHttpServer())
+    const updateRes = await request(app.getHttpServer() as unknown)
       .patch(`/api/v1/financings/${createdId}`)
       .send(updateData)
       .expect(200);
+    const updateBody = updateRes.body as ApiResponse<FinancingData>;
 
-    expect(updateRes.body.data.financing_type).toBe('Test CRUD HTTP Modifié');
+    expect(updateBody.data?.financing_type).toBe('Test CRUD HTTP Modifié');
 
     // 4. Supprimer
-    await request(app.getHttpServer())
+    await request(app.getHttpServer() as unknown)
       .delete(`/api/v1/financings/${createdId}`)
       .expect(200);
 
     // 5. Vérifier suppression
-    await request(app.getHttpServer())
+    await request(app.getHttpServer() as unknown)
       .get(`/api/v1/financings/${createdId}`)
       .expect(404);
 

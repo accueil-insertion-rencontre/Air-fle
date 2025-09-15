@@ -33,7 +33,7 @@ describe('Student RBAC - Tests Simples', () => {
     const user = {}; // Pas de rôle
     const requiredRoles = ['admin', 'teacher'];
 
-    const userRole = (user as any).role;
+    const userRole = (user as { role?: string }).role;
     const isAuthorized = !!userRole && requiredRoles.includes(userRole);
 
     expect(isAuthorized).toBe(false);
