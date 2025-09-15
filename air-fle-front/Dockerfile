@@ -19,11 +19,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package*.json ./
 
-# Copie du code source
+# Copie du code source et des fichiers de configuration
 COPY . .
 
-# Build de l'application Angular
-RUN npm run build
+# Build de l'application Angular pour la production
+RUN npm run build -- --configuration=production
 
 # Stage 3: Serveur de production
 FROM nginx:alpine AS production

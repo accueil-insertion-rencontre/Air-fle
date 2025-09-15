@@ -3,7 +3,7 @@
 # =============================================================================
 
 # Build outputs (Angular specific)
-dist/
+# dist/ # Commented out for production builds that use pre-built files
 .angular/
 
 # Testing (Angular specific)
