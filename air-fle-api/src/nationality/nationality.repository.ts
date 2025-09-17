@@ -61,6 +61,21 @@ export class NationalityRepository {
     });
   }
 
+  async findUniqueWithRelations(nationality_uuid: string): Promise<{
+    nationality_uuid: string;
+    nationality_label: string;
+    students: { student_uuid: string }[];
+  } | null> {
+    return this.prisma.nationality.findUnique({
+      where: { nationality_uuid },
+      include: {
+        students: {
+          select: { student_uuid: true },
+        },
+      },
+    });
+  }
+
   async findByLabel(label: string): Promise<Nationality | null> {
     return this.prisma.nationality.findFirst({
       where: {
