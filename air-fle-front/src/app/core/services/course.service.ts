@@ -21,11 +21,11 @@ export class CourseService {
    */
   getCourses(): Observable<Course[]> {
     // 🔧 FIX: Utiliser expand=group.session pour récupérer les sessions (pattern moderne)
-    return this.http.get<any>(`${this.apiUrl}?expand=group.session`).pipe(
-      map((response: ApiListResponse<Course> | Paginated<Course> | any) => {
-        if (response && Array.isArray(response.data)) return (response.data as any[]).map(c => this.convertToFrontendModel(c));
-        if (response && response.data && Array.isArray(response.data.data)) return (response.data.data as any[]).map(c => this.convertToFrontendModel(c));
-        if (Array.isArray(response)) return (response as any[]).map(c => this.convertToFrontendModel(c));
+    return this.http.get<ApiListResponse<Course> | Paginated<Course> | Course[]>(`${this.apiUrl}?expand=group.session`).pipe(
+      map((response) => {
+        if (response && 'data' in response && Array.isArray(response.data)) return response.data.map(c => this.convertToFrontendModel(c));
+        if (response && 'data' in response && response.data && 'data' in response.data && Array.isArray(response.data.data)) return response.data.data.map(c => this.convertToFrontendModel(c));
+        if (Array.isArray(response)) return response.map(c => this.convertToFrontendModel(c));
         return [];
       }),
       catchError(this.handleError)
@@ -36,9 +36,9 @@ export class CourseService {
    * Récupère un cours par son ID
    */
   getCourseById(id: string | number): Observable<Course> {
-    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.get<{ data: Course } | Course>(`${this.apiUrl}/${id}`).pipe(
       map(response => {
-        if (response && response.data) {
+        if (response && 'data' in response) {
           return this.convertToFrontendModel(response.data);
         }
         throw new Error('Cours non trouvé');
@@ -51,10 +51,10 @@ export class CourseService {
    * Récupère les cours d'une session
    */
   getCoursesBySessionId(sessionId: string | number): Observable<Course[]> {
-    return this.http.get<any>(`${this.apiUrl}/session/${sessionId}`).pipe(
-      map((response: ApiListResponse<Course> | any) => {
-        if (response && Array.isArray(response.data)) return (response.data as any[]).map(c => this.convertToFrontendModel(c));
-        if (Array.isArray(response)) return (response as any[]).map(c => this.convertToFrontendModel(c));
+    return this.http.get<ApiListResponse<Course> | Course[]>(`${this.apiUrl}/session/${sessionId}`).pipe(
+      map((response) => {
+        if (response && 'data' in response && Array.isArray(response.data)) return response.data.map(c => this.convertToFrontendModel(c));
+        if (Array.isArray(response)) return response.map(c => this.convertToFrontendModel(c));
         return [];
       }),
       catchError(this.handleError)
@@ -79,12 +79,12 @@ export class CourseService {
     if (pageSize) params.push(`pageSize=${pageSize}`);
     const url = `${this.apiUrl}?${params.join('&')}`;
 
-    return this.http.get<any>(url).pipe(
-      map((response: ApiListResponse<Course> | Paginated<Course> | any) => {
+    return this.http.get<ApiListResponse<Course> | Paginated<Course> | Course[]>(url).pipe(
+      map((response) => {
         // Supporte {data:[...]} ou {data:{data:[...],meta}} ou tableau brut
-        if (response && Array.isArray(response.data)) return (response.data as any[]).map(c => this.convertToFrontendModel(c));
-        if (response && response.data && Array.isArray(response.data.data)) return (response.data.data as any[]).map(c => this.convertToFrontendModel(c));
-        if (Array.isArray(response)) return (response as any[]).map(c => this.convertToFrontendModel(c));
+        if (response && 'data' in response && Array.isArray(response.data)) return response.data.map(c => this.convertToFrontendModel(c));
+        if (response && 'data' in response && response.data && 'data' in response.data && Array.isArray(response.data.data)) return response.data.data.map(c => this.convertToFrontendModel(c));
+        if (Array.isArray(response)) return response.map(c => this.convertToFrontendModel(c));
         return [];
       }),
       catchError(() => {
@@ -99,9 +99,9 @@ export class CourseService {
   createCourse(course: Partial<Course>): Observable<Course> {
     const apiCourse = this.convertToApiModel(course);
 
-    return this.http.post<any>(this.apiUrl, apiCourse).pipe(
+    return this.http.post<{ data: Course } | Course>(this.apiUrl, apiCourse).pipe(
       map(response => {
-        if (response && response.data) {
+        if (response && 'data' in response) {
           return this.convertToFrontendModel(response.data);
         }
         throw new Error('Erreur lors de la création du cours');
@@ -116,18 +116,18 @@ export class CourseService {
   updateCourse(id: string | number, course: Partial<Course>): Observable<Course> {
     const apiCourse = this.convertToApiModel(course);
 
-    return this.http.patch<any>(`${this.apiUrl}/${id}`, apiCourse).pipe(
+    return this.http.patch<{ data: Course } | Course>(`${this.apiUrl}/${id}`, apiCourse).pipe(
       map(response => {
-        if (response && response.data) {
+        if (response && 'data' in response) {
           return this.convertToFrontendModel(response.data);
         }
         throw new Error('Erreur lors de la mise à jour du cours');
       }),
       catchError(() => {
         // Fallback avec PUT
-        return this.http.put<any>(`${this.apiUrl}/${id}`, apiCourse).pipe(
+        return this.http.put<{ data: Course } | Course>(`${this.apiUrl}/${id}`, apiCourse).pipe(
           map(response => {
-            if (response && response.data) {
+            if (response && 'data' in response) {
               return this.convertToFrontendModel(response.data);
             }
             throw new Error('Erreur lors de la mise à jour du cours');
@@ -173,10 +173,10 @@ export class CourseService {
    * Récupère les cours par groupe
    */
   getCoursesByGroupId(groupId: string | number): Observable<Course[]> {
-    return this.http.get<any>(`${this.apiUrl}/group/${groupId}`).pipe(
-      map((response: ApiListResponse<Course> | any) => {
-        if (response && Array.isArray(response.data)) return (response.data as any[]).map(c => this.convertToFrontendModel(c));
-        if (Array.isArray(response)) return (response as any[]).map(c => this.convertToFrontendModel(c));
+    return this.http.get<ApiListResponse<Course> | Course[]>(`${this.apiUrl}/group/${groupId}`).pipe(
+      map((response) => {
+        if (response && 'data' in response && Array.isArray(response.data)) return response.data.map(c => this.convertToFrontendModel(c));
+        if (Array.isArray(response)) return response.map(c => this.convertToFrontendModel(c));
         return [];
       }),
       catchError(() => {
@@ -208,71 +208,71 @@ export class CourseService {
   /**
    * Convertit une réponse API vers le modèle frontend
    */
-  private convertToFrontendModel(apiCourse: any): Course {
+  private convertToFrontendModel(apiCourse: Record<string, unknown> | Course): Course {
     return {
       // ✅ NOUVEAUX CHAMPS
-      course_uuid: apiCourse.course_uuid,
-      course_name: apiCourse.course_name,
-      course_day: this.extractDateFromDateTime(apiCourse.course_day),
-      course_start_hour: this.extractTimeFromDate(apiCourse.course_start_hour),
-      course_end_hour: this.extractTimeFromDate(apiCourse.course_end_hour),
-      group_uuid: apiCourse.group_uuid,
-      course_color: apiCourse.course_color,
-      course_created_at: apiCourse.course_created_at,
+      course_uuid: apiCourse['course_uuid'] as string | undefined,
+      course_name: apiCourse['course_name'] as string,
+      course_day: this.extractDateFromDateTime(apiCourse['course_day'] as string | Date),
+      course_start_hour: this.extractTimeFromDate(apiCourse['course_start_hour'] as string | Date),
+      course_end_hour: this.extractTimeFromDate(apiCourse['course_end_hour'] as string | Date),
+      group_uuid: apiCourse['group_uuid'] as string | undefined,
+      course_color: apiCourse['course_color'] as string | undefined,
+      course_created_at: apiCourse['course_created_at'] as Date | undefined,
 
       // flags d'appel
-      attendance_taken: apiCourse.attendance_taken ?? false,
-      attendance_taken_at: apiCourse.attendance_taken_at,
-      attendance_taken_by_user_uuid: apiCourse.attendance_taken_by_user_uuid,
-      attendance_taken_by: apiCourse.attendance_taken_by
+      attendance_taken: (apiCourse['attendance_taken'] ?? false) as boolean,
+      attendance_taken_at: apiCourse['attendance_taken_at'] as string | undefined,
+      attendance_taken_by_user_uuid: apiCourse['attendance_taken_by_user_uuid'] as string | undefined,
+      attendance_taken_by: apiCourse['attendance_taken_by']
         ? {
-            user_uuid: apiCourse.attendance_taken_by.user_uuid,
-            user_firstname: apiCourse.attendance_taken_by.user_firstname,
-            user_lastname: apiCourse.attendance_taken_by.user_lastname,
+            user_uuid: (apiCourse['attendance_taken_by'] as Record<string, unknown>)['user_uuid'] as string,
+            user_firstname: (apiCourse['attendance_taken_by'] as Record<string, unknown>)['user_firstname'] as string,
+            user_lastname: (apiCourse['attendance_taken_by'] as Record<string, unknown>)['user_lastname'] as string,
           }
         : undefined,
 
       // 🔄 ANCIENS CHAMPS (fallback)
-      course_id: apiCourse.course_id || apiCourse.id,
-      id: apiCourse.course_uuid || apiCourse.id,
-      session_id: apiCourse.session_uuid || apiCourse.session_id,
-      group_id: apiCourse.group_uuid || apiCourse.group_id,
-      day: this.extractDateFromDateTime(apiCourse.course_day || apiCourse.day),
-      start_hour: this.extractTimeFromDate(apiCourse.course_start_hour || apiCourse.start_hour),
-      end_hour: this.extractTimeFromDate(apiCourse.course_end_hour || apiCourse.end_hour),
-      title: apiCourse.course_name || apiCourse.title || apiCourse.intitule,
-      intitule: apiCourse.course_name || apiCourse.intitule,
-      user_id: apiCourse.user_uuid || apiCourse.user_id,
-      color: apiCourse.course_color || apiCourse.color,
+      course_id: (apiCourse['course_id'] || apiCourse['id']) as string | number | undefined,
+      id: (apiCourse['course_uuid'] || apiCourse['id']) as string | number | undefined,
+      session_id: (apiCourse['session_id'] || (apiCourse as Record<string, unknown>)['session_uuid']) as string | number | undefined,
+      group_id: (apiCourse['group_uuid'] || apiCourse['group_id']) as string | number | undefined,
+      day: this.extractDateFromDateTime((apiCourse['course_day'] || apiCourse['day']) as string | Date),
+      start_hour: this.extractTimeFromDate((apiCourse['course_start_hour'] || apiCourse['start_hour']) as string | Date),
+      end_hour: this.extractTimeFromDate((apiCourse['course_end_hour'] || apiCourse['end_hour']) as string | Date),
+      title: (apiCourse['course_name'] || apiCourse['title'] || apiCourse['intitule']) as string | undefined,
+      intitule: (apiCourse['course_name'] || apiCourse['intitule']) as string | undefined,
+      user_id: (apiCourse['user_uuid'] || apiCourse['user_id']) as string | number | undefined,
+      color: (apiCourse['course_color'] || apiCourse['color']) as string | undefined,
 
       // Relations
-      session: apiCourse.group?.session ? {
-        session_uuid: apiCourse.group.session.session_uuid,
-        session_label: apiCourse.group.session.session_label,
-        session_id: apiCourse.group.session.session_uuid || apiCourse.group.session.session_id,
-        label: apiCourse.group.session.session_label || apiCourse.group.session.label
+      session: (apiCourse['group'] as Record<string, unknown>)?.['session'] ? {
+        session_uuid: ((apiCourse['group'] as Record<string, unknown>)['session'] as Record<string, unknown>)['session_uuid'] as string,
+        session_label: ((apiCourse['group'] as Record<string, unknown>)['session'] as Record<string, unknown>)['session_label'] as string,
+        session_id: (((apiCourse['group'] as Record<string, unknown>)['session'] as Record<string, unknown>)['session_uuid'] || ((apiCourse['group'] as Record<string, unknown>)['session'] as Record<string, unknown>)['session_id']) as string | number,
+        label: (((apiCourse['group'] as Record<string, unknown>)['session'] as Record<string, unknown>)['session_label'] || ((apiCourse['group'] as Record<string, unknown>)['session'] as Record<string, unknown>)['label']) as string
       } : undefined,
 
-      group: apiCourse.group ? {
-        group_uuid: apiCourse.group.group_uuid,
-        group_label: apiCourse.group.group_label,
-        group_id: apiCourse.group.group_uuid || apiCourse.group.group_id,
-        label: apiCourse.group.group_label || apiCourse.group.label
+      group: apiCourse['group'] ? {
+        group_uuid: (apiCourse['group'] as Record<string, unknown>)['group_uuid'] as string,
+        group_label: (apiCourse['group'] as Record<string, unknown>)['group_label'] as string,
+        group_id: ((apiCourse['group'] as Record<string, unknown>)['group_uuid'] || (apiCourse['group'] as Record<string, unknown>)['group_id']) as string | number,
+        label: ((apiCourse['group'] as Record<string, unknown>)['group_label'] || (apiCourse['group'] as Record<string, unknown>)['label']) as string
       } : undefined,
 
-      user: apiCourse.user ? {
-        user_uuid: apiCourse.user.user_uuid,
-        user_firstname: apiCourse.user.user_firstname,
-        user_lastname: apiCourse.user.user_lastname,
-        user_mail: apiCourse.user.user_mail,
-        user_id: apiCourse.user.user_uuid || apiCourse.user.user_id,
-        firstname: apiCourse.user.user_firstname || apiCourse.user.firstname,
-        lastname: apiCourse.user.user_lastname || apiCourse.user.lastname,
-        email: apiCourse.user.user_mail || apiCourse.user.email
+      user: apiCourse['user'] ? {
+        user_uuid: (apiCourse['user'] as Record<string, unknown>)['user_uuid'] as string,
+        user_firstname: (apiCourse['user'] as Record<string, unknown>)['user_firstname'] as string,
+        user_lastname: (apiCourse['user'] as Record<string, unknown>)['user_lastname'] as string,
+        user_mail: (apiCourse['user'] as Record<string, unknown>)['user_mail'] as string,
+        user_id: ((apiCourse['user'] as Record<string, unknown>)['user_uuid'] || (apiCourse['user'] as Record<string, unknown>)['user_id']) as string | number,
+        firstname: ((apiCourse['user'] as Record<string, unknown>)['user_firstname'] || (apiCourse['user'] as Record<string, unknown>)['firstname']) as string,
+        lastname: ((apiCourse['user'] as Record<string, unknown>)['user_lastname'] || (apiCourse['user'] as Record<string, unknown>)['lastname']) as string,
+        email: ((apiCourse['user'] as Record<string, unknown>)['user_mail'] || (apiCourse['user'] as Record<string, unknown>)['email']) as string
       } : undefined,
 
-      created_at: apiCourse.course_created_at || apiCourse.created_at,
-      updated_at: apiCourse.updated_at
+      created_at: (apiCourse['course_created_at'] || apiCourse['created_at']) as string | undefined,
+      updated_at: apiCourse['updated_at'] as string | undefined
     };
   }
 
