@@ -176,8 +176,8 @@ export class CourseAttendancePage implements OnInit {
         this.form = (res.students||[]).map(s => ({ student_uuid: s.student_uuid, status: (s.status||'present') as NewAttendanceStatus, notes: s.notes||'', firstname: s.firstname, lastname: s.lastname }));
         this.state = 'ready';
       },
-      error: (err) => {
-        this.error = err?.message || 'Erreur de chargement';
+      error: () => {
+        this.error = 'Erreur de chargement';
         this.state = 'error';
       }
     });
@@ -194,7 +194,7 @@ export class CourseAttendancePage implements OnInit {
         // recharger
         this.attendance.getCourseAttendanceNew(this.data!.course_uuid).subscribe(r=>{ this.data = r; this.submitting=false; });
       },
-      error: (err) => { this.submitting=false; this.error = err?.error?.message || 'Erreur lors de la validation de l\'appel'; }
+      error: () => { this.submitting=false; this.error = 'Erreur lors de la validation de l\'appel'; }
     })
   }
 }
