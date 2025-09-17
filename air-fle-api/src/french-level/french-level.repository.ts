@@ -55,6 +55,26 @@ export class FrenchLevelRepository {
     });
   }
 
+  async findUniqueWithRelations(french_level_uuid: string): Promise<{
+    french_level_uuid: string;
+    french_level_code: string;
+    french_level_description: string;
+    students: { student_uuid: string }[];
+    exit_students: { student_uuid: string }[];
+  } | null> {
+    return this.prisma.frenchLevel.findUnique({
+      where: { french_level_uuid },
+      include: {
+        students: {
+          select: { student_uuid: true },
+        },
+        exit_students: {
+          select: { student_uuid: true },
+        },
+      },
+    });
+  }
+
   async findByCode(code: string): Promise<FrenchLevel | null> {
     return this.prisma.frenchLevel.findFirst({
       where: {
