@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -50,7 +51,7 @@ export class OrientationsComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        console.error('Erreur lors du chargement des orientations:');
+        // console.error('Erreur lors du chargement des orientations:');
         this.error = 'Erreur lors du chargement des orientations';
         this.isLoading = false;
       },
@@ -102,8 +103,8 @@ export class OrientationsComponent implements OnInit {
   createOrientation(): void {
     if (this.createForm.invalid) return;
     const orientationData: CreateOrientationDto = {
-      type: this.createForm.value.type,
-      description: this.createForm.value.description || undefined,
+      orientation_type: this.createForm.value.type,
+      orientation_description: this.createForm.value.description || undefined,
     };
     this.referenceDataService.createOrientation(orientationData).subscribe({
       next: (newOrientation: Orientation) => {
@@ -111,7 +112,7 @@ export class OrientationsComponent implements OnInit {
         this.closeCreateModal();
       },
       error: () => {
-        console.error("Erreur lors de la création de l'orientation:");
+        // console.error("Erreur lors de la création de l'orientation:");
         this.error = "Erreur lors de la création de l'orientation";
       },
     });
@@ -120,8 +121,8 @@ export class OrientationsComponent implements OnInit {
   updateOrientation(): void {
     if (this.editForm.invalid || !this.selectedOrientation) return;
     const orientationData: CreateOrientationDto = {
-      type: this.editForm.value.type,
-      description: this.editForm.value.description || undefined,
+      orientation_type: this.editForm.value.type,
+      orientation_description: this.editForm.value.description || undefined,
     };
     this.referenceDataService
       .updateOrientation(this.selectedOrientation.id, orientationData)
@@ -134,7 +135,7 @@ export class OrientationsComponent implements OnInit {
           this.closeEditModal();
         },
         error: () => {
-          console.error("Erreur lors de la mise à jour de l'orientation:");
+          // console.error("Erreur lors de la mise à jour de l'orientation:");
           this.error = "Erreur lors de la mise à jour de l'orientation";
         },
       });
@@ -146,9 +147,9 @@ export class OrientationsComponent implements OnInit {
         next: () => {
           this.orientations = this.orientations.filter(o => o.id !== orientation.id);
         },
-        error: () => {
-          console.error("Erreur lors de la suppression de l'orientation:");
-          this.error = "Erreur lors de la suppression de l'orientation";
+        error: (error: HttpErrorResponse) => {
+          // console.error("Erreur lors de la suppression de l'orientation:", error);
+          this.error = error?.error?.message || error?.message || "Erreur lors de la suppression de l'orientation";
         },
       });
     }
