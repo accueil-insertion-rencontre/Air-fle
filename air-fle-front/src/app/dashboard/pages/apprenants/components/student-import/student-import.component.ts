@@ -34,7 +34,7 @@ export class StudentImportComponent implements OnInit {
       next: data => {
         this.referenceData = data;
       },
-      error: err => {
+      error: () => {
         // console.error('Erreur lors du chargement des données de référence:', err);
       },
     });
