@@ -183,7 +183,7 @@ export class StudentListComponent implements OnInit {
       if (student.nationality && student.nationality.nationality_label) {
         return student.nationality.nationality_label;
       }
-    } catch (error) {
+    } catch {
       // Erreur silencieuse en production
     }
     
