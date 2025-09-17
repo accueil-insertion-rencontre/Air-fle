@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { StudentService } from '@core/services';
 import { CreateStudentRequest } from '@core/models';
 import { ReferenceDataService } from '@core/services';
+import { Gender, Nationality, FrenchLevel, Status, Financing, Orientation, Disability } from '@core/models';
 
 interface WizardStep {
   id: number;
@@ -28,13 +29,13 @@ export class StudentWizardComponent implements OnInit {
   additionalForm!: FormGroup;
 
   // Données de référence
-  genders: any[] = [];
-  nationalities: any[] = [];
-  frenchLevels: any[] = [];
-  statuses: any[] = [];
-  financings: any[] = [];
-  orientations: any[] = [];
-  disabilities: any[] = [];
+  genders: Gender[] = [];
+  nationalities: Nationality[] = [];
+  frenchLevels: FrenchLevel[] = [];
+  statuses: Status[] = [];
+  financings: Financing[] = [];
+  orientations: Orientation[] = [];
+  disabilities: Disability[] = [];
 
   // État du wizard
   currentStep = 1;
@@ -110,6 +111,7 @@ export class StudentWizardComponent implements OnInit {
     this.additionalForm = this.fb.group({
       date_test_initial: [''],
       orientation_id: [''],
+      hasDisability: [false],
       disability_ids: [[]],
       commentaire: [''],
     });
@@ -153,9 +155,9 @@ export class StudentWizardComponent implements OnInit {
           // Note: Les adresses ne sont pas encore dans le modèle
         });
 
-        // Extraire la nationalité depuis le tableau nationalities
+        // Extraire la nationalité depuis le tableau nationalities (structure: nationalities[0].nationality.nationality_uuid)
         const studentNationality = student.nationalities && student.nationalities.length > 0 
-          ? student.nationalities[0].nationality_uuid 
+          ? (student.nationalities[0].nationality?.nationality_uuid || '') 
           : '';
         
         // Préremplir le formulaire étape 3 - Informations administratives
@@ -176,8 +178,10 @@ export class StudentWizardComponent implements OnInit {
           exit_reason_id: student.exit_reason_uuid || '',
           date_test_initial: student.student_date_test_initial ? new Date(student.student_date_test_initial).toISOString().split('T')[0] : '',
           commentaire: student.student_commentary || '',
-          hasDisability: false, // Pas de gestion des handicaps dans le modèle actuel
-          disability_ids: [] // Pas de gestion des handicaps dans le modèle actuel
+          // Récupérer les handicaps depuis l'API
+          hasDisability: student.disabilities && student.disabilities.length > 0,
+          disability_ids: student.disabilities ? 
+            student.disabilities.map((d: { disability_uuid?: string }) => d.disability_uuid || '').filter(id => id !== '') : []
         });
       },
       error: () => {
@@ -341,7 +345,7 @@ export class StudentWizardComponent implements OnInit {
     const additional = this.additionalForm.value;
 
     // Préparer les données brutes
-    const rawStudentData: any = {
+    const rawStudentData: Record<string, unknown> = {
       // Informations personnelles obligatoires
       student_firstname: personal.firstname,
       student_lastname: personal.lastname,
@@ -357,23 +361,28 @@ export class StudentWizardComponent implements OnInit {
 
     // Ajouter les champs optionnels s'ils sont renseignés
     if (personal.placeOfBirth) {
-      rawStudentData.student_place_of_birth = personal.placeOfBirth;
+      rawStudentData['student_place_of_birth'] = personal.placeOfBirth;
     }
     if (contact.email) {
-      rawStudentData.student_mail = contact.email;
+      rawStudentData['student_mail'] = contact.email;
     }
     if (contact.phone) {
-      rawStudentData.student_phone = contact.phone;
+      rawStudentData['student_phone'] = contact.phone;
     }
-    if (admin.date_entree_france) rawStudentData.student_date_entry_france = new Date(admin.date_entree_france);
-    if (admin.date_titre_sejour) rawStudentData.student_date_residence_permit = new Date(admin.date_titre_sejour);
-    if (admin.date_cir) rawStudentData.student_date_cir = new Date(admin.date_cir);
-    if (additional.date_test_initial) rawStudentData.student_date_test_initial = new Date(additional.date_test_initial);
-    if (additional.commentaire) rawStudentData.student_commentary = additional.commentaire;
+    if (admin.date_entree_france) rawStudentData['student_date_entry_france'] = new Date(admin.date_entree_france);
+    if (admin.date_titre_sejour) rawStudentData['student_date_residence_permit'] = new Date(admin.date_titre_sejour);
+    if (admin.date_cir) rawStudentData['student_date_cir'] = new Date(admin.date_cir);
+    if (additional.date_test_initial) rawStudentData['student_date_test_initial'] = new Date(additional.date_test_initial);
+    if (additional.commentaire) rawStudentData['student_commentary'] = additional.commentaire;
+    
+    // Ajouter les handicaps si présents
+    if (additional.hasDisability && additional.disability_ids && additional.disability_ids.length > 0) {
+      rawStudentData['disability_uuids'] = additional.disability_ids;
+    }
 
     // ✅ Angular protège automatiquement les données des formulaires
 
-    return rawStudentData as CreateStudentRequest;
+    return rawStudentData as unknown as CreateStudentRequest;
   }
 
   // Navigation
