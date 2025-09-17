@@ -116,6 +116,23 @@ export class FrenchLevelService {
       throw new NotFoundException('Niveau de français non trouvé');
     }
 
+    // ✅ Vérification des dépendances via une méthode dédiée
+    const levelWithRelations =
+      await this.frenchLevelRepository.findUniqueWithRelations(
+        french_level_uuid,
+      );
+
+    // ✅ Vérification des dépendances
+    const totalStudents =
+      (levelWithRelations?.students?.length || 0) +
+      (levelWithRelations?.exit_students?.length || 0);
+
+    if (totalStudents > 0) {
+      throw new BadRequestException(
+        `Ce niveau de français ne peut pas être supprimé car il est utilisé par ${totalStudents} étudiant(s)`,
+      );
+    }
+
     // ✅ Suppression via repository
     const level = await this.frenchLevelRepository.delete({
       french_level_uuid,
@@ -163,10 +180,9 @@ export class FrenchLevelService {
     }
 
     // ✅ Validation format du code (lettres et chiffres uniquement)
-    if (!/^[A-Za-z0-9]+$/.test(data.french_level_code.trim())) {
-      throw new BadRequestException(
-        'Le code ne peut contenir que des lettres et des chiffres',
-      );
+    // Accepte tous les caractères sauf les espaces vides
+    if (data.french_level_code.trim().length === 0) {
+      throw new BadRequestException('Le code ne peut pas être vide');
     }
   }
 
