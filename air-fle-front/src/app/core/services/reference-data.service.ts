@@ -234,7 +234,7 @@ export class ReferenceDataService {
               }) as Nationality
           );
         }),
-        catchError(err => {
+        catchError(() => {
           // console.error('Erreur lors du chargement des nationalités:', err);
           return of([]);
         })
@@ -293,7 +293,7 @@ export class ReferenceDataService {
               }) as FrenchLevel
           );
         }),
-        catchError(err => {
+        catchError(() => {
           // console.error('Erreur lors du chargement des niveaux de français:', err);
           return of([]);
         })
@@ -351,7 +351,7 @@ export class ReferenceDataService {
               }) as Gender
           );
         }),
-        catchError(err => {
+        catchError(() => {
           // console.error('Erreur lors du chargement des genres:', err);
           return of([]);
         })
@@ -419,7 +419,7 @@ export class ReferenceDataService {
               }) as ExitReason
           );
         }),
-        catchError(err => {
+        catchError(() => {
           // console.error('Erreur lors du chargement des raisons de sortie:', err);
           return of([]);
         })
@@ -478,7 +478,7 @@ export class ReferenceDataService {
               }) as Orientation
           );
         }),
-        catchError(err => {
+        catchError(() => {
           // console.error('Erreur lors du chargement des orientations:', err);
           return of([]);
         })
@@ -536,7 +536,7 @@ export class ReferenceDataService {
               }) as Status
           );
         }),
-        catchError(err => {
+        catchError(() => {
           // console.error('Erreur lors du chargement des statuts:', err);
           return of([]);
         })
@@ -594,7 +594,7 @@ export class ReferenceDataService {
               }) as Financing
           );
         }),
-        catchError(err => {
+        catchError(() => {
           // console.error('Erreur lors du chargement des financements:', err);
           return of([]);
         })
@@ -653,7 +653,7 @@ export class ReferenceDataService {
               }) as Disability
           );
         }),
-        catchError(err => {
+        catchError(() => {
           // console.error('Erreur lors du chargement des handicaps:', err);
           return of([]);
         })
