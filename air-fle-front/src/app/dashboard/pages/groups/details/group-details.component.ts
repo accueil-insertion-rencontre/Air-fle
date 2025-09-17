@@ -1,13 +1,13 @@
 import { AlertService, CourseService, GroupService, StudentService } from '@core/services';
 
-import { Group, Student } from '@core/models';
+import { Group, Student, Session } from '@core/models';
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
-declare let bootstrap: any;
+declare let bootstrap: Record<string, unknown>;
 
 @Component({
   selector: 'app-group-details',
@@ -24,13 +24,13 @@ export class GroupDetailsComponent implements OnInit {
   error: string | null = null;
 
   // Propriétés pour l'ajout d'étudiants
-  addStudentModal: any;
+  addStudentModal: Record<string, unknown> | null = null;
   availableStudents: Student[] = [];
   filteredStudents: Student[] = [];
   selectedStudents: Student[] = [];
   searchTerm: string = '';
   loadingStudents = false;
-  studentSearchTimeout: any;
+  studentSearchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -59,9 +59,10 @@ export class GroupDetailsComponent implements OnInit {
 
         // Extraire les étudiants du groupe
         if (this.group.students && Array.isArray(this.group.students)) {
-          this.students = this.group.students.map((relation: any) => {
-            return relation.student || relation;
-          });
+          this.students = this.group.students.map((relation: unknown) => {
+            const rel = relation as Record<string, unknown>;
+            return rel['student'] || relation;
+          }) as Student[];
         } else {
           this.students = [];
         }
@@ -69,25 +70,25 @@ export class GroupDetailsComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('❌ GROUP-DETAILS - Erreur lors du chargement:', error);
+        // console.error('❌ GROUP-DETAILS - Erreur lors du chargement:', error);
         this.error = 'Erreur lors du chargement du groupe';
         this.loading = false;
       }
     });
   }
 
-  formatDate(date: any): string {
+  formatDate(date: string | Date | null | undefined): string {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('fr-FR');
   }
 
-  getSessionLabel(session: any): string {
+  getSessionLabel(session: Record<string, unknown> | Session | null | undefined): string {
     
     if (!session) {
       
       return 'AUTRES FORMATIONS PROFESSIONNELLES';
     }
-    const result = session.session_label || session.label || 'AUTRES FORMATIONS PROFESSIONNELLES';
+    const result = (session['session_label'] || session['label'] || 'AUTRES FORMATIONS PROFESSIONNELLES') as string;
     
     return result;
   }
@@ -135,7 +136,7 @@ export class GroupDetailsComponent implements OnInit {
       // Étape 3: Supprimer le groupe lui-même
       this.performGroupDeletion();
     } catch (error) {
-      console.error('Erreur lors du processus de suppression:', error);
+      // console.error('Erreur lors du processus de suppression:', error);
       this.alertService.error(
         'Erreur lors de la suppression. Certaines étapes ont peut-être échoué.'
       );
@@ -157,10 +158,10 @@ export class GroupDetailsComponent implements OnInit {
         return;
       }
 
-      console.log(
-        `${courses.length} cours trouvés à supprimer:`,
-        courses.map(c => c.title)
-      );
+      // console.log(
+      //   `${courses.length} cours trouvés à supprimer:`,
+      //   courses.map(c => c.title)
+      // );
 
       // Supprimer tous les cours individuellement avec gestion d'erreur par cours
       const deleteResults = await Promise.allSettled(
@@ -173,20 +174,16 @@ export class GroupDetailsComponent implements OnInit {
               
               return { success: true, course: course.title };
             } catch (error) {
-              console.error('❌ Erreur lors de la suppression du cours:', course.title, error);
+              // console.error('❌ Erreur lors de la suppression du cours:', course.title, error);
               return { success: false, course: course.title, error };
             }
           } else {
-            console.warn('Cours sans ID trouvé:', course);
             return { success: false, course: course.title || 'Cours sans nom', error: "Pas d'ID" };
           }
         })
       );
 
       // Analyser les résultats
-      const successful = deleteResults.filter(
-        r => r.status === 'fulfilled' && r.value.success
-      ).length;
       const failed = deleteResults.filter(
         r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)
       ).length;
@@ -194,16 +191,15 @@ export class GroupDetailsComponent implements OnInit {
       
 
       if (failed > 0) {
-        console.warn(
-          `${failed} cours n'ont pas pu être supprimés, mais on continue avec la suppression du groupe`
-        );
+        // console.log(
+        //   `${failed} cours n'ont pas pu être supprimés, mais on continue avec la suppression du groupe`
+        // );
         // On continue quand même avec la suppression du groupe
       } else {
         // No courses to delete
       }
     } catch (error) {
-      console.error('Erreur lors de la récupération des cours du groupe:', error);
-      console.warn('Impossible de récupérer les cours, on continue avec la suppression du groupe');
+      // console.error('Erreur lors de la récupération des cours du groupe:', error);
       // On continue quand même le processus, même si on ne peut pas récupérer les cours
     }
   }
@@ -215,10 +211,10 @@ export class GroupDetailsComponent implements OnInit {
     
 
     const removePromises = this.students.map(student => {
-      const studentId = (student as any).id || (student as any).student_id;
+      const studentId = ((student as unknown as Record<string, unknown>))['id'] || ((student as unknown as Record<string, unknown>))['student_id'];
       
       return this.groupService
-        .removeStudentFromGroup(this.groupId, studentId.toString())
+        .removeStudentFromGroup(this.groupId, (studentId as string | number).toString())
         .toPromise();
     });
 
@@ -247,13 +243,13 @@ export class GroupDetailsComponent implements OnInit {
         });
       },
       error: err => {
-        console.error('Erreur lors de la suppression du groupe', err);
-        console.error("Détails de l'erreur:", {
-          status: err.status,
-          statusText: err.statusText,
-          message: err.message,
-          errorDetails: err.error,
-        });
+        // console.error('Erreur lors de la suppression du groupe', err);
+        // console.error("Détails de l'erreur:", {
+        //   status: err.status,
+        //   statusText: err.statusText,
+        //   message: err.message,
+        //   errorDetails: err.error,
+        // });
 
         // Message d'erreur plus informatif
         let errorMessage = 'Erreur lors de la suppression du groupe.';
@@ -284,8 +280,9 @@ export class GroupDetailsComponent implements OnInit {
 
     const modalElement = document.getElementById('addStudentModal');
     if (modalElement) {
-      this.addStudentModal = new bootstrap.Modal(modalElement);
-      this.addStudentModal.show();
+      const BootstrapModal = (bootstrap as Record<string, unknown>)['Modal'] as new (element: Element) => Record<string, unknown>;
+      this.addStudentModal = new BootstrapModal(modalElement);
+      ((this.addStudentModal as Record<string, unknown>)['show'] as () => void)();
     }
   }
 
@@ -302,11 +299,11 @@ export class GroupDetailsComponent implements OnInit {
 
         // Filtrer les étudiants qui ne sont pas déjà dans le groupe
         // Maintenant this.students contient les objets étudiants extraits
-        const currentStudentIds = this.students.map(student => (student as any).id);
+        const currentStudentIds = this.students.map(student => ((student as unknown as Record<string, unknown>))['id']);
         
 
         this.availableStudents = allStudents.filter(
-          student => !currentStudentIds.includes((student as any).id || student.student_uuid)
+          student => !currentStudentIds.includes(((student as unknown as Record<string, unknown>))['id'] || student.student_uuid)
         );
         this.filteredStudents = [...this.availableStudents];
         this.loadingStudents = false;
@@ -314,7 +311,7 @@ export class GroupDetailsComponent implements OnInit {
         
       },
       error: error => {
-        console.error('Erreur lors du chargement des étudiants:', error);
+        // console.error('Erreur lors du chargement des étudiants:', error);
         this.loadingStudents = false;
         this.alertService.error('Erreur lors du chargement des étudiants');
       },
@@ -352,11 +349,11 @@ export class GroupDetailsComponent implements OnInit {
     
 
     // Utiliser 'id' car c'est ce que retourne l'API
-    const studentId = (student as any).id || student.student_uuid;
+    const studentId = ((student as unknown as Record<string, unknown>))['id'] || student.student_uuid;
     
 
     const index = this.selectedStudents.findIndex(
-      s => ((s as any).id || s.student_uuid) === studentId
+      s => ((s as unknown as Record<string, unknown>)['id'] || s.student_uuid) === studentId
     );
 
     
@@ -369,11 +366,10 @@ export class GroupDetailsComponent implements OnInit {
       
     }
 
-    console.log("Nombre d'étudiants sélectionnés après:", this.selectedStudents.length);
-    console.log(
-      'Liste des étudiants sélectionnés:',
-      this.selectedStudents.map(s => s.firstname + ' ' + s.lastname)
-    );
+    // console.log(
+    //   'Liste des étudiants sélectionnés:',
+    //   this.selectedStudents.map(s => s.firstname + ' ' + s.lastname)
+    // );
   }
 
   /**
@@ -391,8 +387,8 @@ export class GroupDetailsComponent implements OnInit {
    */
   isStudentSelected(student: Student): boolean {
     // Utiliser 'id' car c'est ce que retourne l'API
-    const studentId = (student as any).id || student.student_uuid;
-    return this.selectedStudents.some(s => ((s as any).id || s.student_uuid) === studentId);
+    const studentId = ((student as unknown as Record<string, unknown>))['id'] || student.student_uuid;
+    return this.selectedStudents.some(s => ((s as unknown as Record<string, unknown>)['id'] || s.student_uuid) === studentId);
   }
 
   /**
@@ -408,10 +404,10 @@ export class GroupDetailsComponent implements OnInit {
 
     const addPromises = this.selectedStudents.map(student => {
       // Utiliser l'ID disponible - priorité à 'id' car c'est ce que retourne l'API
-      const studentId = (student as any).id || student.student_uuid;
+      const studentId = ((student as unknown as Record<string, unknown>))['id'] || student.student_uuid;
 
       if (!studentId) {
-        console.error("Aucun ID trouvé pour l'étudiant:", student);
+        // console.error("Aucun ID trouvé pour l'étudiant:", student);
         throw new Error(`Aucun ID trouvé pour l'étudiant ${student.student_firstname} ${student.student_lastname}`);
       }
 
@@ -428,7 +424,7 @@ export class GroupDetailsComponent implements OnInit {
         this.loadGroup(); // Recharger les données du groupe
       })
       .catch(error => {
-        console.error("Erreur lors de l'ajout des étudiants:", error);
+        // console.error("Erreur lors de l'ajout des étudiants:", error);
         this.alertService.error("Erreur lors de l'ajout des étudiants");
       });
   }
@@ -441,7 +437,9 @@ export class GroupDetailsComponent implements OnInit {
     this.searchTerm = '';
     this.filteredStudents = [];
     this.availableStudents = [];
-    this.addStudentModal?.hide();
+    if (this.addStudentModal) {
+      ((this.addStudentModal as Record<string, unknown>)['hide'] as () => void)();
+    }
   }
 
   /**
@@ -453,10 +451,10 @@ export class GroupDetailsComponent implements OnInit {
     this.alertService.confirm(confirmMessage).then(confirmed => {
       if (confirmed) {
               // Maintenant student contient directement les données d'étudiant avec la propriété id
-      const studentId = (student as any).id || student.student_uuid;
+      const studentId = ((student as unknown as Record<string, unknown>))['id'] || student.student_uuid;
 
         if (!studentId) {
-          console.error("Aucun ID trouvé pour l'étudiant:", student);
+          // console.error("Aucun ID trouvé pour l'étudiant:", student);
           this.alertService.error(
             `Aucun ID trouvé pour l'étudiant ${student.student_firstname} ${student.student_lastname}`
           );
@@ -471,7 +469,7 @@ export class GroupDetailsComponent implements OnInit {
             this.loadGroup(); // Recharger les données du groupe
           },
           error: error => {
-            console.error("Erreur lors de la suppression de l'étudiant:", error);
+            // console.error("Erreur lors de la suppression de l'étudiant:", error);
             this.alertService.error("Erreur lors de la suppression de l'étudiant");
           },
         });
@@ -483,6 +481,6 @@ export class GroupDetailsComponent implements OnInit {
    * TrackBy function pour optimiser le rendu
    */
   trackByStudentId(index: number, student: Student): number | string {
-    return (student as any).id || student.student_uuid || index;
+    return (((student as unknown as Record<string, unknown>))['id'] || student.student_uuid || index) as string | number;
   }
 }
