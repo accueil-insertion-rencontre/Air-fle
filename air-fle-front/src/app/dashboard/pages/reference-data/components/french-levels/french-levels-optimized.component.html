@@ -95,8 +95,8 @@
 </div>
 
 <!-- 🔥 Modal de création avec async pipe -->
-<div class="modal-overlay" *ngIf="state.isCreateModalOpen" (click)="closeCreateModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="state.isCreateModalOpen" (click)="closeCreateModal()" (keyup.escape)="closeCreateModal()" tabindex="0" role="button" aria-label="Fermer la modal">
+  <div class="modal-content" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="-1">
     <div class="modal-header">
       <h2>Ajouter un niveau de français</h2>
       <button class="close-btn" (click)="closeCreateModal()">×</button>
@@ -158,8 +158,8 @@
 </div>
 
 <!-- 🔥 Modal d'édition avec async pipe -->
-<div class="modal-overlay" *ngIf="state.isEditModalOpen" (click)="closeEditModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="state.isEditModalOpen" (click)="closeEditModal()" (keyup.escape)="closeEditModal()" tabindex="0" role="button" aria-label="Fermer la modal">
+  <div class="modal-content" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="-1">
     <div class="modal-header">
       <h2>Modifier le niveau "{{ state.selectedLevel?.code }}"</h2>
       <button class="close-btn" (click)="closeEditModal()">×</button>
