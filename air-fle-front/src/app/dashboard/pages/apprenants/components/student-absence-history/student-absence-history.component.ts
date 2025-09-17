@@ -44,8 +44,8 @@ export class StudentAbsenceHistoryComponent implements OnInit {
         this.loading = false;
         this.calculateAbsenceStats();
       },
-      error: (error: any) => {
-        console.error("Erreur lors du chargement de l'historique des absences:", error);
+      error: (error: Record<string, unknown>) => {
+        // console.error("Erreur lors du chargement de l'historique des absences:", error);
         this.error = "Impossible de charger l'historique des absences";
         this.loading = false;
 
@@ -122,8 +122,8 @@ export class StudentAbsenceHistoryComponent implements OnInit {
         this.calculateAbsenceStats();
         this.alertService.success('Absence supprimée avec succès');
       },
-      error: (error: any) => {
-        console.error('Erreur lors de la suppression:', error);
+      error: (error: Record<string, unknown>) => {
+        // console.error('Erreur lors de la suppression:', error);
         this.alertService.error("Erreur lors de la suppression de l'absence");
       },
     });
