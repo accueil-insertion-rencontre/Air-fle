@@ -104,6 +104,22 @@ export class NationalityService {
       throw new NotFoundException('Nationalité non trouvée');
     }
 
+    // ✅ Vérification des dépendances via une méthode dédiée
+    const nationalityWithRelations =
+      await this.nationalityRepository.findUniqueWithRelations(
+        nationality_uuid,
+      );
+
+    // ✅ Vérification des dépendances
+    if (
+      nationalityWithRelations?.students &&
+      nationalityWithRelations.students.length > 0
+    ) {
+      throw new BadRequestException(
+        `Cette nationalité ne peut pas être supprimée car elle est attribuée à ${nationalityWithRelations.students.length} étudiant(s)`,
+      );
+    }
+
     // ✅ Suppression via repository
     const nationality = await this.nationalityRepository.delete({
       nationality_uuid,
