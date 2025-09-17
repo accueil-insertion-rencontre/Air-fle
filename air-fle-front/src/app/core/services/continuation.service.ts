@@ -110,19 +110,20 @@ export class ContinuationService {
   /**
    * Gestion centralisée des erreurs
    */
-  private handleError = (error: any) => {
-    console.error('Erreur ContinuationService:', error);
+  private handleError = (error: unknown) => {
+    // console.error('Erreur ContinuationService:', error);
     
     let errorMessage = 'Une erreur inattendue s\'est produite';
     
-    if (error.error) {
-      if (error.error.message) {
-        errorMessage = error.error.message;
-      } else if (typeof error.error === 'string') {
-        errorMessage = error.error;
+    if (error && typeof error === 'object' && 'error' in error) {
+      const errorObj = error.error;
+      if (errorObj && typeof errorObj === 'object' && 'message' in errorObj) {
+        errorMessage = errorObj.message as string;
+      } else if (typeof errorObj === 'string') {
+        errorMessage = errorObj;
       }
-    } else if (error.message) {
-      errorMessage = error.message;
+    } else if (error && typeof error === 'object' && 'message' in error) {
+      errorMessage = (error as { message: string }).message;
     }
 
     return throwError(() => new Error(errorMessage));
