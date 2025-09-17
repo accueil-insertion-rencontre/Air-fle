@@ -55,5 +55,5 @@ COPY . .
 # Exposition du port 4200 pour Angular
 EXPOSE 4200
 
-# Commande de développement avec hot reload
-CMD ["npm", "start", "--", "--host", "0.0.0.0", "--port", "4200"] 
+# Commande de développement avec hot reload et proxy Docker
+CMD ["npm", "start", "--", "--host", "0.0.0.0", "--port", "4200", "--proxy-config", "proxy.docker.conf.json"] 
