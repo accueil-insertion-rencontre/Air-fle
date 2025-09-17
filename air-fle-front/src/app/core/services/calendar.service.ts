@@ -53,7 +53,7 @@ export class CalendarService {
   }
 
   // Mettre à jour un événement après drag & drop
-  updateEventTimes(event: Schedule): Observable<any> {
+  updateEventTimes(event: Schedule): Observable<unknown> {
     if (event.courseId && event.courseId !== undefined) {
       // C'est un cours
       return this.courseService.getCourseById(event.courseId).pipe(
