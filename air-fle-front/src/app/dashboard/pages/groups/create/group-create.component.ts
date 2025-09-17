@@ -13,7 +13,7 @@ import {
 } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 
-declare let bootstrap: any;
+declare let bootstrap: { Modal: new (element: Element) => { show: () => void; hide: () => void } };
 
 @Component({
   selector: 'app-group-create',
@@ -38,8 +38,8 @@ export class GroupCreateComponent implements OnInit {
   initialStudents: Student[] = []; // Étudiants du groupe au chargement initial
   searchTerm: string = '';
   loadingStudents = false;
-  studentSearchTimeout: any;
-  addStudentModal: any;
+  studentSearchTimeout: ReturnType<typeof setTimeout> | null = null;
+  addStudentModal: { show: () => void; hide: () => void } | null = null;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -78,7 +78,7 @@ export class GroupCreateComponent implements OnInit {
         this.sessions = sessions;
       },
       error: err => {
-        console.error('Erreur lors du chargement des sessions', err);
+        // console.error('Erreur lors du chargement des sessions', err);
         this.error = 'Impossible de charger les sessions. Veuillez réessayer plus tard.';
       },
     });
@@ -100,7 +100,7 @@ export class GroupCreateComponent implements OnInit {
         this.isEditMode = true;
         this.groupId = id;
       },
-      error: (error) => {
+      error: () => {
         this.error = 'Erreur lors du chargement du groupe';
       }
     });
@@ -138,7 +138,7 @@ export class GroupCreateComponent implements OnInit {
                 this.router.navigate(['/dashboard/groups']);
               })
               .catch(error => {
-                console.error('Erreur lors de la synchronisation des étudiants:', error);
+                // console.error('Erreur lors de la synchronisation des étudiants:', error);
                 this.alertService.error(
                   'Groupe modifié mais erreur lors de la gestion des étudiants'
                 );
@@ -172,13 +172,12 @@ export class GroupCreateComponent implements OnInit {
               this.router.navigate(['/dashboard/groups']);
             });
           } else {
-            console.warn('❌ GROUP-CREATE - Aucun ID de groupe trouvé après la création');
             this.alertService.success('Groupe créé avec succès !');
             this.router.navigate(['/dashboard/groups']);
           }
         },
         error: error => {
-          console.error('❌ GROUP-CREATE - Erreur lors de la création:', error);
+          // console.error('❌ GROUP-CREATE - Erreur lors de la création:', error);
           this.error =
             error?.error?.message || error?.message || 'Erreur lors de la création du groupe';
           this.loading = false;
@@ -213,18 +212,21 @@ export class GroupCreateComponent implements OnInit {
     this.studentService.getAllStudents().subscribe({
       next: students => {
         // Filtrer les étudiants qui ne sont pas déjà sélectionnés
+        interface StudentWithId extends Omit<Student, 'id'> {
+          id?: string | number;
+        }
         const currentStudentIds = this.selectedStudents.map(
-          student => (student as any).id || student.student_uuid
+          student => (student as StudentWithId).id || student.student_uuid
         );
 
         this.availableStudents = students.filter(
-          student => !currentStudentIds.includes((student as any).id || student.student_uuid)
+          student => !currentStudentIds.includes((student as StudentWithId).id || student.student_uuid)
         );
         this.filteredStudents = [...this.availableStudents];
         this.loadingStudents = false;
       },
       error: error => {
-        console.error('Erreur lors du chargement des étudiants:', error);
+        // console.error('Erreur lors du chargement des étudiants:', error);
         this.loadingStudents = false;
       },
     });
@@ -270,9 +272,12 @@ export class GroupCreateComponent implements OnInit {
    */
   toggleStudentSelection(student: Student): void {
     // Utiliser 'id' car c'est ce que retourne l'API
-    const studentId = (student as any).id || student.student_uuid;
+    interface StudentWithId extends Omit<Student, 'id'> {
+      id?: string | number;
+    }
+    const studentId = (student as StudentWithId).id || student.student_uuid;
     const index = this.selectedStudents.findIndex(
-      s => ((s as any).id || s.student_uuid) === studentId
+      s => ((s as StudentWithId).id || s.student_uuid) === studentId
     );
 
     if (index > -1) {
@@ -290,8 +295,11 @@ export class GroupCreateComponent implements OnInit {
    */
   isStudentSelected(student: Student): boolean {
     // Utiliser 'id' car c'est ce que retourne l'API
-    const studentId = (student as any).id || student.student_uuid;
-    return this.selectedStudents.some(s => ((s as any).id || s.student_uuid) === studentId);
+    interface StudentWithId extends Omit<Student, 'id'> {
+      id?: string | number;
+    }
+    const studentId = (student as StudentWithId).id || student.student_uuid;
+    return this.selectedStudents.some(s => ((s as StudentWithId).id || s.student_uuid) === studentId);
   }
 
   /**
@@ -306,9 +314,12 @@ export class GroupCreateComponent implements OnInit {
    */
   removeStudentFromSelection(student: Student): void {
     // Utiliser 'id' car c'est ce que retourne l'API
-    const studentId = (student as any).id || student.student_uuid;
+    interface StudentWithId extends Omit<Student, 'id'> {
+      id?: string | number;
+    }
+    const studentId = (student as StudentWithId).id || student.student_uuid;
     const index = this.selectedStudents.findIndex(
-      s => ((s as any).id || s.student_uuid) === studentId
+      s => ((s as StudentWithId).id || s.student_uuid) === studentId
     );
     if (index > -1) {
       this.selectedStudents.splice(index, 1);
@@ -322,7 +333,10 @@ export class GroupCreateComponent implements OnInit {
    * TrackBy function pour optimiser le rendu
    */
   trackByStudentId(index: number, student: Student): number | string {
-    return (student as any).id || student.student_uuid || index;
+    interface StudentWithId extends Omit<Student, 'id'> {
+      id?: string | number;
+    }
+    return (student as StudentWithId).id || student.student_uuid || index;
   }
 
   /**
@@ -333,12 +347,15 @@ export class GroupCreateComponent implements OnInit {
       return Promise.resolve();
     }
 
+    interface StudentWithId extends Omit<Student, 'id'> {
+      id?: string | number;
+    }
     const addPromises = this.selectedStudents.map(student => {
       // Utiliser l'ID disponible - priorité à 'id' car c'est ce que retourne l'API
-      const studentId = (student as any).id || student.student_uuid || student.student_uuid;
+      const studentId = (student as StudentWithId).id || student.student_uuid;
 
       if (!studentId) {
-        console.error("Aucun ID trouvé pour l'étudiant:", student);
+        // console.error("Aucun ID trouvé pour l'étudiant:", student);
         throw new Error(`Aucun ID trouvé pour l'étudiant ${student.student_firstname} ${student.student_lastname}`);
       }
 
@@ -349,7 +366,7 @@ export class GroupCreateComponent implements OnInit {
       await Promise.all(addPromises);
       this.alertService.success('Étudiants associés avec succès');
     } catch (error) {
-      console.error("Erreur lors de l'association des étudiants:", error);
+      // console.error("Erreur lors de l'association des étudiants:", error);
       // Continue quand même vers la liste des groupes
       // L'utilisateur pourra ajouter les étudiants manuellement depuis les détails du groupe
     }
@@ -359,35 +376,38 @@ export class GroupCreateComponent implements OnInit {
    * Synchronise les étudiants du groupe
    */
   private async synchronizeGroupStudents(groupId: string | number): Promise<void> {
+    interface StudentWithId extends Omit<Student, 'id'> {
+      id?: string | number;
+    }
     // Comparer les étudiants initiaux avec les étudiants actuellement sélectionnés
     const initialStudentIds = this.initialStudents.map(
-      student => (student as any).id || student.student_uuid
+      student => (student as StudentWithId).id || student.student_uuid
     );
     const currentStudentIds = this.selectedStudents.map(
-      student => (student as any).id || student.student_uuid
+      student => (student as StudentWithId).id || student.student_uuid
     );
 
     // Étudiants à ajouter (dans selectedStudents mais pas dans initialStudents)
     const studentsToAdd = this.selectedStudents.filter(
-      student => !initialStudentIds.includes((student as any).id || student.student_uuid)
+      student => !initialStudentIds.includes((student as StudentWithId).id || student.student_uuid)
     );
 
     // Étudiants à supprimer (dans initialStudents mais pas dans selectedStudents)
     const studentsToRemove = this.initialStudents.filter(
-      student => !currentStudentIds.includes((student as any).id || student.student_uuid)
+      student => !currentStudentIds.includes((student as StudentWithId).id || student.student_uuid)
     );
 
     const addPromises = studentsToAdd.map(student => {
-      const studentId = (student as any).id || student.student_uuid || student.student_uuid;
+      const studentId = (student as StudentWithId).id || student.student_uuid;
       if (!studentId) {
-        console.error("Aucun ID trouvé pour l'étudiant:", student);
+        // console.error("Aucun ID trouvé pour l'étudiant:", student);
         throw new Error(`Aucun ID trouvé pour l'étudiant ${student.student_firstname} ${student.student_lastname}`);
       }
       return this.groupService.addStudentToGroup(groupId, studentId.toString()).toPromise();
     });
 
     const removePromises = studentsToRemove.map(student => {
-      const studentId = (student as any).id || student.student_uuid;
+      const studentId = (student as StudentWithId).id || student.student_uuid;
       return this.groupService.removeStudentFromGroup(groupId, studentId.toString()).toPromise();
     });
 
@@ -400,7 +420,7 @@ export class GroupCreateComponent implements OnInit {
         await Promise.all(removePromises);
       }
     } catch (error) {
-      console.error('Erreur lors de la synchronisation des étudiants:', error);
+      // console.error('Erreur lors de la synchronisation des étudiants:', error);
       throw error;
     }
   }
