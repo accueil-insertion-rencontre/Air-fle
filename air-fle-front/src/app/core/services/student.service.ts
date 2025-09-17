@@ -206,7 +206,7 @@ export class StudentService {
   deleteStudent(id: string): Observable<void> {
     
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
-      tap(response => {
+      tap(() => {
       }),
       catchError(error => {
         // console.error('❌ StudentService - Erreur suppression:', error);
