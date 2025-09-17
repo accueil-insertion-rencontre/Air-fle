@@ -46,6 +46,23 @@ export interface Student {
     nationality_label: string;
     nationality_created_at?: string;
   };
+  nationalities?: Array<{
+    nationality?: {
+      nationality_uuid: string;
+      nationality_label: string;
+      nationality_created_at?: string;
+    };
+    nationality_label?: string; // Fallback si structure directe
+  }>;
+  disabilities?: Array<{
+    disability?: {
+      disability_uuid: string;
+      disability_label: string;
+      disability_description?: string;
+      disability_created_at?: string;
+    };
+    disability_uuid?: string; // Fallback si structure directe
+  }>;
   financing?: {
     financing_uuid: string;
     financing_type: string;
@@ -69,11 +86,6 @@ export interface Student {
     french_level_code: string;
     french_level_description: string;
     french_level_created_at?: string;
-  }[];
-  nationalities?: {
-    nationality_uuid: string;
-    nationality_label: string;
-    nationality_created_at?: string;
   }[];
   // Note: le back renvoie student.addresses[] (table de jointure) avec un objet imbriqué "address"
   addresses?: {
@@ -122,6 +134,9 @@ export interface CreateStudentRequest {
   status_uuid: string;
   orientation_uuid?: string;
   exit_reason_uuid?: string;
+  
+  // Handicaps
+  disability_uuids?: string[];
 }
 
 // ✅ TYPES UTILITAIRES
