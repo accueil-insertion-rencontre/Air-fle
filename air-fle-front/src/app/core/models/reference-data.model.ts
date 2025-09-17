@@ -67,7 +67,7 @@ export interface Disability extends BaseReferenceItem {
 
 // Types pour les opérations CRUD
 export interface CreateNationalityDto {
-  label: string;
+  nationality_label: string;
 }
 
 export interface CreateFrenchLevelDto {
@@ -76,29 +76,29 @@ export interface CreateFrenchLevelDto {
 }
 
 export interface CreateGenderDto {
-  label: string;
+  gender_label: string;
 }
 
 export interface CreateExitReasonDto {
-  reason: string; // Sera mappé vers exit_reason côté backend
+  reason: string;
 }
 
 export interface CreateOrientationDto {
-  type: string;
-  description?: string;
+  orientation_type: string;
+  orientation_description?: string;
 }
 
 export interface CreateStatusDto {
-  label: string;
+  status_label: string;
 }
 
 export interface CreateFinancingDto {
-  type: string;
+  financing_type: string;
 }
 
 export interface CreateDisabilityDto {
-  label: string;
-  description?: string;
+  disability_label: string;
+  disability_description?: string;
 }
 
 // Interface pour les réponses API
