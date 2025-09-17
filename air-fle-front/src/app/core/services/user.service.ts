@@ -139,11 +139,11 @@ export class UserService {
    * Récupère tous les utilisateurs
    */
   getAllUsers(): Observable<User[]> {
-    return this.http.get<any>(this.apiUrl).pipe(
-      map((response: ApiListResponse<User> | Paginated<User> | any) => {
-        if (response && Array.isArray(response.data)) return (response.data as any[]).map(u => this.convertToFrontendModel(u));
-        if (response && response.data && Array.isArray(response.data.data)) return (response.data.data as any[]).map(u => this.convertToFrontendModel(u));
-        if (Array.isArray(response)) return (response as any[]).map(u => this.convertToFrontendModel(u));
+    return this.http.get<ApiListResponse<User> | Paginated<User> | User[]>(this.apiUrl).pipe(
+      map((response) => {
+        if ('data' in response && Array.isArray(response['data'])) return (response['data'] as User[]).map(u => this.convertToFrontendModel(u as unknown as Record<string, unknown>));
+        if ('data' in response && response['data'] && 'data' in (response['data'] as unknown as Record<string, unknown>) && Array.isArray((response['data'] as unknown as Record<string, unknown>)['data'])) return ((response['data'] as unknown as Record<string, unknown>)['data'] as User[]).map(u => this.convertToFrontendModel(u as unknown as Record<string, unknown>));
+        if (Array.isArray(response)) return (response as User[]).map(u => this.convertToFrontendModel(u as unknown as Record<string, unknown>));
         return [];
       }),
       catchError(this.handleError)
@@ -157,7 +157,7 @@ export class UserService {
     return this.http.get<ApiResponse<User>>(`${this.apiUrl}/${id}`).pipe(
       map(response => {
         if (response && response.success && response.data) {
-          return this.convertToFrontendModel(response.data);
+          return this.convertToFrontendModel(response.data as unknown as Record<string, unknown>);
         }
         throw new Error('Utilisateur non trouvé');
       }),
@@ -183,11 +183,11 @@ export class UserService {
    * Récupère tous les utilisateurs
    */
   getUsers(): Observable<User[]> {
-    return this.http.get<any>(`${this.apiUrl}`).pipe(
-      map((response: ApiListResponse<User> | Paginated<User> | any) => {
-        if (response && Array.isArray(response.data)) return (response.data as any[]).map(u => this.convertToFrontendModel(u));
-        if (response && response.data && Array.isArray(response.data.data)) return (response.data.data as any[]).map(u => this.convertToFrontendModel(u));
-        if (Array.isArray(response)) return (response as any[]).map(u => this.convertToFrontendModel(u));
+    return this.http.get<ApiListResponse<User> | Paginated<User> | User[]>(`${this.apiUrl}`).pipe(
+      map((response) => {
+        if ('data' in response && Array.isArray(response['data'])) return (response['data'] as User[]).map(u => this.convertToFrontendModel(u as unknown as Record<string, unknown>));
+        if ('data' in response && response['data'] && 'data' in (response['data'] as unknown as Record<string, unknown>) && Array.isArray((response['data'] as unknown as Record<string, unknown>)['data'])) return ((response['data'] as unknown as Record<string, unknown>)['data'] as User[]).map(u => this.convertToFrontendModel(u as unknown as Record<string, unknown>));
+        if (Array.isArray(response)) return (response as User[]).map(u => this.convertToFrontendModel(u as unknown as Record<string, unknown>));
         return [];
       }),
       catchError(() => of([]))
@@ -199,10 +199,10 @@ export class UserService {
    */
   createUser(user: Partial<User>): Observable<User> {
     const apiUser = this.convertToApiModel(user);
-    return this.http.post<any>(this.apiUrl, apiUser).pipe(
+    return this.http.post<{data: User} | User>(this.apiUrl, apiUser).pipe(
       map(response => {
-        if (response && response.data) {
-          return this.convertToFrontendModel(response.data);
+        if (response && 'data' in response) {
+          return this.convertToFrontendModel(response['data'] as unknown as Record<string, unknown>);
         }
         throw new Error('Erreur lors de la création de l\'utilisateur');
       }),
@@ -217,10 +217,10 @@ export class UserService {
    */
   updateUser(id: string | number, user: Partial<User>): Observable<User> {
     const apiUser = this.convertToApiModel(user);
-    return this.http.put<any>(`${this.apiUrl}/${id}`, apiUser).pipe(
+    return this.http.put<{data: User} | User>(`${this.apiUrl}/${id}`, apiUser).pipe(
       map(response => {
-        if (response && response.data) {
-          return this.convertToFrontendModel(response.data);
+        if (response && (response as Record<string, unknown>)['data']) {
+          return this.convertToFrontendModel((response as Record<string, unknown>)['data'] as unknown as Record<string, unknown>);
         }
         throw new Error('Erreur lors de la mise à jour de l\'utilisateur');
       }),
@@ -264,64 +264,69 @@ export class UserService {
   /**
    * Convertit une réponse API vers le modèle frontend
    */
-  private convertToFrontendModel(apiUser: any): User {
+  private convertToFrontendModel(apiUser: Record<string, unknown>): User {
     return {
       // ✅ NOUVEAUX CHAMPS - VALEURS DE L'API SEULEMENT
-      user_uuid: apiUser.user_uuid,
-      user_firstname: apiUser.user_firstname,
-      user_lastname: apiUser.user_lastname,
-      user_mail: apiUser.user_mail,
-      user_password: apiUser.user_password,
-      role_uuid: apiUser.role_uuid,
-      user_isactive: apiUser.user_isactive,
-      user_created_at: apiUser.user_created_at,
+      user_uuid: apiUser['user_uuid'] as string,
+      user_firstname: apiUser['user_firstname'] as string,
+      user_lastname: apiUser['user_lastname'] as string,
+      user_mail: apiUser['user_mail'] as string,
+      user_password: apiUser['user_password'] as string,
+      role_uuid: apiUser['role_uuid'] as string,
+      user_isactive: apiUser['user_isactive'] as boolean,
+      user_created_at: new Date(apiUser['user_created_at'] as string || new Date()),
 
       // 🔄 ANCIENS CHAMPS (fallback UNIQUEMENT - PAS de valeurs par défaut inventées)
-      id: apiUser.user_uuid || apiUser.id,
-      firstname: apiUser.user_firstname || apiUser.firstname,
-      lastname: apiUser.user_lastname || apiUser.lastname,
-      email: apiUser.user_mail || apiUser.email,
+      id: (apiUser['user_uuid'] || apiUser['id']) as string | number,
+      firstname: (apiUser['user_firstname'] || apiUser['firstname']) as string,
+      lastname: (apiUser['user_lastname'] || apiUser['lastname']) as string,
+      email: (apiUser['user_mail'] || apiUser['email']) as string,
       // 🔥 SUPPRESSION : Plus de role par défaut ! Si pas de rôle = undefined
-      role: apiUser.role, // PAS de fallback "USER" inventé !
-      isActive: apiUser.user_isactive !== undefined ? apiUser.user_isactive : apiUser.isActive,
+      role: apiUser['role'] ? {
+        role_uuid: (apiUser['role'] as Record<string, unknown>)['role_uuid'] as string,
+        role_name: (apiUser['role'] as Record<string, unknown>)['role_name'] as string,
+        role_description: (apiUser['role'] as Record<string, unknown>)['role_description'] as string | undefined,
+        role_created_at: (apiUser['role'] as Record<string, unknown>)['role_created_at'] as string | undefined
+      } : undefined,
+      isActive: apiUser['user_isactive'] !== undefined ? apiUser['user_isactive'] as boolean : apiUser['isActive'] as boolean,
 
       // Relations (SI elles existent dans l'API)
-      role_details: apiUser.role_details ? {
-        role_uuid: apiUser.role_details.role_uuid,
-        role_name: apiUser.role_details.role_name,
-        role_created_at: apiUser.role_details.role_created_at
+      role_details: apiUser['role_details'] ? {
+        role_uuid: (apiUser['role_details'] as Record<string, unknown>)['role_uuid'] as string,
+        role_name: (apiUser['role_details'] as Record<string, unknown>)['role_name'] as string,
+        role_created_at: new Date((apiUser['role_details'] as Record<string, unknown>)['role_created_at'] as string || new Date())
       } : undefined,
 
-      created_at: apiUser.user_created_at || apiUser.created_at,
-      updated_at: apiUser.updated_at
+      created_at: (apiUser['user_created_at'] || apiUser['created_at']) as string,
+      updated_at: apiUser['updated_at'] as string
     };
   }
 
   /**
    * Convertit un utilisateur en format d'affichage
    */
-  private convertToDisplayInfo(user: any): UserDisplayInfo {
-    const firstname = user.user_firstname || user.firstname || '';
-    const lastname = user.user_lastname || user.lastname || '';
+  private convertToDisplayInfo(user: User | Record<string, unknown>): UserDisplayInfo {
+    const firstname = (user['user_firstname'] || user['firstname'] || '') as string;
+    const lastname = (user['user_lastname'] || user['lastname'] || '') as string;
     
     return {
-      user_uuid: user.user_uuid || user.id,
+      user_uuid: (user['user_uuid'] || user['id']) as string,
       user_firstname: firstname,
       user_lastname: lastname,
-      user_mail: user.user_mail || user.email,
+      user_mail: (user['user_mail'] || user['email']) as string,
       fullName: `${firstname} ${lastname}`.trim() || 'Utilisateur inconnu',
       // Anciens champs pour compatibilité
-      id: user.user_uuid || user.id,
+      id: (user['user_uuid'] || user['id']) as string | number,
       firstname,
       lastname,
-      email: user.user_mail || user.email,
+      email: (user['user_mail'] || user['email']) as string,
     };
   }
 
   /**
    * Convertit un modèle frontend vers l'API - VALEURS STRICTES SEULEMENT
    */
-  private convertToApiModel(user: Partial<User>): any {
+  private convertToApiModel(user: Partial<User>): Record<string, unknown> {
     return {
       user_firstname: user.user_firstname || user.firstname,
       user_lastname: user.user_lastname || user.lastname,
