@@ -93,7 +93,7 @@ export class SessionDetailsComponent implements OnInit {
 
         this.loading = false;
       },
-      error: (err: Error) => {
+      error: () => {
         // console.error('Erreur lors du chargement de la session', err);
         this.loading = false;
       },
@@ -183,7 +183,7 @@ export class SessionDetailsComponent implements OnInit {
             
             
           },
-          error: (error) => {
+          error: () => {
             // console.error(`❌ SESSION-DETAILS - Erreur lors du chargement du groupe ${index}:`, error);
           }
         });
@@ -247,7 +247,7 @@ export class SessionDetailsComponent implements OnInit {
     const payload = { session_uuid: this.session?.session_uuid || this.sessionId } as Partial<Group>;
     this.groupService.updateGroup(this.selectedExistingGroupId, payload).subscribe({
       next: ()=>{ this.isCreateGroupOpen = false; this.loadSession(); },
-      error: (err: Error & { error?: { message?: string } })=>{ this.error = err?.error?.message || 'Impossible d\'associer le groupe'; }
+      error: ()=>{ this.error = 'Impossible d\'associer le groupe'; }
     });
   }
 
@@ -274,7 +274,7 @@ export class SessionDetailsComponent implements OnInit {
                 this.router.navigate(['/dashboard/sessions']);
               });
             },
-            error: (err: Error) => {
+            error: () => {
               // console.error('Erreur lors de la suppression de la session', err);
               this.alertService.error('Erreur lors de la suppression. Veuillez réessayer.');
             },
