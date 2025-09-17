@@ -19,30 +19,30 @@ export class SessionService {
   constructor(private http: HttpClient) {}
 
   getSessions(): Observable<Session[]> {
-    return this.http.get<any>(this.apiUrl).pipe(
+    return this.http.get<Record<string, unknown>>(this.apiUrl).pipe(
       // Vérifier et adapter le format de la réponse
-      map((response: ApiListResponse<Session> | any) => {
+      map((response: ApiListResponse<Session> | Record<string, unknown>) => {
         // Structure spécifique de votre API: response.data.data contient le tableau
-        if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-          return response.data.data.map((session: any) => this.convertToFrontendModel(session));
+        if (response && response['data'] && (response['data'] as Record<string, unknown>)['data'] && Array.isArray((response['data'] as Record<string, unknown>)['data'])) {
+          return ((response['data'] as Record<string, unknown>)['data'] as Record<string, unknown>[]).map((session: Record<string, unknown>) => this.convertToFrontendModel(session));
         }
-        if (response && Array.isArray(response.data)) {
-          return (response.data as any[]).map(s => this.convertToFrontendModel(s));
+        if (response && Array.isArray(response['data'])) {
+          return (response['data'] as Record<string, unknown>[]).map(s => this.convertToFrontendModel(s));
         }
         // Vérifier si la réponse est un tableau
         else if (Array.isArray(response)) {
-          return response.map((session: any) => this.convertToFrontendModel(session));
+          return response.map((session: Record<string, unknown>) => this.convertToFrontendModel(session));
         }
         // Vérifier si la réponse est un objet avec une propriété data ou items
-        else if (response && (response.data || response.items)) {
-          const sessionsData = response.data || response.items;
+        else if (response && ((response as Record<string, unknown>)['data'] || (response as Record<string, unknown>)['items'])) {
+          const sessionsData = (response as Record<string, unknown>)['data'] || (response as Record<string, unknown>)['items'];
           if (Array.isArray(sessionsData)) {
-            return sessionsData.map((session: any) => this.convertToFrontendModel(session));
+            return (sessionsData as Record<string, unknown>[]).map((session: Record<string, unknown>) => this.convertToFrontendModel(session));
           }
         }
         // Si c'est un objet unique, le mettre dans un tableau
-        else if (response && (response.id || response.session_id)) {
-          return [this.convertToFrontendModel(response)];
+        else if (response && ((response as Record<string, unknown>)['id'] || (response as Record<string, unknown>)['session_id'])) {
+          return [this.convertToFrontendModel(response as Record<string, unknown>)];
         }
 
         return [];
@@ -52,14 +52,14 @@ export class SessionService {
   }
 
   getSessionById(id: number): Observable<Session> {
-    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.get<Record<string, unknown>>(`${this.apiUrl}/${id}`).pipe(
       map(response => {
         // Structure spécifique de votre API: response.data contient l'objet session
-        if (response && response.data) {
-          return this.convertToFrontendModel(response.data);
+        if (response && response['data']) {
+          return this.convertToFrontendModel(response['data'] as Record<string, unknown>);
         }
         // Si la structure est différente, essayer de convertir directement
-        else if (response && (response.id || response.session_id)) {
+        else if (response && (response['id'] || response['session_id'])) {
           return this.convertToFrontendModel(response);
         }
 
@@ -69,24 +69,24 @@ export class SessionService {
     );
   }
 
-  createSession(session: any): Observable<Session> {
+  createSession(session: Partial<Session>): Observable<Session> {
     const apiSession = this.convertToApiModel(session);
     return this.http.post<Session>(this.apiUrl, apiSession).pipe(
-      map(session => this.convertToFrontendModel(session)),
+      map(session => this.convertToFrontendModel(session as unknown as Record<string, unknown>)),
       catchError(this.handleError)
     );
   }
 
   updateSession(id: number | string, session: Partial<Session>): Observable<Session> {
     const apiSession = this.convertToApiModel(session);
-    return this.http.patch<any>(`${this.apiUrl}/${id}`, apiSession).pipe(
+    return this.http.patch<Record<string, unknown>>(`${this.apiUrl}/${id}`, apiSession).pipe(
       map(response => {
         // Structure spécifique de votre API: response.data contient l'objet session
-        if (response && response.data) {
-          return this.convertToFrontendModel(response.data);
+        if (response && response['data']) {
+          return this.convertToFrontendModel(response['data'] as Record<string, unknown>);
         }
         // Si la structure est différente, essayer de convertir directement
-        else if (response && (response.id || response.session_id)) {
+        else if (response && (response['id'] || response['session_id'])) {
           return this.convertToFrontendModel(response);
         }
 
@@ -104,72 +104,72 @@ export class SessionService {
 
 
 
-  private handleError(error: any): Observable<never> {
+  private handleError(error: Error): Observable<never> {
     return throwError(() => error);
   }
 
   // Convertir un modèle de session de l'API vers le format frontend
-  private convertToFrontendModel(apiSession: any): Session {
+  private convertToFrontendModel(apiSession: Record<string, unknown>): Session {
     if (!apiSession) {
       return {} as Session;
     }
 
-    const sessionUuid = apiSession.session_uuid || apiSession.id;
+    const sessionUuid = apiSession['session_uuid'] || apiSession['id'];
 
     // Traiter les groupes s'ils sont présents
-    let groups = [];
-    if (apiSession.groups && Array.isArray(apiSession.groups)) {
-      groups = apiSession.groups.map((group: any) => ({
-        group_uuid: group.group_uuid || group.id,
-        group_label: group.group_label || group.label,
-        session_uuid: group.session_uuid || sessionUuid,
-        students: group.students || [],
+    let groups: Record<string, unknown>[] = [];
+    if (apiSession['groups'] && Array.isArray(apiSession['groups'])) {
+      groups = (apiSession['groups'] as Record<string, unknown>[]).map((group) => ({
+        group_uuid: group['group_uuid'] || group['id'],
+        group_label: group['group_label'] || group['label'],
+        session_uuid: group['session_uuid'] || sessionUuid,
+        students: group['students'] || [],
       }));
     }
 
     return {
       // ✅ NOUVEAUX CHAMPS (schéma réel)
-      session_uuid: sessionUuid,
-      session_label: apiSession.session_label,
-      session_started_at: apiSession.session_started_at,
-      session_finished_at: apiSession.session_finished_at,
-      session_created_at: apiSession.session_created_at,
-      session_description: apiSession.session_description,
+      session_uuid: sessionUuid as string,
+      session_label: apiSession['session_label'] as string,
+      session_started_at: apiSession['session_started_at'] as string | Date,
+      session_finished_at: apiSession['session_finished_at'] as string | Date,
+      session_created_at: apiSession['session_created_at'] as string | Date,
+      session_description: apiSession['session_description'] as string,
       
       // Relations
       groups: groups,
       
       // ✅ PROPRIÉTÉS DE COMPATIBILITÉ TEMPORAIRES
-      id: sessionUuid, // Alias
-      label: apiSession.session_label, // Alias
-      startedAt: apiSession.session_started_at, // Alias
-      finishedAt: apiSession.session_finished_at, // Alias
-      started_at: apiSession.session_started_at, // Alias
-      finished_at: apiSession.session_finished_at, // Alias
+      id: sessionUuid as string, // Alias
+      label: apiSession['session_label'] as string, // Alias
+      startedAt: apiSession['session_started_at'] as string, // Alias
+      finishedAt: apiSession['session_finished_at'] as string, // Alias
+      started_at: apiSession['session_started_at'] as string | Date, // Alias
+      finished_at: apiSession['session_finished_at'] as string | Date, // Alias
     };
   }
 
   // Convertir un modèle de session du frontend vers le format API
-  private convertToApiModel(session: any): any {
+  private convertToApiModel(session: Partial<Session>): Record<string, unknown> {
     // ✅ NOUVEAUX CHAMPS - Utiliser les vrais noms de la base de données
-    const apiSession: any = {
+    const apiSession: Record<string, unknown> = {
       session_label: session.session_label || session.label,
     };
 
     // Traiter les dates pour s'assurer qu'elles sont au format ISO 8601
     if (session.session_started_at || session.startedAt || session.started_at) {
       const startedAt = session.session_started_at || session.startedAt || session.started_at;
-      apiSession.session_started_at = this.formatDateToISO(startedAt);
+      apiSession['session_started_at'] = this.formatDateToISO(startedAt!);
     }
 
     if (session.session_finished_at || session.finishedAt || session.finished_at) {
       const finishedAt = session.session_finished_at || session.finishedAt || session.finished_at;
-      apiSession.session_finished_at = this.formatDateToISO(finishedAt);
+      apiSession['session_finished_at'] = this.formatDateToISO(finishedAt!);
     }
 
     // Ajouter la description si elle existe
     if (session.session_description) {
-      apiSession.session_description = session.session_description;
+      apiSession['session_description'] = session.session_description;
     }
 
     return apiSession;
@@ -205,7 +205,7 @@ export class SessionService {
   }
 
   // Récupérer les groupes d'une session
-  getSessionGroups(sessionId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/${sessionId}/groups`);
+  getSessionGroups(sessionId: number): Observable<Record<string, unknown>[]> {
+    return this.http.get<Record<string, unknown>[]>(`${this.apiUrl}/${sessionId}/groups`);
   }
 }
