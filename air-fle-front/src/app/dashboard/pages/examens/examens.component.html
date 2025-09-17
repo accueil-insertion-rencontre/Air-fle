@@ -187,19 +187,19 @@
         <!-- panneau détaillé intégré -->
         <div class="students-list-inline" *ngIf="expandedExamId === exam.id && selectedExam">
           <div class="participants">
-            <div class="participant-item" *ngFor="let s of detailsStudents" [class.editing]="editingStudentUuid === s.student_uuid">
+            <div class="participant-item" *ngFor="let s of detailsStudents" [class.editing]="editingStudentUuid === s['student_uuid']">
               <div class="row-1">
-                <div class="student-name">{{ s.name || '—' }}</div>
-                <div class="score-pill" [class.empty]="!s.score" *ngIf="editingStudentUuid !== s.student_uuid">{{ s.score || '—' }}</div>
-                <input *ngIf="editingStudentUuid === s.student_uuid" type="text" class="form-control form-control-sm score-input" [(ngModel)]="inlineEdit.score" placeholder="Ex: 15/20" />
+                <div class="student-name">{{ s['name'] || '—' }}</div>
+                <div class="score-pill" [class.empty]="!s['score']" *ngIf="editingStudentUuid !== s['student_uuid']">{{ s['score'] || '—' }}</div>
+                <input *ngIf="editingStudentUuid === s['student_uuid']" type="text" class="form-control form-control-sm score-input" [(ngModel)]="inlineEdit.score" placeholder="Ex: 15/20" />
               </div>
               <div class="row-2">
                 <span class="label">Email</span>
-                <span class="value">{{ s.email || '—' }}</span>
+                <span class="value">{{ s['email'] || '—' }}</span>
                 <span class="dot"></span>
                 <span class="label">Statut</span>
-                <span class="value" *ngIf="editingStudentUuid !== s.student_uuid">{{ s.status || '—' }}</span>
-                <select *ngIf="editingStudentUuid === s.student_uuid" class="form-select form-select-sm status-select" [(ngModel)]="inlineEdit.status">
+                <span class="value" *ngIf="editingStudentUuid !== s['student_uuid']">{{ s['status'] || '—' }}</span>
+                <select *ngIf="editingStudentUuid === s['student_uuid']" class="form-select form-select-sm status-select" [(ngModel)]="inlineEdit.status">
                   <option value="pending">En attente</option>
                   <option value="passed">Réussi</option>
                   <option value="failed">Échoué</option>
@@ -208,12 +208,12 @@
               </div>
               <div class="row-3">
                 <span class="label">Commentaires</span>
-                <span class="value" *ngIf="editingStudentUuid !== s.student_uuid">{{ s.notes || '-' }}</span>
-                <input *ngIf="editingStudentUuid === s.student_uuid" type="text" class="form-control form-control-sm notes-input" [(ngModel)]="inlineEdit.notes" placeholder="Commentaires" />
+                <span class="value" *ngIf="editingStudentUuid !== s['student_uuid']">{{ s['notes'] || '-' }}</span>
+                <input *ngIf="editingStudentUuid === s['student_uuid']" type="text" class="form-control form-control-sm notes-input" [(ngModel)]="inlineEdit.notes" placeholder="Commentaires" />
               </div>
               <div class="row-actions">
                 <ng-container *ngIf="detailsEditable">
-                  <ng-container *ngIf="editingStudentUuid !== s.student_uuid; else editingBtns">
+                  <ng-container *ngIf="editingStudentUuid !== s['student_uuid']; else editingBtns">
                     <button class="icon-btn" title="Modifier la note" (click)="startInlineEdit(s)">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                     </button>
@@ -383,21 +383,21 @@
         <div class="mb-4" *ngIf="hasStudents()">
           <h6 class="mb-3">Étudiants inscrits ({{ getStudentsCount() }})</h6>
           <div class="participants">
-            <div class="participant-item" *ngFor="let s of selectedExam?.students || []">
+            <div class="participant-item" *ngFor="let s of detailsStudents">
               <div class="row-1">
-                <div class="student-name">{{ s.student?.student_firstname }} {{ s.student?.student_lastname }}</div>
-                <div class="score-pill" [class.empty]="!s.exam_score">{{ s.exam_score || '—' }}</div>
+                <div class="student-name">{{ s['name'] || '—' }}</div>
+                <div class="score-pill" [class.empty]="!s['score']">{{ s['score'] || '—' }}</div>
               </div>
               <div class="row-2">
                 <span class="label">Email</span>
-                <span class="value">{{ s.student?.student_mail || '—' }}</span>
+                <span class="value">{{ s['email'] || '—' }}</span>
                 <span class="dot"></span>
                 <span class="label">Statut</span>
-                <span class="value">{{ s.exam_status === 'passed' ? 'Réussi' : s.exam_status === 'failed' ? 'Échoué' : s.exam_status === 'absent' ? 'Absent' : 'En attente' }}</span>
+                <span class="value">{{ s['status'] === 'passed' ? 'Réussi' : s['status'] === 'failed' ? 'Échoué' : s['status'] === 'absent' ? 'Absent' : 'En attente' }}</span>
               </div>
-              <div class="row-3" *ngIf="s.exam_notes">
+              <div class="row-3" *ngIf="s['notes']">
                 <span class="label">Commentaires</span>
-                <span class="value">{{ s.exam_notes }}</span>
+                <span class="value">{{ s['notes'] }}</span>
               </div>
               <div class="row-actions">
                 <button class="btn btn-sm btn-outline-warning me-2 icon-btn" title="Modifier la note" (click)="showEditStudentScoreForm(s)">
@@ -431,7 +431,7 @@
 
   <!-- Modal de Confirmation de Suppression -->
   <div *ngIf="showDeleteConfirm" class="modal-overlay" (click)="cancelDelete()" (keyup.escape)="cancelDelete()" tabindex="0">
-    <div class="modal-content delete-modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+    <div class="modal-content delete-modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
       <div class="modal-header bg-danger">
         <h5 class="modal-title text-white">Confirmer la suppression</h5>
         <button type="button" class="btn-close btn-close-white" (click)="cancelDelete()"></button>
@@ -852,7 +852,7 @@
       <div class="card-header bg-warning bg-opacity-10">
         <div class="d-flex justify-content-between align-items-center">
           <h5 class="mb-0">
-            ✏️ Modifier la Note - {{ selectedStudent?.student?.student_firstname }} {{ selectedStudent?.student?.student_lastname }}
+            ✏️ Modifier la Note - {{ getSelectedStudentName() }}
           </h5>
           <button type="button" class="btn-close" (click)="hideEditStudentScoreForm()"></button>
         </div>
