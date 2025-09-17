@@ -19,7 +19,7 @@ export const adminGuard: CanActivateFn = () => {
       if (payload.role === 'admin') {
         return true;
       }
-    } catch (error) {
+    } catch {
       // Gestion silencieuse de l'erreur
     }
   }
