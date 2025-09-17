@@ -70,7 +70,7 @@ export class SessionCreateComponent implements OnInit {
 
         this.loading = false;
       },
-      error: error => {
+      error: () => {
         // console.error('Erreur lors du chargement de la session:', error);
         this.error = 'Impossible de charger les détails de la session';
         this.loading = false;
@@ -125,12 +125,9 @@ export class SessionCreateComponent implements OnInit {
           
           this.router.navigate(['/dashboard/sessions']);
         },
-        error: error => {
+        error: () => {
           // console.error('Erreur lors de la mise à jour:', error);
-          this.error =
-            error?.error?.message ||
-            error?.message ||
-            'Erreur lors de la mise à jour de la session';
+          this.error = 'Erreur lors de la mise à jour de la session';
           this.loading = false;
         },
       });
@@ -142,10 +139,9 @@ export class SessionCreateComponent implements OnInit {
           
           this.router.navigate(['/dashboard/sessions']);
         },
-        error: error => {
+        error: () => {
           // console.error('Erreur lors de la création:', error);
-          this.error =
-            error?.error?.message || error?.message || 'Erreur lors de la création de la session';
+          this.error = 'Erreur lors de la création de la session';
           this.loading = false;
         },
       });
