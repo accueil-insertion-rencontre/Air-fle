@@ -192,6 +192,11 @@ export class StudentRepository {
           nationality: true,
         },
       },
+      disabilities: {
+        include: {
+          disability: true,
+        },
+      },
     };
   }
 
