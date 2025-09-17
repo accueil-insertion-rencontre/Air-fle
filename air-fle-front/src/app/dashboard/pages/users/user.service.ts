@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { User, CreateUserRequest, UpdateUserRequest } from '@core/models';
+import { User, UpdateUserRequest } from '@core/models';
 import { AuthService } from '@core/services/auth.service';
 import { environment } from '@environments/environment';
 
@@ -106,7 +106,7 @@ export class UserService {
   getRoles(): Observable<Role[]> {
     const token = this.authService.getToken();
     const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
-    return this.http.get<any>(`${this.authUrl}/roles`, { headers }).pipe(
+    return this.http.get<ApiResponse<{roles: Role[]}>>(`${this.authUrl}/roles`, { headers }).pipe(
         map(response => {
         if (!response.success) {
           throw new Error(response.message || 'API roles: success=false');
