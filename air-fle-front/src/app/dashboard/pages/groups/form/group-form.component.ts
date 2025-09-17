@@ -21,8 +21,8 @@ export class GroupFormComponent implements OnInit {
   sessions: Session[] = [];
   loading = false;
   submitted = false;
-  availableStudents: any[] = []; // Normalement, on chargerait les étudiants disponibles
-  selectedStudents: any[] = []; // Étudiants sélectionnés pour ce groupe
+  availableStudents: Record<string, unknown>[] = []; // Normalement, on chargerait les étudiants disponibles
+  selectedStudents: Record<string, unknown>[] = []; // Étudiants sélectionnés pour ce groupe
 
   constructor(
     private fb: FormBuilder,
@@ -55,7 +55,9 @@ export class GroupFormComponent implements OnInit {
       next: data => {
         this.sessions = data;
       },
-      error: err => console.error('Erreur lors du chargement des sessions', err),
+      error: err => {
+        // console.error('Erreur lors du chargement des sessions', err);
+      },
     });
   }
 
@@ -75,7 +77,7 @@ export class GroupFormComponent implements OnInit {
         this.loading = false;
       },
       error: err => {
-        console.error('Erreur lors du chargement du groupe', err);
+        // console.error('Erreur lors du chargement du groupe', err);
         this.loading = false;
       },
     });
@@ -99,7 +101,7 @@ export class GroupFormComponent implements OnInit {
           this.router.navigate(['/dashboard/groups']);
         },
         error: err => {
-          console.error('Erreur lors de la mise à jour du groupe', err);
+          // console.error('Erreur lors de la mise à jour du groupe', err);
           this.loading = false;
         },
       });
@@ -110,14 +112,14 @@ export class GroupFormComponent implements OnInit {
           this.router.navigate(['/dashboard/groups']);
         },
         error: err => {
-          console.error('Erreur lors de la création du groupe', err);
+          // console.error('Erreur lors de la création du groupe', err);
           this.loading = false;
         },
       });
     }
   }
 
-  addStudentToGroup(student: any): void {
+  addStudentToGroup(student: Record<string, unknown>): void {
     if (this.groupId) {
       this.groupService.addStudentToGroup(this.groupId, student.student_uuid).subscribe({
         next: () => {
@@ -126,12 +128,14 @@ export class GroupFormComponent implements OnInit {
             s => s.student_uuid !== student.student_uuid
           );
         },
-        error: err => console.error("Erreur lors de l'ajout de l'étudiant au groupe", err),
+        error: err => {
+          // console.error("Erreur lors de l'ajout de l'étudiant au groupe", err);
+        },
       });
     }
   }
 
-  removeStudentFromGroup(student: any): void {
+  removeStudentFromGroup(student: Record<string, unknown>): void {
     if (this.groupId) {
       this.groupService.removeStudentFromGroup(this.groupId, student.student_uuid).subscribe({
         next: () => {
@@ -140,7 +144,9 @@ export class GroupFormComponent implements OnInit {
             s => s.student_uuid !== student.student_uuid
           );
         },
-        error: err => console.error("Erreur lors du retrait de l'étudiant du groupe", err),
+        error: err => {
+          // console.error("Erreur lors du retrait de l'étudiant du groupe", err);
+        },
       });
     }
   }
