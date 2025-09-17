@@ -101,15 +101,15 @@ export class TodolistService {
     return 'in_progress';
   }
 
-  private mapSubtask(raw: any): Subtask {
+  private mapSubtask(raw: Record<string, unknown>): Subtask {
     return {
-      id: raw?.subtask_uuid ?? raw?.id ?? '',
-      title: raw?.subtask_title ?? raw?.title ?? '',
-      description: raw?.subtask_description ?? raw?.description ?? undefined,
-      status: raw?.subtask_status ?? raw?.status ?? 'pending',
-      createdAt: raw?.subtask_created_at ?? raw?.createdAt ?? new Date().toISOString(),
-      updatedAt: raw?.subtask_updated_at ?? raw?.updatedAt ?? new Date().toISOString(),
-      task_id: raw?.task_uuid ?? raw?.task_id ?? '',
+      id: (raw?.['subtask_uuid'] ?? raw?.['id'] ?? '') as string,
+      title: (raw?.['subtask_title'] ?? raw?.['title'] ?? '') as string,
+      description: (raw?.['subtask_description'] ?? raw?.['description']) as string | undefined,
+      status: (raw?.['subtask_status'] ?? raw?.['status'] ?? 'pending') as 'pending' | 'completed',
+      createdAt: (raw?.['subtask_created_at'] ?? raw?.['createdAt'] ?? new Date().toISOString()) as string,
+      updatedAt: (raw?.['subtask_updated_at'] ?? raw?.['updatedAt'] ?? new Date().toISOString()) as string,
+      task_id: (raw?.['task_uuid'] ?? raw?.['task_id'] ?? '') as string,
     };
   }
 
@@ -119,24 +119,24 @@ export class TodolistService {
     return Math.round((completed / subtasks.length) * 100);
   }
 
-  private mapTask(raw: any): TodoTask {
-    const subtasks: Subtask[] = Array.isArray(raw?.subtasks)
-      ? raw.subtasks.map((st: any) => this.mapSubtask(st))
+  private mapTask(raw: Record<string, unknown>): TodoTask {
+    const subtasks: Subtask[] = Array.isArray(raw?.['subtasks'])
+      ? raw['subtasks'].map((st: Record<string, unknown>) => this.mapSubtask(st))
       : [];
 
-    const statsRaw = raw?.statistics;
+    const statsRaw = raw?.['statistics'] as Record<string, unknown>;
     const statistics: TaskStatistics | undefined = statsRaw
       ? {
-          total: statsRaw.total ?? statsRaw?.subtasks?.total ?? subtasks.length ?? 0,
+          total: (statsRaw?.['total'] as number) ?? ((statsRaw?.['subtasks'] as Record<string, unknown>)?.['total'] as number) ?? subtasks.length ?? 0,
           completed:
-            statsRaw.completed ?? statsRaw?.subtasks?.completed ??
+            (statsRaw?.['completed'] as number) ?? ((statsRaw?.['subtasks'] as Record<string, unknown>)?.['completed'] as number) ??
             subtasks.filter(s => s.status === 'completed').length,
           pending:
-            statsRaw.pending ?? statsRaw?.subtasks?.pending ??
+            (statsRaw?.['pending'] as number) ?? ((statsRaw?.['subtasks'] as Record<string, unknown>)?.['pending'] as number) ??
             subtasks.filter(s => s.status !== 'completed').length,
           completionPercentage:
             Math.round(
-              (statsRaw.completionPercentage ?? statsRaw?.subtasks?.completionPercentage ?? this.computeCompletion(subtasks))
+              ((statsRaw?.['completionPercentage'] as number) ?? ((statsRaw?.['subtasks'] as Record<string, unknown>)?.['completionPercentage'] as number) ?? this.computeCompletion(subtasks))
             ),
         }
       : undefined;
@@ -144,23 +144,23 @@ export class TodolistService {
     const completionPercentage = statistics?.completionPercentage ?? this.computeCompletion(subtasks);
 
     return {
-      id: raw?.task_uuid ?? raw?.id ?? '',
-      title: raw?.task_title ?? raw?.title ?? '',
-      description: raw?.task_description ?? raw?.description ?? undefined,
-      dueAt: raw?.task_due_at ?? raw?.dueAt ?? undefined,
-      status: (raw?.status as any) ?? this.mapStatusFromNumeric(raw?.task_status),
+      id: (raw?.['task_uuid'] ?? raw?.['id'] ?? '') as string,
+      title: (raw?.['task_title'] ?? raw?.['title'] ?? '') as string,
+      description: (raw?.['task_description'] ?? raw?.['description']) as string | undefined,
+      dueAt: (raw?.['task_due_at'] ?? raw?.['dueAt']) as string | undefined,
+      status: (raw?.['status'] as 'pending' | 'in_progress' | 'completed') ?? this.mapStatusFromNumeric(raw?.['task_status'] as number | undefined),
       completionPercentage,
-      createdAt: raw?.task_created_at ?? raw?.createdAt ?? new Date().toISOString(),
-      updatedAt: raw?.task_updated_at ?? raw?.updatedAt ?? new Date().toISOString(),
-      user_id: raw?.user_uuid ?? raw?.user_id ?? '',
-      user: raw?.user
+      createdAt: (raw?.['task_created_at'] ?? raw?.['createdAt'] ?? new Date().toISOString()) as string,
+      updatedAt: (raw?.['task_updated_at'] ?? raw?.['updatedAt'] ?? new Date().toISOString()) as string,
+      user_id: (raw?.['user_uuid'] ?? raw?.['user_id'] ?? '') as string,
+      user: raw?.['user']
         ? {
-            id: raw.user.user_uuid ?? raw.user.id,
-            email: raw.user.user_mail ?? raw.user.email,
-            firstname: raw.user.user_firstname ?? raw.user.firstname,
-            lastname: raw.user.user_lastname ?? raw.user.lastname,
-            role_id: raw.user.role_uuid ?? raw.user.role_id,
-            isActive: raw.user.user_isactive ?? raw.user.isActive ?? true,
+            id: (((raw['user'] as Record<string, unknown>)?.['user_uuid'] ?? (raw['user'] as Record<string, unknown>)?.['id']) as string) ?? '',
+            email: (((raw['user'] as Record<string, unknown>)?.['user_mail'] ?? (raw['user'] as Record<string, unknown>)?.['email']) as string) ?? '',
+            firstname: (((raw['user'] as Record<string, unknown>)?.['user_firstname'] ?? (raw['user'] as Record<string, unknown>)?.['firstname']) as string) ?? '',
+            lastname: (((raw['user'] as Record<string, unknown>)?.['user_lastname'] ?? (raw['user'] as Record<string, unknown>)?.['lastname']) as string) ?? '',
+            role_id: (((raw['user'] as Record<string, unknown>)?.['role_uuid'] ?? (raw['user'] as Record<string, unknown>)?.['role_id']) as string) ?? '',
+            isActive: (((raw['user'] as Record<string, unknown>)?.['user_isactive'] ?? (raw['user'] as Record<string, unknown>)?.['isActive']) as boolean) ?? true,
           }
         : undefined,
       subtasks,
@@ -175,7 +175,7 @@ export class TodolistService {
     return this.http.get<ApiResponse<TasksResponse>>(this.apiUrl).pipe(
       map(response => {
         const rawTasks = response?.data?.tasks ?? [];
-        return Array.isArray(rawTasks) ? rawTasks.map(t => this.mapTask(t)) : [];
+        return Array.isArray(rawTasks) ? rawTasks.map(t => this.mapTask(t as unknown as Record<string, unknown>)) : [];
       }),
       catchError(error => {
         throw error;
@@ -190,7 +190,7 @@ export class TodolistService {
     return this.http.get<ApiResponse<TasksResponse>>(this.apiUrl).pipe(
       map(response => {
         const tasks = Array.isArray(response?.data?.tasks)
-          ? response.data.tasks.map(t => this.mapTask(t))
+          ? response.data.tasks.map(t => this.mapTask(t as unknown as Record<string, unknown>))
           : [];
         const gs = response?.data?.globalStats;
         return {
@@ -229,7 +229,7 @@ export class TodolistService {
    * Crée une nouvelle tâche avec sous-tâches (nouvelle API v1)
    */
   createTodoWithSubtasks(todo: CreateTodoWithSubtasksRequest): Observable<TodoTask> {
-    return this.http.post<ApiResponse<any>>(this.apiUrl, todo).pipe(
+    return this.http.post<ApiResponse<Record<string, unknown>>>(this.apiUrl, todo).pipe(
       map(response => this.mapTask(response.data)),
       catchError(error => {
         return throwError(() => error);
@@ -242,7 +242,7 @@ export class TodolistService {
    */
   toggleTaskStatus(taskId: string): Observable<TodoTask> {
     return this.http
-      .put<ApiResponse<any>>(`${this.apiUrl}/${taskId}/toggle-status`, {})
+      .put<ApiResponse<Record<string, unknown>>>(`${this.apiUrl}/${taskId}/toggle-status`, {})
       .pipe(
         map(response => this.mapTask(response.data)),
         catchError(error => {
@@ -256,7 +256,7 @@ export class TodolistService {
    */
   toggleSubtaskStatus(subtaskId: string): Observable<Subtask> {
     const subtaskUrl = `${environment.apiUrl}/tasks/subtasks/${subtaskId}/toggle`;
-    return this.http.patch<ApiResponse<any>>(subtaskUrl, {}).pipe(
+    return this.http.patch<ApiResponse<Record<string, unknown>>>(subtaskUrl, {}).pipe(
       map(response => this.mapSubtask(response.data)),
       catchError(error => {
         throw error;
