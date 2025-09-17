@@ -6,7 +6,7 @@ import { AttendanceService, Absence } from '@core/services/attendance.service';
 import { ReferenceDataService } from '@core/services';
 import { ExamService } from '@core/services';
 // StudentAbsenceHistoryComponent retiré (non utilisé)
-import { Student } from '@core/models';
+import { Student, Status, Nationality, FrenchLevel, Gender, Orientation } from '@core/models';
 // Exam affichage pour récupérer les notes
 
 @Component({
@@ -35,11 +35,11 @@ export class StudentProfileComponent implements OnInit {
   notesError: string | null = null;
 
   // Données de référence pour le mapping
-  statuses: any[] = [];
-  nationalities: any[] = [];
-  frenchLevels: any[] = [];
-  genders: any[] = [];
-  orientations: any[] = [];
+  statuses: Status[] = [];
+  nationalities: Nationality[] = [];
+  frenchLevels: FrenchLevel[] = [];
+  genders: Gender[] = [];
+  orientations: Orientation[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -92,7 +92,7 @@ export class StudentProfileComponent implements OnInit {
         this.loadRecentAbsences(); // Charger les absences récentes
       },
       error: () => {
-        console.error('❌ Erreur lors du chargement');
+        // console.error('❌ Erreur lors du chargement');
         this.error = "Erreur lors du chargement du profil de l'étudiant";
         this.loading = false;
       },
@@ -105,22 +105,23 @@ export class StudentProfileComponent implements OnInit {
     this.loadingNotes = true;
     this.notesError = null;
     this.examService.getExamsByStudent(this.student.student_uuid).subscribe({
-      next: (exams: any[]) => {
+      next: (exams: unknown[]) => {
         const notes: Array<{ label: string; score: string; date: string | Date }> = [];
-        exams.forEach((exam: any) => {
+        exams.forEach((exam: unknown) => {
+          const examRecord = exam as Record<string, unknown>;
           // récupérer les données étudiant pour cet examen
           let score: string | undefined;
           // let status: string | undefined;
-          const date: string | Date | undefined = exam.exam?.exam_taked_at || exam.exam_taked_at || exam.taken_at;
-          const label = exam.exam?.exam_label || exam.exam_label || 'Examen';
+          const date: string | Date | undefined = (examRecord['exam'] as Record<string, unknown>)?.['exam_taked_at'] as string | Date || examRecord['exam_taked_at'] as string | Date || examRecord['taken_at'] as string | Date;
+          const label = (examRecord['exam'] as Record<string, unknown>)?.['exam_label'] as string || examRecord['exam_label'] as string || 'Examen';
 
-          if (exam.students && Array.isArray(exam.students)) {
-            const me = exam.students.find((s: any) => s.student_uuid === this.student?.student_uuid);
-            score = me?.exam_score;
+          if (examRecord['students'] && Array.isArray(examRecord['students'])) {
+            const me = (examRecord['students'] as Record<string, unknown>[]).find((s: Record<string, unknown>) => s['student_uuid'] === this.student?.student_uuid);
+            score = me?.['exam_score'] as string;
             // status = me?.exam_status;
-          } else if (exam.student_uuid && (exam.exam_score !== undefined || exam.exam_status !== undefined)) {
+          } else if (examRecord['student_uuid'] && (examRecord['exam_score'] !== undefined || examRecord['exam_status'] !== undefined)) {
             // structure plate
-            score = exam.exam_score;
+            score = examRecord['exam_score'] as string;
             // status = exam.exam_status;
           }
 
@@ -134,7 +135,7 @@ export class StudentProfileComponent implements OnInit {
         this.loadingNotes = false;
       },
       error: () => {
-        console.error('❌ Erreur chargement notes:');
+        // console.error('❌ Erreur chargement notes:');
         this.notesError = 'Impossible de charger les notes';
         this.loadingNotes = false;
       }
@@ -183,15 +184,24 @@ export class StudentProfileComponent implements OnInit {
     if (!this.student) return 'Non renseignée';
     
     try {
-      // Vérifier d'abord le tableau nationalities
+      // Vérifier d'abord le tableau nationalities (relation many-to-many via StudentNationality)
       if (this.student.nationalities && this.student.nationalities.length > 0) {
-        // Utiliser any pour éviter les erreurs de type
-        const firstNationality = this.student.nationalities[0] as any;
+        const firstNationality = this.student.nationalities[0];
         
-        // Essayer d'accéder à nationality.nationality_label
+        // La structure est : student.nationalities[0].nationality.nationality_label
         if (firstNationality.nationality && firstNationality.nationality.nationality_label) {
           return firstNationality.nationality.nationality_label;
         }
+        
+        // Fallback si la structure est directe
+        if (firstNationality.nationality_label) {
+          return firstNationality.nationality_label;
+        }
+      }
+      
+      // Vérifier la relation directe nationality (si elle existe)
+      if (this.student.nationality && this.student.nationality.nationality_label) {
+        return this.student.nationality.nationality_label;
       }
     } catch {
       // Erreur silencieuse en production
@@ -307,15 +317,11 @@ export class StudentProfileComponent implements OnInit {
       event.stopPropagation();
     }
     
-    console.log('🗑️ Méthode deleteStudent appelée');
     
     if (!this.student) {
-      console.log('❌ Aucun étudiant à supprimer');
       return;
     }
     
-    console.log('🗑️ Suppression étudiant - ID:', this.student.student_uuid);
-    console.log('🗑️ Suppression étudiant - Données:', this.student);
     
     // Afficher la modal de confirmation personnalisée
     this.showDeleteConfirmModal = true;
@@ -324,23 +330,20 @@ export class StudentProfileComponent implements OnInit {
   confirmDelete(): void {
     if (!this.student) return;
     
-    console.log('🗑️ Suppression confirmée, appel API...');
     this.showDeleteConfirmModal = false;
     
     this.studentService.deleteStudent(this.student.student_uuid).subscribe({
       next: (response) => {
-        console.log('✅ Suppression réussie:', response);
         this.router.navigate(['/dashboard/apprenants']);
       },
       error: () => {
-        console.error('❌ Erreur lors de la suppression');
+        // console.error('❌ Erreur lors de la suppression');
         alert('Erreur lors de la suppression de l\'étudiant');
       }
     });
   }
 
   cancelDelete(): void {
-    console.log('🗑️ Suppression annulée par l\'utilisateur');
     this.showDeleteConfirmModal = false;
   }
 
@@ -371,8 +374,9 @@ export class StudentProfileComponent implements OnInit {
     this.loadingAbsences = true;
     this.absencesError = null;
     this.attendanceService.getStudentAbsences(this.student.student_uuid).subscribe({
-      next: (absences: any) => {
-        const list: Absence[] = Array.isArray(absences) ? absences : (absences?.data || absences?.data?.data || []);
+      next: (absences: unknown) => {
+        const absencesRecord = absences as Record<string, unknown>;
+        const list: Absence[] = Array.isArray(absencesRecord) ? absencesRecord : (absencesRecord?.['data'] || (absencesRecord?.['data'] as Record<string, unknown>)?.['data'] || []) as Absence[];
         const sorted = list.sort((a: Absence, b: Absence) =>
           new Date(b.course?.day || '').getTime() - new Date(a.course?.day || '').getTime()
         );
@@ -380,7 +384,7 @@ export class StudentProfileComponent implements OnInit {
         this.loadingAbsences = false;
       },
       error: () => {
-        console.error('❌ Erreur chargement absences:');
+        // console.error('❌ Erreur chargement absences:');
         this.absencesError = 'Impossible de charger les absences';
         this.loadingAbsences = false;
       }
@@ -405,7 +409,7 @@ export class StudentProfileComponent implements OnInit {
   getAbsenceLabel(a: Absence): string {
     if (!a) return '';
     if (a.absence_reason) return a.absence_reason;
-    if ((a as any).absence_status === 'justified') return 'Justifiée';
+    if ((a as unknown as Record<string, unknown>)['absence_status'] === 'justified') return 'Justifiée';
     return 'Absence';
   }
 
