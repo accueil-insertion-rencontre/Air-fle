@@ -156,8 +156,8 @@ export class CourseCreateComponent implements OnInit {
             this.router.navigate(['/dashboard/courses']);
           });
         },
-        error: error => {
-          this.error = error?.error?.message || 'Une erreur est survenue lors de la modification';
+        error: () => {
+          this.error = 'Une erreur est survenue lors de la modification';
           this.loading = false;
         },
       });
@@ -169,8 +169,8 @@ export class CourseCreateComponent implements OnInit {
             this.router.navigate(['/dashboard/courses']);
           });
         },
-        error: error => {
-          this.error = error?.error?.message || 'Une erreur est survenue lors de la création';
+        error: () => {
+          this.error = 'Une erreur est survenue lors de la création';
           this.loading = false;
         },
       });
