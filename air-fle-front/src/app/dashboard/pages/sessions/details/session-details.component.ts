@@ -1,6 +1,6 @@
 import { AlertService, GroupService, SessionService } from '@core/services';
 
-import { Session } from '@core/models';
+import { Session, Group } from '@core/models';
 
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -19,7 +19,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } 
 export class SessionDetailsComponent implements OnInit {
   sessionId!: string | number;
   session: Session | null = null;
-  groups: any[] = [];
+  groups: Group[] = [];
   loading = true;
 
   // Propriétés pour la modal de création de groupe
@@ -28,7 +28,7 @@ export class SessionDetailsComponent implements OnInit {
   error = '';
   submitted = false;
   isCreateGroupOpen = false;
-  allGroups: any[] = [];
+  allGroups: Group[] = [];
   selectedExistingGroupId: string | number | null = null;
 
   constructor(
@@ -93,8 +93,8 @@ export class SessionDetailsComponent implements OnInit {
 
         this.loading = false;
       },
-      error: err => {
-        console.error('Erreur lors du chargement de la session', err);
+      error: (err: Error) => {
+        // console.error('Erreur lors du chargement de la session', err);
         this.loading = false;
       },
     });
@@ -135,18 +135,18 @@ export class SessionDetailsComponent implements OnInit {
   }
 
   // Obtient le nombre d'étudiants d'un groupe avec fallback
-  getStudentCount(group: any): number {
+  getStudentCount(group: Group): number {
     
     if (!group) return 0;
     
     // Essayer différentes propriétés pour les étudiants
-    const students = group.students || group.student || group.students_list || [];
+    const students = group.students || (group as Record<string, unknown>)['student'] || (group as Record<string, unknown>)['students_list'] || [];
     const count = Array.isArray(students) ? students.length : 0;
     return count;
   }
 
   // Obtient le nom du groupe avec fallback
-  getGroupLabel(group: any): string {
+  getGroupLabel(group: Group): string {
     
     if (!group) return 'Groupe sans nom';
     const result = group.group_label || group.label || 'Groupe sans nom';
@@ -155,13 +155,14 @@ export class SessionDetailsComponent implements OnInit {
   }
 
   // Obtient l'ID du groupe avec fallback
-  getGroupId(group: any): string | number {
+  getGroupId(group: unknown): string | number {
     
     if (!group) return '';
     
-    const groupId = group.group_id || group.id || group.group_uuid || group.uuid || '';
+    const g = group as Record<string, unknown>;
+    const groupId = g['group_id'] || g['id'] || g['group_uuid'] || g['uuid'] || '';
     
-    return groupId;
+    return groupId as string | number;
   }
 
   // Charge les détails complets de chaque groupe pour avoir les étudiants
@@ -183,7 +184,7 @@ export class SessionDetailsComponent implements OnInit {
             
           },
           error: (error) => {
-            console.error(`❌ SESSION-DETAILS - Erreur lors du chargement du groupe ${index}:`, error);
+            // console.error(`❌ SESSION-DETAILS - Erreur lors du chargement du groupe ${index}:`, error);
           }
         });
       }
@@ -199,7 +200,7 @@ export class SessionDetailsComponent implements OnInit {
     // Charger les groupes existants pour l'association
     this.groupService.getGroups().subscribe({
       next: (groups)=>{ this.allGroups = groups || []; },
-      error: (_)=>{ this.allGroups = []; }
+      error: ()=>{ this.allGroups = []; }
     });
   }
 
@@ -216,20 +217,20 @@ export class SessionDetailsComponent implements OnInit {
     // Préparer les données avec la session pré-sélectionnée (API format)
     const groupData = {
       group_label: this.groupForm.value.label,
-      session_uuid: this.session?.session_uuid || this.sessionId,
+      session_uuid: String(this.session?.session_uuid || this.sessionId),
     };
 
 
 
     this.groupService.createGroup(groupData).subscribe({
-      next: response => {
+      next: () => {
         this.groupLoading = false;
         this.isCreateGroupOpen = false;
 
         // Recharger la session pour récupérer les groupes mis à jour
         this.loadSession();
       },
-      error: error => {
+      error: (error: Error & { error?: { message?: string }; message?: string }) => {
         this.error =
           error?.error?.message ||
           error?.message ||
@@ -243,10 +244,10 @@ export class SessionDetailsComponent implements OnInit {
   attachExistingGroup(): void {
     if (!this.selectedExistingGroupId || !this.sessionId) return;
     // Ici, l’API idéale: PATCH /groups/:id { session_uuid }
-    const payload = { session_uuid: this.session?.session_uuid || this.sessionId } as any;
+    const payload = { session_uuid: this.session?.session_uuid || this.sessionId } as Partial<Group>;
     this.groupService.updateGroup(this.selectedExistingGroupId, payload).subscribe({
-      next: (_)=>{ this.isCreateGroupOpen = false; this.loadSession(); },
-      error: (err)=>{ this.error = err?.error?.message || 'Impossible d\'associer le groupe'; }
+      next: ()=>{ this.isCreateGroupOpen = false; this.loadSession(); },
+      error: (err: Error & { error?: { message?: string } })=>{ this.error = err?.error?.message || 'Impossible d\'associer le groupe'; }
     });
   }
 
@@ -273,8 +274,8 @@ export class SessionDetailsComponent implements OnInit {
                 this.router.navigate(['/dashboard/sessions']);
               });
             },
-            error: err => {
-              console.error('Erreur lors de la suppression de la session', err);
+            error: (err: Error) => {
+              // console.error('Erreur lors de la suppression de la session', err);
               this.alertService.error('Erreur lors de la suppression. Veuillez réessayer.');
             },
           });
