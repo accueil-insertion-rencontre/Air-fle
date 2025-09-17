@@ -336,7 +336,7 @@ export class CourseCalendarComponent implements OnInit {
         
         this.updateScheduleWithCourses();
       },
-      error: (error) => {
+      error: () => {
         // console.error('❌ === ERREUR loadCourses() ===');
         // console.error('❌ Erreur lors du chargement des cours:', error);
         // console.error('❌ Status code:', error.status);
@@ -693,14 +693,14 @@ export class CourseCalendarComponent implements OnInit {
           next: course => {
             resolve(course);
           },
-          error: (error) => {
+          error: () => {
             // console.error('❌ Erreur API lors de la création:', error);
             // console.error('❌ Détails de l\'erreur:', {
             //   status: error.status,
             //   message: error.message,
             //   error: error.error
             // });
-            reject(error);
+            reject(new Error('Erreur lors de la création du cours'));
           },
         });
       });
@@ -740,7 +740,7 @@ export class CourseCalendarComponent implements OnInit {
           this.error = 'Erreur lors de la création des cours';
         }
       })
-      .catch(error => {
+      .catch(() => {
         this.loading = false;
         // console.error('💥 Erreur globale:', error);
         this.error = 'Une erreur est survenue lors de la création des cours';
@@ -906,7 +906,7 @@ export class CourseCalendarComponent implements OnInit {
         this.loadExistingAbsences();
         this.isLoadingStudents = false;
       },
-      error: (error: Error) => {
+      error: () => {
         // console.error('Erreur lors du chargement des étudiants:', error);
         this.error = 'Impossible de charger les étudiants du groupe';
         this.isLoadingStudents = false;
@@ -953,7 +953,7 @@ export class CourseCalendarComponent implements OnInit {
           }
         });
       },
-      error: (error: Error) => {
+      error: () => {
         // console.error('Erreur lors du chargement des absences:', error);
       }
     });
@@ -1012,9 +1012,9 @@ export class CourseCalendarComponent implements OnInit {
         this.loadCourses();
         this.alertService.success('Cours supprimé avec succès');
       },
-      error: (error) => {
+      error: () => {
         this.deleteLoading = false;
-        this.deleteError = error?.error?.message || 'Erreur lors de la suppression du cours';
+        this.deleteError = 'Erreur lors de la suppression du cours';
       }
     });
   }
@@ -1265,7 +1265,7 @@ export class CourseCalendarComponent implements OnInit {
           this.alertService.success('Présences enregistrées avec succès !');
         }
       })
-      .catch(error => {
+      .catch(() => {
         this.isSaving = false;
         // console.error('Erreur lors de la sauvegarde:', error);
         this.alertService.error('Erreur lors de l\'enregistrement des présences');
