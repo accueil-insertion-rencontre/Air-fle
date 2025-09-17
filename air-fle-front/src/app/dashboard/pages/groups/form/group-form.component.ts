@@ -55,7 +55,7 @@ export class GroupFormComponent implements OnInit {
       next: data => {
         this.sessions = data;
       },
-      error: err => {
+      error: () => {
         // console.error('Erreur lors du chargement des sessions', err);
       },
     });
@@ -76,7 +76,7 @@ export class GroupFormComponent implements OnInit {
 
         this.loading = false;
       },
-      error: err => {
+      error: () => {
         // console.error('Erreur lors du chargement du groupe', err);
         this.loading = false;
       },
@@ -100,7 +100,7 @@ export class GroupFormComponent implements OnInit {
           this.loading = false;
           this.router.navigate(['/dashboard/groups']);
         },
-        error: err => {
+        error: () => {
           // console.error('Erreur lors de la mise à jour du groupe', err);
           this.loading = false;
         },
@@ -111,7 +111,7 @@ export class GroupFormComponent implements OnInit {
           this.loading = false;
           this.router.navigate(['/dashboard/groups']);
         },
-        error: err => {
+        error: () => {
           // console.error('Erreur lors de la création du groupe', err);
           this.loading = false;
         },
@@ -128,7 +128,7 @@ export class GroupFormComponent implements OnInit {
             s => s.student_uuid !== student.student_uuid
           );
         },
-        error: err => {
+        error: () => {
           // console.error("Erreur lors de l'ajout de l'étudiant au groupe", err);
         },
       });
@@ -144,7 +144,7 @@ export class GroupFormComponent implements OnInit {
             s => s.student_uuid !== student.student_uuid
           );
         },
-        error: err => {
+        error: () => {
           // console.error("Erreur lors du retrait de l'étudiant du groupe", err);
         },
       });
