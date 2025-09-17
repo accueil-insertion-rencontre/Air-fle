@@ -82,7 +82,7 @@ export class DocumentGenerationModalComponent {
         this.isLoading = false;
         this.closeModal.emit();
       },
-      error: (err) => {
+      error: () => {
         this.error = 'Erreur lors du téléchargement du certificat';
         this.isLoading = false;
         // console.error('Erreur:', err);
