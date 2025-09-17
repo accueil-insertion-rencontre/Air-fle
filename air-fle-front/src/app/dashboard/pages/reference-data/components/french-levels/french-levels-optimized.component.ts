@@ -100,9 +100,9 @@ export class FrenchLevelsOptimizedComponent {
       .getFrenchLevels()
       .pipe(
         takeUntilDestroyed(), // 🔥 Auto-unsubscribe moderne
-        catchError(error => {
+        catchError(() => {
           this.errorSubject.next('Erreur lors du chargement des niveaux');
-          console.error('Error loading french levels:');
+          // console.error('Error loading french levels:');
           return of([]); // 🔥 Fallback pour éviter les erreurs dans le template
         }),
         finalize(() => this.loadingSubject.next(false))
@@ -149,9 +149,9 @@ export class FrenchLevelsOptimizedComponent {
         .pipe(
           takeUntilDestroyed(),
           switchMap(() => this.referenceDataService.getFrenchLevels()), // 🔥 Rechargement automatique
-          catchError(error => {
+          catchError(() => {
             this.errorSubject.next('Erreur lors de la création');
-            console.error('Error creating french level:');
+            // console.error('Error creating french level:');
             return of(this.levelsSubject.value); // 🔥 Garder l'état précédent
           }),
           finalize(() => this.loadingSubject.next(false))
@@ -178,9 +178,9 @@ export class FrenchLevelsOptimizedComponent {
         .pipe(
           takeUntilDestroyed(),
           switchMap(() => this.referenceDataService.getFrenchLevels()),
-          catchError(error => {
+          catchError(() => {
             this.errorSubject.next('Erreur lors de la mise à jour');
-            console.error('Error updating french level:');
+            // console.error('Error updating french level:');
             return of(this.levelsSubject.value);
           }),
           finalize(() => this.loadingSubject.next(false))
@@ -204,9 +204,9 @@ export class FrenchLevelsOptimizedComponent {
         .pipe(
           takeUntilDestroyed(),
           switchMap(() => this.referenceDataService.getFrenchLevels()),
-          catchError(error => {
+          catchError(() => {
             this.errorSubject.next('Erreur lors de la suppression');
-            console.error('Error deleting french level:');
+            // console.error('Error deleting french level:');
             return of(this.levelsSubject.value);
           }),
           finalize(() => this.loadingSubject.next(false))
