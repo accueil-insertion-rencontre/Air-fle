@@ -87,7 +87,7 @@ export class SessionCalendarComponent implements OnInit {
         this.calendarOptions.events = this.events;
         this.loading = false;
       },
-      error: (err: Error) => {
+      error: () => {
         // console.error('Erreur lors du chargement des événements du calendrier', err);
         this.loading = false;
       },
@@ -150,7 +150,7 @@ export class SessionCalendarComponent implements OnInit {
       next: () => {
 
       },
-      error: (err: Error) => {
+      error: () => {
         // console.error("Erreur lors de la mise à jour de l'événement", err);
         dropInfo.revert();
       },
