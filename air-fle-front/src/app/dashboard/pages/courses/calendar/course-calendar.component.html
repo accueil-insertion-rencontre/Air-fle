@@ -54,12 +54,14 @@
             tabindex="0"
           >
             <!-- Cours pour ce jour -->
-            <div
+            <button
               *ngFor="let course of getCoursesForDay(day)"
               class="course-card"
               [style.background-color]="getCourseColorWithOpacity(course)"
               [style.--course-color]="getCourseColor(course)"
               (click)="onCourseClick($event, course)"
+              (keyup.enter)="onCourseClick($event, course)"
+              type="button"
             >
               <!-- Horaires du cours -->
               <div class="course-time">{{ course.course_start_hour || course.start_hour }} - {{ course.course_end_hour || course.end_hour }}</div>
@@ -81,7 +83,7 @@
               <div class="course-group" *ngIf="course.group && (course.group.group_label || course.group.label)">
                 {{ course.group.group_label || course.group.label }}
               </div>
-            </div>
+            </button>
 
             <!-- Zone d'ajout si pas de cours -->
             <div *ngIf="getCoursesForDay(day).length === 0" class="add-course-zone">
@@ -96,8 +98,8 @@
 </div>
 
 <!-- Modal de création de cours (custom) -->
-<div class="modal-overlay" *ngIf="showCreateModal" (click)="onCancelCourse()"></div>
-<div class="modal-content-custom" *ngIf="showCreateModal" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="onCancelCourse()" (keyup.escape)="onCancelCourse()" tabindex="0" role="button" aria-label="Fermer la modal"></div>
+<div class="modal-content-custom" *ngIf="showCreateModal" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="-1">
   <div class="modal-header-custom">
     <h5 class="modal-title">Nouveau cours</h5>
     <button class="icon-btn" (click)="onCancelCourse()" aria-label="Fermer">×</button>
@@ -410,8 +412,8 @@
 </div>
 
 <!-- Modal de détail de cours (custom) -->
-<div class="modal-overlay" *ngIf="showDetailsModal" (click)="onCloseDetailsModal()"></div>
-<div class="modal-content-custom xl" *ngIf="showDetailsModal" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="onCloseDetailsModal()" (keyup.escape)="onCloseDetailsModal()" tabindex="0" role="button" aria-label="Fermer la modal"></div>
+<div class="modal-content-custom xl" *ngIf="showDetailsModal" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="-1">
   <div class="modal-header-custom">
     <div>
       <h5 class="modal-title">Détails du cours</h5>
@@ -595,8 +597,8 @@
 </div>
 
 <!-- Modal d'édition de cours (custom) -->
-<div class="modal-overlay" *ngIf="showEditModal" (click)="onCancelEditCourse()"></div>
-<div class="modal-content-custom" *ngIf="showEditModal" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="showEditModal" (click)="onCancelEditCourse()" (keyup.escape)="onCancelEditCourse()" tabindex="0" role="button" aria-label="Fermer la modal"></div>
+<div class="modal-content-custom" *ngIf="showEditModal" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="-1">
   <div class="modal-header-custom">
     <h5 class="modal-title">Modifier le cours</h5>
     <button class="icon-btn" (click)="onCancelEditCourse()">×</button>
@@ -768,8 +770,8 @@
 </div>
 
 <!-- Modal de confirmation de suppression -->
-<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="cancelDeleteCourse()"></div>
-<div class="modal-content-custom delete" *ngIf="showDeleteConfirm" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="cancelDeleteCourse()" (keyup.escape)="cancelDeleteCourse()" tabindex="0" role="button" aria-label="Fermer la modal"></div>
+<div class="modal-content-custom delete" *ngIf="showDeleteConfirm" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="-1">
   <div class="modal-header-custom">
     <h5 class="modal-title">Confirmer la suppression</h5>
     <button class="icon-btn" (click)="cancelDeleteCourse()">×</button>
