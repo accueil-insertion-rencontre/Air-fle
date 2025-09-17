@@ -60,28 +60,40 @@ export class StudentService {
           student.student_uuid,
           [data.nationality_uuid],
         );
+      }
 
-        // Récupérer l'étudiant avec les nationalités mises à jour
-        const studentWithNationalities =
-          await this.studentRepository.findUnique({
-            where: { student_uuid: student.student_uuid },
-            include: this.studentRepository.getStandardIncludes(),
-          });
+      // Assigner les handicaps si fournis
+      if (data.disability_uuids && data.disability_uuids.length > 0) {
+        await this.studentRepository.updateStudentDisabilities(
+          student.student_uuid,
+          data.disability_uuids,
+        );
+      }
 
-        if (studentWithNationalities) {
-          this.recordStudentCreation(studentWithNationalities, createdByUserId);
+      // Si des nationalités ou des handicaps ont été assignés, récupérer l'étudiant avec toutes les relations
+      if (
+        data.nationality_uuid ||
+        (data.disability_uuids && data.disability_uuids.length > 0)
+      ) {
+        const studentWithRelations = await this.studentRepository.findUnique({
+          where: { student_uuid: student.student_uuid },
+          include: this.studentRepository.getStandardIncludes(),
+        });
+
+        if (studentWithRelations) {
+          this.recordStudentCreation(studentWithRelations, createdByUserId);
 
           this.logger.log(
             JSON.stringify({
               event: 'student_created',
-              uuid: studentWithNationalities.student_uuid,
-              email: studentWithNationalities.student_mail ?? null,
+              uuid: studentWithRelations.student_uuid,
+              email: studentWithRelations.student_mail ?? null,
               createdBy: createdByUserId ?? 'system',
               timestamp: new Date().toISOString(),
             }),
           );
 
-          return studentWithNationalities;
+          return studentWithRelations;
         }
       }
 
@@ -223,16 +235,102 @@ export class StudentService {
         throw new NotFoundException('Étudiant non trouvé');
       }
 
+      // ✅ 2.5. Transformer le DTO pour Prisma
+      // Créer une copie du DTO et extraire les UUIDs de relation
+      const {
+        gender_uuid,
+        french_level_uuid,
+        status_uuid,
+        financing_uuid,
+        orientation_uuid,
+        exit_reason_uuid,
+        nationality_uuid,
+        disability_uuids,
+        ...studentData
+      } = data;
+
+      // Construire l'objet Prisma avec les relations
+      const prismaData: Prisma.StudentUpdateInput = {
+        ...studentData,
+      };
+
+      // Ajouter les relations si elles sont fournies
+      if (gender_uuid) {
+        prismaData.gender = { connect: { gender_uuid } };
+      }
+
+      if (french_level_uuid) {
+        prismaData.frenchLevel = { connect: { french_level_uuid } };
+      }
+
+      if (status_uuid) {
+        prismaData.status = { connect: { status_uuid } };
+      }
+
+      if (financing_uuid) {
+        prismaData.financing = { connect: { financing_uuid } };
+      }
+
+      // Gérer orientation (peut être null)
+      if (orientation_uuid !== undefined) {
+        prismaData.orientation = orientation_uuid
+          ? { connect: { orientation_uuid } }
+          : { disconnect: true };
+      }
+
+      // Gérer exit_reason (peut être null)
+      if (exit_reason_uuid !== undefined) {
+        prismaData.exitReason = exit_reason_uuid
+          ? { connect: { exit_reason_uuid } }
+          : { disconnect: true };
+      }
+
       // ✅ 3. Mise à jour
       const updatedStudent = await this.studentRepository.update({
-        data,
+        data: prismaData,
         where,
         include: this.studentRepository.getStandardIncludes(),
       });
 
-      // ✅ 4. Tracking des changements
-      // Historique désactivé
+      // ✅ 3.5. Mise à jour des nationalités si fournie
+      if (nationality_uuid !== undefined) {
+        await this.studentRepository.updateStudentNationalities(
+          updatedStudent.student_uuid,
+          nationality_uuid ? [nationality_uuid] : [],
+        );
+      }
 
+      // ✅ 3.6. Mise à jour des handicaps si fournis
+      if (disability_uuids !== undefined) {
+        await this.studentRepository.updateStudentDisabilities(
+          updatedStudent.student_uuid,
+          disability_uuids || [],
+        );
+      }
+
+      // ✅ 3.7. Si des nationalités ou des handicaps ont été modifiés, récupérer l'étudiant avec toutes les relations
+      if (nationality_uuid !== undefined || disability_uuids !== undefined) {
+        const studentWithRelations = await this.studentRepository.findUnique({
+          where: { student_uuid: updatedStudent.student_uuid },
+          include: this.studentRepository.getStandardIncludes(),
+        });
+
+        if (studentWithRelations) {
+          // ✅ 4. Tracking des changements
+          this.logger.log(
+            JSON.stringify({
+              event: 'student_updated',
+              uuid: studentWithRelations.student_uuid,
+              updatedBy: updatedByUserId ?? 'system',
+              timestamp: new Date().toISOString(),
+            }),
+          );
+
+          return studentWithRelations;
+        }
+      }
+
+      // ✅ 4. Tracking des changements
       this.logger.log(
         JSON.stringify({
           event: 'student_updated',
