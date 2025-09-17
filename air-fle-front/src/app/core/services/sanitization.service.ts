@@ -120,45 +120,45 @@ export class SanitizationService {
     return cleanPhone.length > 20 ? '' : cleanPhone;
   }
 
-  sanitizeStudentFormData(formData: any): any {
-    if (!formData || typeof formData !== 'object') return {};
+  sanitizeStudentFormData(formData: Record<string, unknown>): Record<string, unknown> {
+    if (!formData || typeof formData !== 'object') return {} as Record<string, unknown>;
 
     const sanitized = { ...formData };
 
-    if (sanitized.firstname) {
-      sanitized.firstname = this.sanitizeName(sanitized.firstname);
+    if (sanitized['firstname']) {
+      sanitized['firstname'] = this.sanitizeName(sanitized['firstname'] as string);
     }
     
-    if (sanitized.lastname) {
-      sanitized.lastname = this.sanitizeName(sanitized.lastname);
+    if (sanitized['lastname']) {
+      sanitized['lastname'] = this.sanitizeName(sanitized['lastname'] as string);
     }
     
-    if (sanitized.placeOfBirth) {
-      sanitized.placeOfBirth = this.sanitizeText(sanitized.placeOfBirth);
+    if (sanitized['placeOfBirth']) {
+      sanitized['placeOfBirth'] = this.sanitizeText(sanitized['placeOfBirth'] as string);
     }
     
-    if (sanitized.email) {
-      sanitized.email = this.sanitizeEmail(sanitized.email);
+    if (sanitized['email']) {
+      sanitized['email'] = this.sanitizeEmail(sanitized['email'] as string);
     }
     
-    if (sanitized.phone) {
-      sanitized.phone = this.sanitizePhone(sanitized.phone);
+    if (sanitized['phone']) {
+      sanitized['phone'] = this.sanitizePhone(sanitized['phone'] as string);
     }
     
-    if (sanitized.commentaire) {
-      sanitized.commentaire = this.sanitizeHtml(sanitized.commentaire);
+    if (sanitized['commentaire']) {
+      sanitized['commentaire'] = this.sanitizeHtml(sanitized['commentaire'] as string);
     }
 
-    if (sanitized.address) {
-      sanitized.address = this.sanitizeText(sanitized.address);
+    if (sanitized['address']) {
+      sanitized['address'] = this.sanitizeText(sanitized['address'] as string);
     }
     
-    if (sanitized.city) {
-      sanitized.city = this.sanitizeText(sanitized.city);
+    if (sanitized['city']) {
+      sanitized['city'] = this.sanitizeText(sanitized['city'] as string);
     }
     
-    if (sanitized.postalCode) {
-      sanitized.postalCode = this.sanitizeText(sanitized.postalCode);
+    if (sanitized['postalCode']) {
+      sanitized['postalCode'] = this.sanitizeText(sanitized['postalCode'] as string);
     }
 
     return sanitized;
@@ -204,7 +204,7 @@ export class SanitizationService {
     return true;
   }
 
-  validateCriticalData(data: any, allowedFields: string[]): boolean {
+  validateCriticalData(data: Record<string, unknown>, allowedFields: string[]): boolean {
     if (!data || typeof data !== 'object') return false;
     
     const dataKeys = Object.keys(data);
@@ -221,7 +221,7 @@ export class SanitizationService {
     return true;
   }
 
-  secureLog(message: string, data?: any): void {
+  secureLog(message: string, data?: Record<string, unknown>): void {
     this.sanitizeText(message);
     if (data) {
       this.sanitizeText(JSON.stringify(data).substring(0, 200));
