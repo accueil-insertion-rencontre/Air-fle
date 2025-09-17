@@ -261,7 +261,7 @@ export class UserProfileComponent implements OnInit {
             // Ne pas inclure la date si elle ne peut pas être formatée correctement
           }
         }
-      } catch (error) {
+      } catch {
         // Ne pas inclure la date si elle ne peut pas être formatée correctement
       }
     }
