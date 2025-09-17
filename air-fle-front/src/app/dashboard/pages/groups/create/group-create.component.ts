@@ -77,7 +77,7 @@ export class GroupCreateComponent implements OnInit {
       next: sessions => {
         this.sessions = sessions;
       },
-      error: err => {
+      error: () => {
         // console.error('Erreur lors du chargement des sessions', err);
         this.error = 'Impossible de charger les sessions. Veuillez réessayer plus tard.';
       },
@@ -137,7 +137,7 @@ export class GroupCreateComponent implements OnInit {
                 this.alertService.success('Groupe modifié avec succès !');
                 this.router.navigate(['/dashboard/groups']);
               })
-              .catch(error => {
+              .catch(() => {
                 // console.error('Erreur lors de la synchronisation des étudiants:', error);
                 this.alertService.error(
                   'Groupe modifié mais erreur lors de la gestion des étudiants'
@@ -149,9 +149,8 @@ export class GroupCreateComponent implements OnInit {
             this.router.navigate(['/dashboard/groups']);
           }
         },
-        error: error => {
-          this.error =
-            error?.error?.message || error?.message || 'Erreur lors de la mise à jour du groupe';
+        error: () => {
+          this.error = 'Erreur lors de la mise à jour du groupe';
           this.loading = false;
         },
       });
@@ -176,10 +175,9 @@ export class GroupCreateComponent implements OnInit {
             this.router.navigate(['/dashboard/groups']);
           }
         },
-        error: error => {
+        error: () => {
           // console.error('❌ GROUP-CREATE - Erreur lors de la création:', error);
-          this.error =
-            error?.error?.message || error?.message || 'Erreur lors de la création du groupe';
+          this.error = 'Erreur lors de la création du groupe';
           this.loading = false;
         },
       });
@@ -225,7 +223,7 @@ export class GroupCreateComponent implements OnInit {
         this.filteredStudents = [...this.availableStudents];
         this.loadingStudents = false;
       },
-      error: error => {
+      error: () => {
         // console.error('Erreur lors du chargement des étudiants:', error);
         this.loadingStudents = false;
       },
@@ -365,7 +363,7 @@ export class GroupCreateComponent implements OnInit {
     try {
       await Promise.all(addPromises);
       this.alertService.success('Étudiants associés avec succès');
-    } catch (error) {
+    } catch {
       // console.error("Erreur lors de l'association des étudiants:", error);
       // Continue quand même vers la liste des groupes
       // L'utilisateur pourra ajouter les étudiants manuellement depuis les détails du groupe
@@ -411,17 +409,12 @@ export class GroupCreateComponent implements OnInit {
       return this.groupService.removeStudentFromGroup(groupId, studentId.toString()).toPromise();
     });
 
-    try {
-      if (addPromises.length > 0) {
-        await Promise.all(addPromises);
-      }
+    if (addPromises.length > 0) {
+      await Promise.all(addPromises);
+    }
 
-      if (removePromises.length > 0) {
-        await Promise.all(removePromises);
-      }
-    } catch (error) {
-      // console.error('Erreur lors de la synchronisation des étudiants:', error);
-      throw error;
+    if (removePromises.length > 0) {
+      await Promise.all(removePromises);
     }
   }
 }
