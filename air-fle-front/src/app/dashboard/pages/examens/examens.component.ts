@@ -131,9 +131,9 @@ export class ExamensComponent implements OnInit, OnDestroy {
         }
         this.updateFilteredExams();
       },
-      error: (error) => {
+      error: () => {
         // console.error('❌ ExamensComponent: Erreur lors du chargement des examens:', error);
-        this.error = 'Impossible de charger les examens. ' + error.message;
+        this.error = 'Impossible de charger les examens.';
         this.isLoading = false;
       }
     });
@@ -144,7 +144,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
         this.students = response.students || [];
         this.isLoading = false;
       },
-      error: (error) => {
+      error: () => {
         // console.error('❌ ExamensComponent: Erreur lors du chargement des étudiants:', error);
         this.alertService.error('Impossible de charger la liste des étudiants');
         this.isLoading = false;
@@ -155,7 +155,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
       next: (groups: Group[]) => {
         this.groups = groups;
       },
-      error: (error: Record<string, unknown>) => {
+      error: () => {
         // console.error('❌ ExamensComponent: Erreur lors du chargement des groupes:', error);
         this.alertService.error('Impossible de charger la liste des groupes');
       }
@@ -635,7 +635,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
           this.hideAddGroupForm();
           this.loadInitialData(); // Recharger les données
         },
-        error: (error) => {
+        error: () => {
           // console.error('❌ Erreur lors de l\'ajout du groupe:', error);
           this.alertService.error('Erreur lors de l\'ajout du groupe à l\'examen');
         }
@@ -687,7 +687,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
           this.hideEditStudentScoreForm();
           this.loadInitialData(); // Recharger les données
         },
-        error: (error) => {
+        error: () => {
           // console.error('❌ Erreur lors de la mise à jour de la note:', error);
           this.alertService.error('Erreur lors de la mise à jour de la note');
         }
@@ -808,7 +808,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
         this.totalStudentItems = result.total || result.totalItems || 0;
         this.totalStudentPages = Math.ceil(this.totalStudentItems / this.studentsPerPage);
       },
-      error: (error) => {
+      error: () => {
         // console.error('❌ Erreur lors du chargement des étudiants:', error);
         this.alertService.error('Erreur lors du chargement des étudiants');
         // Initialiser avec des valeurs par défaut en cas d'erreur
@@ -1003,7 +1003,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
       this.selectedStudents = [];
       this.hideAddStudentForm();
       this.loadInitialData();
-    }).catch(error => {
+    }).catch(() => {
       // console.error('❌ Erreur lors de l\'ajout des étudiants:', error);
       this.alertService.error('Erreur lors de l\'ajout des étudiants');
     });
@@ -1031,9 +1031,9 @@ export class ExamensComponent implements OnInit, OnDestroy {
           // Recharger les données de l'examen
           this.loadInitialData();
         },
-        error: (error) => {
+        error: () => {
           // console.error('❌ Erreur lors de l\'ajout de l\'étudiant:', error);
-          this.error = error.message;
+          this.error = 'Une erreur est survenue.';
         }
       });
     } else {
@@ -1065,9 +1065,9 @@ export class ExamensComponent implements OnInit, OnDestroy {
           this.alertService.success('Examen créé avec succès ! Vous pouvez maintenant ajouter des étudiants.');
           this.isCreating = false;
         },
-        error: (error) => {
+        error: () => {
           // console.error('❌ ExamensComponent: Erreur lors de la création:', error);
-          this.error = error.message;
+          this.error = 'Une erreur est survenue.';
           this.isCreating = false;
         }
       });
@@ -1104,9 +1104,9 @@ export class ExamensComponent implements OnInit, OnDestroy {
           this.alertService.success('Examen mis à jour avec succès !');
           this.isUpdating = false;
         },
-        error: (error) => {
+        error: () => {
           // console.error('❌ ExamensComponent: Erreur lors de la mise à jour:', error);
-          this.error = error.message;
+          this.error = 'Une erreur est survenue.';
           this.isUpdating = false;
         }
       });
@@ -1142,9 +1142,9 @@ export class ExamensComponent implements OnInit, OnDestroy {
           this.examToDelete = null;
           this.showDeleteConfirm = false;
         },
-        error: (error) => {
+        error: () => {
           // console.error('❌ ExamensComponent: Erreur lors de la suppression:', error);
-          this.alertService.error('Erreur lors de la suppression : ' + error.message);
+          this.alertService.error('Erreur lors de la suppression.');
           this.isDeleting = false;
           this.examToDelete = null;
           this.showDeleteConfirm = false;
