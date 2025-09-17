@@ -145,7 +145,8 @@ export class HomeOptimizedComponent implements OnInit, AfterViewInit {
           feather.replace();
         });
       }
-    } catch (error) {
+    } catch {
+      // Silently fail if feather is not available
     }
   }
 
@@ -200,7 +201,7 @@ export class HomeOptimizedComponent implements OnInit, AfterViewInit {
           this.closeCreateModal();
           // Le rechargement se fait automatiquement via l'observable todos$
         },
-        error: error => {
+        error: () => {
           this.todoErrorSubject.next('Erreur lors de la création de la tâche');
           this.isCreatingTodoSubject.next(false);
           // console.error('Create todo error:', error);
