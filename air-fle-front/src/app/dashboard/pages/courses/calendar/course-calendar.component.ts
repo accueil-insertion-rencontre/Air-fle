@@ -50,8 +50,13 @@ export class CourseCalendarComponent implements OnInit {
   loading = false;
   error = '';
   // Gestion des présences (copiée exactement de la modal d'absences)
-  students: any[] = [];
-  studentAttendances: any[] = [];
+  students: Student[] = [];
+  studentAttendances: {
+    student: Student;
+    status: 'present' | 'absent' | 'absent_justified' | 'late';
+    originalStatus?: 'present' | 'absent' | 'absent_justified' | 'late';
+    reason?: string;
+  }[] = [];
   isLoadingStudents = false;
   isSaving = false;
 
@@ -313,8 +318,6 @@ export class CourseCalendarComponent implements OnInit {
    * Charge TOUS les cours puis filtre côté frontend
    */
   loadCourses(): void {
-    // 🔧 DEBUG: Vérifier le token d'authentification
-    const token = this.authService.getToken();
 
     // 🌐 Appel API filtré par plage (semaine courante) pour éviter de charger tout
     const start = this.getStartOfWeek(this.currentWeek);
@@ -334,10 +337,10 @@ export class CourseCalendarComponent implements OnInit {
         this.updateScheduleWithCourses();
       },
       error: (error) => {
-        console.error('❌ === ERREUR loadCourses() ===');
-        console.error('❌ Erreur lors du chargement des cours:', error);
-        console.error('❌ Status code:', error.status);
-        console.error('❌ Message:', error.message);
+        // console.error('❌ === ERREUR loadCourses() ===');
+        // console.error('❌ Erreur lors du chargement des cours:', error);
+        // console.error('❌ Status code:', error.status);
+        // console.error('❌ Message:', error.message);
         this.error = 'Impossible de charger les cours';
         this.courses = [];
         this.clearCoursesCache();
@@ -643,13 +646,14 @@ export class CourseCalendarComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    const baseCourseData = {
+    const baseCourseData: Partial<Course> = {
       course_name: this.courseForm.value.course_name,
       course_start_hour: this.courseForm.value.course_start_hour,
       course_end_hour: this.courseForm.value.course_end_hour,
       group_uuid: this.courseForm.value.group_uuid,
       user_uuid: this.courseForm.value.user_uuid,
       course_color: this.courseForm.value.course_color,
+      course_day: this.selectedDate, // Ajouter course_day qui est requis
     };
 
     // Déterminer les dates à créer
@@ -662,8 +666,8 @@ export class CourseCalendarComponent implements OnInit {
   /**
    * Crée les cours pour toutes les dates sélectionnées
    */
-  private createCoursesForDates(baseCourseData: any, dates: string[]): void {
-    const courseCreationPromises: Promise<any>[] = [];
+  private createCoursesForDates(baseCourseData: Partial<Course>, dates: string[]): void {
+    const courseCreationPromises: Promise<Course>[] = [];
 
     dates.forEach(date => {
       // Convertir les heures en objets Date avec la date du cours
@@ -675,28 +679,27 @@ export class CourseCalendarComponent implements OnInit {
       const startDateLocal = new Date(startDate.getTime() - (startDate.getTimezoneOffset() * 60000));
       const endDateLocal = new Date(endDate.getTime() - (endDate.getTimezoneOffset() * 60000));
       
-      const courseData = {
+      const courseData: Partial<Course> = {
         ...baseCourseData,
         course_day: date,
-        course_start_hour: startDateLocal,
-        course_end_hour: endDateLocal,
+        course_start_hour: startDateLocal.toISOString(),
+        course_end_hour: endDateLocal.toISOString(),
       };
 
       // Debug: Afficher les données envoyées
-      console.log('🔍 Données envoyées au backend:', courseData);
 
-      const promise = new Promise((resolve, reject) => {
+      const promise = new Promise<Course>((resolve, reject) => {
         this.courseService.createCourse(courseData).subscribe({
           next: course => {
             resolve(course);
           },
           error: (error) => {
-            console.error('❌ Erreur API lors de la création:', error);
-            console.error('❌ Détails de l\'erreur:', {
-              status: error.status,
-              message: error.message,
-              error: error.error
-            });
+            // console.error('❌ Erreur API lors de la création:', error);
+            // console.error('❌ Détails de l\'erreur:', {
+            //   status: error.status,
+            //   message: error.message,
+            //   error: error.error
+            // });
             reject(error);
           },
         });
@@ -710,18 +713,18 @@ export class CourseCalendarComponent implements OnInit {
       .then(results => {
         this.loading = false;
 
-        const successful = results.filter(result => result.status === 'fulfilled');
         const failed = results.filter(result => result.status === 'rejected');
+        const successCount = results.filter(result => result.status === 'fulfilled').length;
 
         if (failed.length > 0) {
-          console.error('Failed to create some courses', failed);
+          // console.error('Failed to create some courses', failed);
         }
 
-        if (successful.length > 0) {
+        if (successCount > 0) {
           const message =
             dates.length === 1
               ? 'Cours créé avec succès !'
-              : `${successful.length} cours créés avec succès${failed.length > 0 ? `, ${failed.length} échecs` : ''} !`;
+              : `${successCount} cours créés avec succès${failed.length > 0 ? `, ${failed.length} échecs` : ''} !`;
 
           this.alertService.success(message);
           this.showCreateModal = false;
@@ -739,7 +742,7 @@ export class CourseCalendarComponent implements OnInit {
       })
       .catch(error => {
         this.loading = false;
-        console.error('💥 Erreur globale:', error);
+        // console.error('💥 Erreur globale:', error);
         this.error = 'Une erreur est survenue lors de la création des cours';
       });
   }
@@ -781,43 +784,12 @@ export class CourseCalendarComponent implements OnInit {
     this.error = '';
   }
 
-  /**
-   * Annule la création de cours
-   */
-  onCancelCourse(): void {
-    this.resetCourseForm();
-    this.error = '';
-    this.showCreateModal = false;
-  }
-
-  /**
-   * Vérifie si un champ est invalide
-   */
-  isFieldInvalid(fieldName: string): boolean {
-    const control = this.courseForm.get(fieldName);
-    return !!(control && control.invalid && (control.dirty || control.touched));
-  }
-
-  /**
-   * Formate la date pour l'affichage
-   */
-  getWeekDisplay(): string {
-    const startOfWeek = this.getStartOfWeek(this.currentWeek);
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-    return `${startOfWeek.toLocaleDateString('fr-FR')} - ${endOfWeek.toLocaleDateString('fr-FR')}`;
-  }
-
   // ========== MÉTHODES POUR LE MODAL DE DÉTAIL DE COURS ==========
 
   /**
-   * Gestion du clic sur un cours (ouvre le modal de détail)
+   * Sélectionne un cours pour afficher ses détails
    */
-  onCourseClick(event: Event, course: Course): void {
-    // Empêcher la propagation vers le clic sur le jour
-    event.stopPropagation();
-
+  selectCourse(course: Course): void {
     this.selectedCourse = this.enrichCourseData(course);
     this.loadCourseStudents();
 
@@ -851,16 +823,17 @@ export class CourseCalendarComponent implements OnInit {
     let assignedUserUuid = course.user?.user_uuid || course.user_uuid; // Valeur par défaut
 
     // Si le cours a un array users (structure API), extraire le premier professeur
+    const courseWithUsers = course as Course & { users?: UserDisplayInfo[] };
     if (
-      (course as any).users &&
-      Array.isArray((course as any).users) &&
-      (course as any).users.length > 0
+      courseWithUsers.users &&
+      Array.isArray(courseWithUsers.users) &&
+      courseWithUsers.users.length > 0
     ) {
-      const firstUser = (course as any).users[0];
+      const firstUser = courseWithUsers.users[0];
       if (firstUser && firstUser.user_uuid) {
         assignedUserUuid = firstUser.user_uuid;
-      } else if (firstUser && firstUser.user && firstUser.user.user_uuid) {
-        assignedUserUuid = firstUser.user.user_uuid;
+      } else if (firstUser && (firstUser as unknown as Record<string, unknown>)['user'] && ((firstUser as unknown as Record<string, unknown>)['user'] as Record<string, unknown>)['user_uuid']) {
+        assignedUserUuid = ((firstUser as unknown as Record<string, unknown>)['user'] as Record<string, unknown>)['user_uuid'] as string;
       }
     }
 
@@ -919,22 +892,22 @@ export class CourseCalendarComponent implements OnInit {
 
     // Charger le groupe pour récupérer les étudiants
     this.groupService.getGroupById(this.selectedCourse.group_uuid).subscribe({
-      next: (group: any) => {
+      next: (group: Group) => {
         this.students = group.students || [];
         this.courseStudents = this.students; // Garder la compatibilité
         
         // Mettre à jour les informations du groupe dans le cours
         this.selectedCourse!.group = {
-          group_uuid: group.group_uuid || group.group_id,
-          group_label: group.group_name || group.label || group.name
+          group_uuid: group.group_uuid || String(group.group_id),
+          group_label: (group as unknown as Record<string, unknown>)['group_name'] as string || group.label || (group as unknown as Record<string, unknown>)['name'] as string
         };
         
         this.initializeAttendances();
         this.loadExistingAbsences();
         this.isLoadingStudents = false;
       },
-      error: (error: any) => {
-        console.error('Erreur lors du chargement des étudiants:', error);
+      error: (error: Error) => {
+        // console.error('Erreur lors du chargement des étudiants:', error);
         this.error = 'Impossible de charger les étudiants du groupe';
         this.isLoadingStudents = false;
       }
@@ -960,8 +933,7 @@ export class CourseCalendarComponent implements OnInit {
 
     // Charger les absences existantes pour ce cours
     this.attendanceService.getCourseAbsences(this.selectedCourse.course_uuid).subscribe({
-      next: (absences: any[]) => {
-        console.log('🔍 Absences existantes:', absences);
+      next: (absences) => {
         
         // Pour chaque absence trouvée, marquer l'étudiant selon le type d'absence
         absences.forEach(absence => {
@@ -981,8 +953,8 @@ export class CourseCalendarComponent implements OnInit {
           }
         });
       },
-      error: (error: any) => {
-        console.error('Erreur lors du chargement des absences:', error);
+      error: (error: Error) => {
+        // console.error('Erreur lors du chargement des absences:', error);
       }
     });
   }
@@ -1038,6 +1010,7 @@ export class CourseCalendarComponent implements OnInit {
         this.showDeleteConfirm = false;
         this.onCloseDetailsModal();
         this.loadCourses();
+        this.alertService.success('Cours supprimé avec succès');
       },
       error: (error) => {
         this.deleteLoading = false;
@@ -1079,9 +1052,9 @@ export class CourseCalendarComponent implements OnInit {
     }
   }
 
-  getStudentStatus(studentUuid: string): 'present' | 'absent' | 'absent_justified' | 'unknown' {
+  getStudentStatus(studentUuid: string): 'present' | 'absent' | 'absent_justified' | 'late' | 'unknown' {
     const attendance = this.studentAttendances.find(a => a.student.student_uuid === studentUuid);
-    return attendance?.status || 'unknown';
+    return (attendance?.status || 'unknown') as 'present' | 'absent' | 'absent_justified' | 'late' | 'unknown';
   }
 
   markStudentPresent(student: Student): void {
@@ -1205,7 +1178,7 @@ export class CourseCalendarComponent implements OnInit {
         this.onCancelEditCourse();
               this.editLoading = false;
       },
-      error: (error) => {
+      error: () => {
         this.editError = 'Erreur lors de la modification du cours';
               this.editLoading = false;
       }
@@ -1283,11 +1256,10 @@ export class CourseCalendarComponent implements OnInit {
       .then(results => {
         this.isSaving = false;
 
-        const successful = results.filter(result => result.status === 'fulfilled');
         const failed = results.filter(result => result.status === 'rejected');
 
         if (failed.length > 0) {
-          console.error('Erreurs lors de la sauvegarde:', failed);
+          // console.error('Erreurs lors de la sauvegarde:', failed);
           this.alertService.error(`${failed.length} absence(s) n'ont pas pu être enregistrées`);
         } else {
           this.alertService.success('Présences enregistrées avec succès !');
@@ -1295,7 +1267,7 @@ export class CourseCalendarComponent implements OnInit {
       })
       .catch(error => {
         this.isSaving = false;
-        console.error('Erreur lors de la sauvegarde:', error);
+        // console.error('Erreur lors de la sauvegarde:', error);
         this.alertService.error('Erreur lors de l\'enregistrement des présences');
       });
   }
@@ -1336,5 +1308,38 @@ export class CourseCalendarComponent implements OnInit {
   private clearCoursesCache(): void {
     this.coursesCache.clear();
     this.lastCoursesUpdate = Date.now();
+  }
+
+  // Méthodes manquantes pour le template
+  getWeekDisplay(): string {
+    const startOfWeek = this.getStartOfWeek(this.currentWeek);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+
+    const monthStart = startOfWeek.toLocaleDateString('fr-FR', { month: 'short' });
+    const monthEnd = endOfWeek.toLocaleDateString('fr-FR', { month: 'short' });
+    const year = startOfWeek.getFullYear();
+
+    if (monthStart === monthEnd) {
+      return `${startOfWeek.getDate()}-${endOfWeek.getDate()} ${monthStart} ${year}`;
+    } else {
+      return `${startOfWeek.getDate()} ${monthStart} - ${endOfWeek.getDate()} ${monthEnd} ${year}`;
+    }
+  }
+
+  onCourseClick(event: Event, course: Course): void {
+    event.preventDefault();
+    this.selectCourse(course);
+  }
+
+  onCancelCourse(): void {
+    this.showCreateModal = false;
+    this.showDetailsModal = false;
+    this.courseForm.reset();
+  }
+
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.courseForm.get(fieldName);
+    return !!(field && field.invalid && (field.dirty || field.touched));
   }
 }
