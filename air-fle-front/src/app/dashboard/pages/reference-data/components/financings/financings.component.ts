@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -48,7 +49,7 @@ export class FinancingsComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        console.error('Erreur lors du chargement des financements:');
+        // console.error('Erreur lors du chargement des financements:');
         this.error = 'Erreur lors du chargement des financements';
         this.isLoading = false;
       },
@@ -90,14 +91,14 @@ export class FinancingsComponent implements OnInit {
 
   createFinancing(): void {
     if (this.createForm.invalid) return;
-    const financingData: CreateFinancingDto = { type: this.createForm.value.type };
+    const financingData: CreateFinancingDto = { financing_type: this.createForm.value.type };
     this.referenceDataService.createFinancing(financingData).subscribe({
       next: (newFinancing: Financing) => {
         this.financings.push(newFinancing);
         this.closeCreateModal();
       },
       error: () => {
-        console.error('Erreur lors de la création du financement:');
+        // console.error('Erreur lors de la création du financement:');
         this.error = 'Erreur lors de la création du financement';
       },
     });
@@ -105,7 +106,7 @@ export class FinancingsComponent implements OnInit {
 
   updateFinancing(): void {
     if (this.editForm.invalid || !this.selectedFinancing) return;
-    const financingData: CreateFinancingDto = { type: this.editForm.value.type };
+    const financingData: CreateFinancingDto = { financing_type: this.editForm.value.type };
     this.referenceDataService.updateFinancing(this.selectedFinancing.id, financingData).subscribe({
       next: (updatedFinancing: Financing) => {
         const index = this.financings.findIndex(f => f.id === updatedFinancing.id);
@@ -115,7 +116,7 @@ export class FinancingsComponent implements OnInit {
         this.closeEditModal();
       },
       error: () => {
-        console.error('Erreur lors de la mise à jour du financement:');
+        // console.error('Erreur lors de la mise à jour du financement:');
         this.error = 'Erreur lors de la mise à jour du financement';
       },
     });
@@ -127,9 +128,9 @@ export class FinancingsComponent implements OnInit {
         next: () => {
           this.financings = this.financings.filter(f => f.id !== financing.id);
         },
-        error: () => {
-          console.error('Erreur lors de la suppression du financement:');
-          this.error = 'Erreur lors de la suppression du financement';
+        error: (error: HttpErrorResponse) => {
+          // console.error('Erreur lors de la suppression du financement:', error);
+          this.error = error?.error?.message || error?.message || 'Erreur lors de la suppression du financement';
         },
       });
     }
