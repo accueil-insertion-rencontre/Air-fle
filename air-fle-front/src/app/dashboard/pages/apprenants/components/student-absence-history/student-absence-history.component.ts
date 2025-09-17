@@ -122,7 +122,7 @@ export class StudentAbsenceHistoryComponent implements OnInit {
         this.calculateAbsenceStats();
         this.alertService.success('Absence supprimée avec succès');
       },
-      error: (error: Record<string, unknown>) => {
+      error: () => {
         // console.error('Erreur lors de la suppression:', error);
         this.alertService.error("Erreur lors de la suppression de l'absence");
       },
