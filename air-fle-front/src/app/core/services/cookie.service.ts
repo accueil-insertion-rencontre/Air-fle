@@ -57,9 +57,7 @@ export class CookieService {
     // Note: httpOnly ne peut pas être défini depuis JavaScript côté client
     // Il doit être défini côté serveur
     if (options.httpOnly) {
-      console.warn(
-        'httpOnly ne peut pas être défini depuis JavaScript. Cette option doit être configurée côté serveur.'
-      );
+      // httpOnly ne peut pas être défini depuis JavaScript. Cette option doit être configurée côté serveur.
     }
 
     document.cookie = cookieString;
@@ -88,13 +86,13 @@ export class CookieService {
    * Supprime un cookie
    */
   delete(name: string, path: string = '/', domain?: string): void {
-    const options: any = {
+    const options: Record<string, unknown> = {
       expires: new Date(0),
       path: path,
     };
 
     if (domain) {
-      options.domain = domain;
+      options['domain'] = domain;
     }
 
     this.set(name, '', options);
