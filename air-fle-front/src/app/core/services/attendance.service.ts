@@ -240,7 +240,7 @@ export class AttendanceService {
 
         return courseAbsences;
       }),
-      catchError(error => {
+      catchError(() => {
         // console.error('[getCourseAbsences] Erreur lors de la récupération des absences:', error);
         return of([]);
       })
