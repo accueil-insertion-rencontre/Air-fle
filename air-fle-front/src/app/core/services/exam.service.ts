@@ -243,7 +243,7 @@ export class ExamService {
     const url = `${this.apiUrl}/group/${examUuid}/${groupUuid}`;
     
     return this.http.post<{data: {added: number; students: ExamStudentDto[]}} | {added: number; students: ExamStudentDto[]}>(url, {}, { params }).pipe(
-      tap((response) => {
+      tap(() => {
       }),
       map((response) => {
         if (response && 'data' in response) {
