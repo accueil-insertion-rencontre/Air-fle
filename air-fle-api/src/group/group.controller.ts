@@ -2,7 +2,7 @@ import {
   Controller,
   Get,
   Post,
-  Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -87,7 +87,7 @@ export class GroupController {
     return this.groupService.findById(id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @Roles('admin', 'teacher')
   @ApiOperation({ summary: 'Mettre à jour un groupe' })
   @ApiResponse({ status: 200, description: 'Groupe mis à jour avec succès' })
