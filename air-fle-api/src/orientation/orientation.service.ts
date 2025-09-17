@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, Orientation } from '@prisma/client';
 
@@ -51,15 +56,38 @@ export class OrientationService {
   }
 
   async delete(id: string): Promise<Orientation> {
-    const orientation = await this.prisma.orientation.delete({
+    // Vérifier d'abord si l'orientation existe et ses dépendances
+    const orientation = await this.prisma.orientation.findUnique({
+      where: { orientation_uuid: id },
+      include: {
+        students: {
+          select: { student_uuid: true },
+        },
+      },
+    });
+
+    if (!orientation) {
+      throw new NotFoundException('Orientation non trouvée');
+    }
+
+    // Vérifier s'il est utilisé par des étudiants
+    if (orientation.students && orientation.students.length > 0) {
+      throw new BadRequestException(
+        `Cette orientation ne peut pas être supprimée car elle est attribuée à ${orientation.students.length} étudiant(s)`,
+      );
+    }
+
+    // Si tout est OK, supprimer l'orientation
+    const deletedOrientation = await this.prisma.orientation.delete({
       where: { orientation_uuid: id },
     });
+
     this.logger.log(
       JSON.stringify({
         event: 'orientation_deleted',
-        orientation_uuid: orientation.orientation_uuid,
+        orientation_uuid: deletedOrientation.orientation_uuid,
       }),
     );
-    return orientation;
+    return deletedOrientation;
   }
 }
