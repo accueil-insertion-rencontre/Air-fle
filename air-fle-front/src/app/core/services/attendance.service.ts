@@ -145,14 +145,14 @@ export class AttendanceService {
   /**
    * Récupère toutes les absences
    */
-  getAllAbsences(): Observable<{ data: Absence[]; meta: any }> {
-    return this.http.get<any>(this.absenceApiUrl).pipe(
-      map((response: Paginated<Absence> | ApiListResponse<Absence> | any) => {
-        if (response && Array.isArray(response.data) && response.meta) return { data: response.data, meta: response.meta };
-        if (response && response.data && Array.isArray(response.data.data)) return { data: response.data.data, meta: response.data.meta || {} };
-        if (response && Array.isArray(response.data)) return { data: response.data, meta: {} };
-        if (Array.isArray(response)) return { data: response as Absence[], meta: {} };
-        return { data: [], meta: {} };
+  getAllAbsences(): Observable<{ data: Absence[]; meta: Record<string, unknown> | undefined }> {
+    return this.http.get<Paginated<Absence> | ApiListResponse<Absence> | Absence[]>(this.absenceApiUrl).pipe(
+      map((response) => {
+        if ('data' in response && 'meta' in response && Array.isArray(response.data)) return { data: response.data, meta: response.meta };
+        if ('data' in response && response.data && 'data' in response.data && Array.isArray(response.data.data)) return { data: response.data.data, meta: (response.data as Record<string, unknown>)['meta'] as Record<string, unknown> || {} as Record<string, unknown> };
+        if ('data' in response && Array.isArray(response.data)) return { data: response.data, meta: {} as Record<string, unknown> };
+        if (Array.isArray(response)) return { data: response as Absence[], meta: {} as Record<string, unknown> };
+        return { data: [], meta: {} as Record<string, unknown> };
       })
     );
   }
@@ -189,32 +189,32 @@ export class AttendanceService {
    * Récupère les absences d'un étudiant spécifique
    */
   getStudentAbsences(studentId: string): Observable<Absence[]> {
-    const normalize = (response: any): Absence[] => {
-      let data: any[] = [];
-      if (response && Array.isArray(response.data)) {
+    const normalize = (response: Paginated<Absence> | ApiListResponse<Absence> | Absence[]): Absence[] => {
+      let data: Absence[] = [];
+      if ('data' in response && Array.isArray(response.data)) {
         data = response.data;
-      } else if (response && response.data && Array.isArray(response.data.data)) {
+      } else if ('data' in response && response.data && 'data' in response.data && Array.isArray(response.data.data)) {
         data = response.data.data;
       } else if (Array.isArray(response)) {
         data = response;
       } else {
         data = [];
       }
-      return (data as any[]).map((a: any) => {
-        const c = a.course || {};
+      return data.map((a) => {
+        const c = (a.course || {}) as Record<string, unknown>;
         const normalizedCourse = {
-          course_id: c.course_uuid || c.course_id || c.id,
-          intitule: c.course_name || c.intitule || c.title,
-          day: c.course_day || c.day,
-          start_hour: c.course_start_hour || c.start_hour,
-          end_hour: c.course_end_hour || c.end_hour,
+          course_id: c['course_uuid'] || c['course_id'] || c['id'],
+          intitule: c['course_name'] || c['intitule'] || c['title'],
+          day: c['course_day'] || c['day'],
+          start_hour: c['course_start_hour'] || c['start_hour'],
+          end_hour: c['course_end_hour'] || c['end_hour'],
         };
         return { ...a, course: normalizedCourse } as Absence;
       });
     };
 
     return this.http
-      .get<any>(`${this.absenceApiUrl}?student_uuid=${studentId}`)
+      .get<Paginated<Absence> | ApiListResponse<Absence> | Absence[]>(`${this.absenceApiUrl}?student_uuid=${studentId}`)
       .pipe(map(normalize), catchError(() => of([] as Absence[])));
   }
 
@@ -241,7 +241,7 @@ export class AttendanceService {
         return courseAbsences;
       }),
       catchError(error => {
-        console.error('[getCourseAbsences] Erreur lors de la récupération des absences:', error);
+        // console.error('[getCourseAbsences] Erreur lors de la récupération des absences:', error);
         return of([]);
       })
     );
