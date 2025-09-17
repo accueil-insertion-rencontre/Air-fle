@@ -9,6 +9,7 @@ import {
   StudentFilters,
   StudentListConfig,
 } from '@core/models';
+import { Status, Nationality, FrenchLevel, Financing, Orientation, Group, Student } from '@core/models';
 import { BreakpointObserver } from '@angular/cdk/layout';
 
 @Component({
@@ -19,7 +20,7 @@ import { BreakpointObserver } from '@angular/cdk/layout';
   styleUrls: ['./student-list.component.scss'],
 })
 export class StudentListComponent implements OnInit {
-  students: any[] = []; // Utilisation de any[] temporairement pour gérer les différences de structure
+  students: Student[] = [];
   loading = false;
   error: string | null = null;
   currentPage = 1;
@@ -41,12 +42,12 @@ export class StudentListComponent implements OnInit {
   };
 
   // Données de référence pour le mapping
-  statuses: any[] = [];
-  nationalities: any[] = [];
-  frenchLevels: any[] = [];
-  groups: any[] = [];
-  financings: any[] = [];
-  orientations: any[] = [];
+  statuses: Status[] = [];
+  nationalities: Nationality[] = [];
+  frenchLevels: FrenchLevel[] = [];
+  groups: Group[] = [];
+  financings: Financing[] = [];
+  orientations: Orientation[] = [];
 
   // Remplacer l'observable par une méthode synchrone fiable
   isReallyMobile(): boolean {
@@ -98,7 +99,7 @@ export class StudentListComponent implements OnInit {
     this.error = null;
 
     // Ne garder que les filtres renseignés
-    const nonEmptyFilters: any = {};
+    const nonEmptyFilters: Record<string, unknown> = {};
     Object.entries(this.filters).forEach(([key, value]) => {
       if (value && value !== '') {
         nonEmptyFilters[key] = value;
@@ -126,26 +127,26 @@ export class StudentListComponent implements OnInit {
     });
   }
 
-  getStudentInitials(student: any): string {
+  getStudentInitials(student: Student): string {
     // Utiliser les vraies propriétés de l'API Prisma
     const firstName = student.student_firstname || '';
     const lastName = student.student_lastname || '';
     return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
   }
 
-  getStudentName(student: any): string {
+  getStudentName(student: Student): string {
     // Utiliser les vraies propriétés de l'API Prisma
     const firstName = student.student_firstname || '';
     const lastName = student.student_lastname || '';
     return `${firstName} ${lastName}`.trim();
   }
 
-  getStudentEmail(student: any): string {
+  getStudentEmail(student: Student): string {
     // Utiliser la vraie propriété de l'API Prisma
     return student.student_mail || 'Non renseigné';
   }
 
-  getStudentLevel(student: any): string {
+  getStudentLevel(student: Student): string {
     // Utiliser l'objet frenchLevel directement de l'API Prisma
     if (student.frenchLevel) {
       return `${student.frenchLevel.french_level_code} - ${student.frenchLevel.french_level_description}`;
@@ -153,7 +154,7 @@ export class StudentListComponent implements OnInit {
     return 'Non défini';
   }
 
-  getStudentStatus(student: any): string {
+  getStudentStatus(student: Student): string {
     // Utiliser l'objet status directement de l'API Prisma
     if (student.status) {
       return student.status.status_label;
@@ -161,16 +162,26 @@ export class StudentListComponent implements OnInit {
     return 'Non défini';
   }
 
-  getStudentNationality(student: any): string {
+  getStudentNationality(student: Student): string {
     try {
-      // Vérifier d'abord le tableau nationalities
+      // Vérifier d'abord le tableau nationalities (relation many-to-many via StudentNationality)
       if (student.nationalities && student.nationalities.length > 0) {
-        const firstNationality = student.nationalities[0] as any;
+        const firstNationality = student.nationalities[0];
         
-        // Essayer d'accéder à nationality.nationality_label
+        // La structure est : student.nationalities[0].nationality.nationality_label
         if (firstNationality.nationality && firstNationality.nationality.nationality_label) {
           return firstNationality.nationality.nationality_label;
         }
+        
+        // Fallback si la structure est directe
+        if (firstNationality.nationality_label) {
+          return firstNationality.nationality_label;
+        }
+      }
+      
+      // Vérifier la relation directe nationality (si elle existe)
+      if (student.nationality && student.nationality.nationality_label) {
+        return student.nationality.nationality_label;
       }
     } catch (error) {
       // Erreur silencieuse en production
@@ -267,7 +278,7 @@ export class StudentListComponent implements OnInit {
           this.loadStudents();
         },
         error: () => {
-          console.error('Erreur lors de la suppression');
+          // console.error('Erreur lors de la suppression');
           alert("Erreur lors de la suppression de l'étudiant");
         },
       });
