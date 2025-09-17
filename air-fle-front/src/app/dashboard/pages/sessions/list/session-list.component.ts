@@ -14,9 +14,6 @@ import {
   AbstractControl,
 } from '@angular/forms';
 
-// Déclaration de jQuery qui est maintenant disponible globalement
-declare let $: any;
-declare let bootstrap: any;
 
 @Component({
   selector: 'app-session-list',
@@ -31,7 +28,7 @@ export class SessionListComponent implements OnInit {
   sessionForm: FormGroup;
   submitted = false;
   error = '';
-  modal: any;
+  modal: { show: () => void; hide: () => void } | null = null;
 
   constructor(
     private sessionService: SessionService,
@@ -69,7 +66,7 @@ export class SessionListComponent implements OnInit {
   }
 
   // Formate une date pour l'affichage
-  formatDate(date: any): string {
+  formatDate(date: string | Date | null | undefined): string {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('fr-FR');
   }
@@ -99,15 +96,15 @@ export class SessionListComponent implements OnInit {
     
 
     this.sessionService.createSession(formData).subscribe({
-      next: response => {
+      next: () => {
 
-        this.modal.hide();
+        if (this.modal) this.modal.hide();
         this.resetForm();
         this.loadSessions();
         this.loading = false;
       },
-      error: error => {
-        console.error('Erreur complète:', error);
+      error: (error: Error & { error?: { message?: string }; message?: string }) => {
+        // console.error('Erreur complète:', error);
         this.error = error?.error?.message || error?.message || 'Une erreur est survenue';
         this.loading = false;
       },
@@ -121,8 +118,8 @@ export class SessionListComponent implements OnInit {
         this.sessions = sessions;
         this.loading = false;
       },
-      error: err => {
-        console.error('Erreur lors du chargement des sessions', err);
+      error: (err: Error) => {
+        // console.error('Erreur lors du chargement des sessions', err);
         this.loading = false;
       },
     });
@@ -145,10 +142,10 @@ export class SessionListComponent implements OnInit {
       finished_at: futureDateIso,
     });
 
-    this.modal.show();
+    if (this.modal) this.modal.show();
   }
 
-  dateFormatter(value: any): string {
+  dateFormatter(value: string | Date | null | undefined): string {
     if (!value) return '';
     const date = new Date(value);
     return date.toLocaleDateString('fr-FR');
@@ -199,8 +196,9 @@ export class SessionListComponent implements OnInit {
   }
 
   // Méthode appelée quand l'utilisateur quitte le champ de date
-  onDateInputBlur(event: any, fieldName: string): void {
-    const frenchDate = event.target.value;
+  onDateInputBlur(event: Event, fieldName: string): void {
+    const target = event.target as HTMLInputElement;
+    const frenchDate = target.value;
     if (frenchDate) {
       const isoDate = this.parseAndConvertFrenchDate(frenchDate);
       if (isoDate) {
@@ -210,7 +208,7 @@ export class SessionListComponent implements OnInit {
         // Si la date n'est pas valide, afficher un message d'erreur
         alert('Format de date invalide. Veuillez utiliser le format JJ/MM/AAAA');
         // Remettre la valeur précédente
-        event.target.value = this.getFormattedDate(this.sessionForm.get(fieldName)?.value);
+        target.value = this.getFormattedDate(this.sessionForm.get(fieldName)?.value);
       }
     }
   }
@@ -267,7 +265,7 @@ export class SessionListComponent implements OnInit {
               this.alertService.success('Session supprimée avec succès !');
             },
             error: err => {
-              console.error('Erreur lors de la suppression de la session', err);
+              // console.error('Erreur lors de la suppression de la session', err);
               this.alertService.error('Erreur lors de la suppression. Veuillez réessayer.');
             },
           });
