@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -54,7 +55,7 @@ export class ExitReasonsComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        console.error('Erreur lors du chargement des raisons de sortie:');
+        // console.error('Erreur lors du chargement des raisons de sortie:');
         this.error = 'Erreur lors du chargement des raisons de sortie';
         this.isLoading = false;
       },
@@ -112,9 +113,9 @@ export class ExitReasonsComponent implements OnInit {
         this.exitReasons.push(newReason);
         this.closeCreateModal();
       },
-      error: () => {
-        console.error('Erreur lors de la création de la raison de sortie:');
-        this.error = 'Erreur lors de la création de la raison de sortie';
+      error: (error: HttpErrorResponse) => {
+        // console.error('Erreur lors de la création de la raison de sortie:', error);
+        this.error = error?.error?.message || error?.message || 'Erreur lors de la création de la raison de sortie';
       },
     });
   }
@@ -134,9 +135,9 @@ export class ExitReasonsComponent implements OnInit {
         }
         this.closeEditModal();
       },
-      error: () => {
-        console.error('Erreur lors de la mise à jour de la raison de sortie:');
-        this.error = 'Erreur lors de la mise à jour de la raison de sortie';
+      error: (error: HttpErrorResponse) => {
+        // console.error('Erreur lors de la mise à jour de la raison de sortie:', error);
+        this.error = error?.error?.message || error?.message || 'Erreur lors de la mise à jour de la raison de sortie';
       },
     });
   }
@@ -147,9 +148,9 @@ export class ExitReasonsComponent implements OnInit {
         next: () => {
           this.exitReasons = this.exitReasons.filter(r => r.id !== reason.id);
         },
-        error: () => {
-          console.error('Erreur lors de la suppression de la raison de sortie:');
-          this.error = 'Erreur lors de la suppression de la raison de sortie';
+        error: (error: HttpErrorResponse) => {
+          // console.error('Erreur lors de la suppression de la raison de sortie:', error);
+          this.error = error?.error?.message || error?.message || 'Erreur lors de la suppression de la raison de sortie';
         },
       });
     }
