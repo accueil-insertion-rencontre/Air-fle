@@ -8,7 +8,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - api-dev
       - air-fle-front-container
@@ -30,6 +30,7 @@ services:
       - ./air-fle-front/public:/app/public
       - ./air-fle-front/angular.json:/app/angular.json
       - ./air-fle-front/proxy.conf.json:/app/proxy.conf.json
+      - ./air-fle-front/proxy.docker.conf.json:/app/proxy.docker.conf.json
       - ./air-fle-front/tsconfig.json:/app/tsconfig.json
       - ./air-fle-front/package.json:/app/package.json
       - ./air-fle-front/package-lock.json:/app/package-lock.json
