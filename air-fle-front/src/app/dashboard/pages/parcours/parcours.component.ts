@@ -119,7 +119,7 @@ export class ParcoursComponent implements OnInit, OnDestroy {
           this.students = [];
         }
       },
-      error: (error: Error) => {
+      error: () => {
         // console.error('Erreur lors du chargement des étudiants:', error);
         this.students = []; // Toujours un tableau même en cas d'erreur
       }
@@ -175,7 +175,7 @@ export class ParcoursComponent implements OnInit, OnDestroy {
         this.loadStats();
         this.isLoading = false;
       },
-      error: (error: Error & { status?: number; message?: string; error?: unknown }) => {
+      error: () => {
         // console.error('❌ Erreur lors du chargement des continuations:', error);
         // console.error('❌ Status:', error.status);
         // console.error('❌ Message:', error.message);
@@ -197,7 +197,7 @@ export class ParcoursComponent implements OnInit, OnDestroy {
         this.continuationStats = stats;
         this.isLoadingStats = false;
       },
-      error: (error: Error & { status?: number; message?: string; error?: unknown }) => {
+      error: () => {
         // console.error('Erreur lors du chargement des statistiques:', error);
         this.continuationStats = null;
         this.isLoadingStats = false;
@@ -280,7 +280,7 @@ export class ParcoursComponent implements OnInit, OnDestroy {
           this.alertService.success('Continuation créée avec succès');
           this.isCreating = false;
         },
-        error: (error: Error & { status?: number; message?: string; error?: unknown }) => {
+        error: () => {
           this.alertService.error('Erreur lors de la création de la continuation');
           this.isCreating = false;
           // console.error('Erreur:', error);
@@ -306,7 +306,7 @@ updateData).subscribe({
           this.alertService.success('Continuation mise à jour avec succès');
           this.isEditing = false;
         },
-        error: (error: Error & { status?: number; message?: string; error?: unknown }) => {
+        error: () => {
           this.alertService.error('Erreur lors de la mise à jour');
           this.isEditing = false;
           // console.error('Erreur:', error);
@@ -323,7 +323,7 @@ updateData).subscribe({
           this.loadContinuations();
           this.alertService.success('Continuation supprimée');
         },
-        error: (error: Error & { status?: number; message?: string; error?: unknown }) => {
+        error: () => {
           this.alertService.error('Erreur lors de la suppression');
           // console.error('Erreur:', error);
         }
