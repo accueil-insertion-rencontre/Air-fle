@@ -2,7 +2,7 @@ import {
   Controller,
   Get,
   Post,
-  Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -69,7 +69,7 @@ export class ExitReasonController {
     return this.exitReasonService.create(prismaData);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Mettre à jour une raison de sortie' })
   @ApiResponse({
     status: 200,
