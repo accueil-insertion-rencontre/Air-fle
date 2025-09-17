@@ -52,16 +52,19 @@ export class GroupListComponent implements OnInit {
 
 
   // Méthode pour obtenir le label de session
-  getSessionLabel(session: any): string {
+  getSessionLabel(session: Session | undefined): string {
     if (!session) return 'AUTRES FORMATIONS PROFESSIONNELLES';
     return session.session_label || session.label || 'AUTRES FORMATIONS PROFESSIONNELLES';
   }
 
   // Méthode pour initialiser les icônes Feather
   private initializeFeatherIcons(): void {
-    if (typeof (window as any).feather !== 'undefined') {
-      (window as any).feather.replace();
-      
+    interface WindowWithFeather extends Window {
+      feather?: { replace: () => void };
+    }
+    const windowWithFeather = window as WindowWithFeather;
+    if (typeof windowWithFeather.feather !== 'undefined') {
+      windowWithFeather.feather.replace();
     } else {
       // Feather not available
     }
@@ -75,7 +78,7 @@ export class GroupListComponent implements OnInit {
         this.loading = false;
       },
       error: err => {
-        console.error('Erreur lors du chargement des groupes', err);
+        // console.error('Erreur lors du chargement des groupes', err);
         this.loading = false;
       },
     });
@@ -87,16 +90,21 @@ export class GroupListComponent implements OnInit {
         this.sessions = sessions;
       },
       error: err => {
-        console.error('Erreur lors du chargement des sessions', err);
+        // console.error('Erreur lors du chargement des sessions', err);
         this.error = 'Impossible de charger les sessions. Veuillez réessayer plus tard.';
       },
     });
   }
 
-  openCreateModal(): void { this.resetForm(); this.isCreateModalOpen = true; }
-  closeCreateModal(): void { this.isCreateModalOpen = false; }
+  openCreateModal(): void {
+    this.resetForm();
+    this.isCreateModalOpen = true;
+  }
+  closeCreateModal(): void {
+    this.isCreateModalOpen = false;
+  }
 
-  dateFormatter(value: any): string {
+  dateFormatter(value: string | Date | null): string {
     if (!value) return '';
     const date = new Date(value);
     return date.toLocaleDateString('fr-FR');
@@ -127,7 +135,7 @@ export class GroupListComponent implements OnInit {
         });
       },
       error: err => {
-        console.error('Erreur lors du chargement des informations du groupe', err);
+        // console.error('Erreur lors du chargement des informations du groupe', err);
         this.alertService.error('Erreur lors du chargement des informations du groupe.');
       },
     });
@@ -138,14 +146,16 @@ export class GroupListComponent implements OnInit {
    */
   private async removeAllStudentsFromGroup(
     groupId: string | number,
-    students: any[]
+    students: { student?: { student_uuid: string }; id?: string }[]
   ): Promise<void> {
     
 
     const removePromises = students.map(relation => {
       // Extraire l'ID de l'étudiant depuis l'objet relation
       const studentId = relation.student ? relation.student.student_uuid : relation.id;
-      
+      if (!studentId) {
+        return Promise.resolve();
+      }
       return this.groupService.removeStudentFromGroup(groupId, studentId.toString()).toPromise();
     });
 
@@ -166,7 +176,6 @@ export class GroupListComponent implements OnInit {
 
 
         if (remainingStudents > 0) {
-          console.warn('Il reste encore des étudiants dans le groupe, abandon de la suppression');
           this.alertService.error(
             'Erreur : Il reste encore des étudiants dans le groupe. Suppression annulée.'
           );
@@ -176,7 +185,7 @@ export class GroupListComponent implements OnInit {
         }
       },
       error: err => {
-        console.error('Erreur lors de la vérification du groupe:', err);
+        // console.error('Erreur lors de la vérification du groupe:', err);
         // Si on ne peut pas vérifier, on essaie quand même de supprimer
         
         this.performGroupDeletion(id);
@@ -205,17 +214,17 @@ export class GroupListComponent implements OnInit {
         this.alertService.success(successMessage);
       },
       error: err => {
-        console.error('Erreur lors de la suppression du groupe', err);
-        console.error("Détails de l'erreur:", {
-          status: err.status,
-          statusText: err.statusText,
-          message: err.message,
-          errorDetails: err.error,
-        });
+        // console.error('Erreur lors de la suppression du groupe', err);
+        // console.error("Détails de l'erreur:", {
+        //   status: err.status,
+        //   statusText: err.statusText,
+        //   message: err.message,
+        //   errorDetails: err.error,
+        // });
 
         // Afficher les détails complets de l'erreur pour debug
         if (err.error) {
-          console.error('Contenu de err.error:', JSON.stringify(err.error, null, 2));
+          // console.error('Contenu de err.error:', JSON.stringify(err.error, null, 2));
         }
 
         // Message d'erreur plus informatif
@@ -265,7 +274,7 @@ export class GroupListComponent implements OnInit {
   /**
    * Démarre le processus de suppression du groupe avec l'ordre correct
    */
-  private async startGroupDeletion(groupId: string | number, group: any): Promise<void> {
+  private async startGroupDeletion(groupId: string | number, group: Group): Promise<void> {
     try {
       
 
@@ -280,7 +289,7 @@ export class GroupListComponent implements OnInit {
       // Étape 3: Supprimer le groupe lui-même
       this.performGroupDeletion(groupId);
     } catch (error) {
-      console.error('Erreur lors du processus de suppression:', error);
+      // console.error('Erreur lors du processus de suppression:', error);
       this.alertService.error(
         'Erreur lors de la suppression. Certaines étapes ont peut-être échoué.'
       );
@@ -315,20 +324,16 @@ export class GroupListComponent implements OnInit {
 
               return { success: true, course: course.title };
             } catch (error) {
-              console.error('❌ Erreur lors de la suppression du cours:', course.title, error);
+              // console.error('❌ Erreur lors de la suppression du cours:', course.title, error);
               return { success: false, course: course.title, error };
             }
           } else {
-            console.warn('Cours sans ID trouvé:', course);
             return { success: false, course: course.title || 'Cours sans nom', error: "Pas d'ID" };
           }
         })
       );
 
       // Analyser les résultats
-      const successful = deleteResults.filter(
-        r => r.status === 'fulfilled' && r.value.success
-      ).length;
       const failed = deleteResults.filter(
         r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)
       ).length;
@@ -336,16 +341,13 @@ export class GroupListComponent implements OnInit {
       
 
       if (failed > 0) {
-        console.warn(
-          `${failed} cours n'ont pas pu être supprimés, mais on continue avec la suppression du groupe`
-        );
+        // console.log(`${failed} cours n'ont pas pu être supprimés, mais on continue avec la suppression du groupe`);
         // On continue quand même avec la suppression du groupe
       } else {
         // No courses to delete
       }
     } catch (error) {
-      console.error('Erreur lors de la récupération des cours du groupe:', error);
-      console.warn('Impossible de récupérer les cours, on continue avec la suppression du groupe');
+      // console.error('Erreur lors de la récupération des cours du groupe:', error);
       // On continue quand même le processus, même si on ne peut pas récupérer les cours
     }
   }
@@ -383,20 +385,20 @@ export class GroupListComponent implements OnInit {
 
     // Création du groupe
     this.groupService.createGroup(formData).subscribe({
-      next: response => {
+      next: () => {
 
         this.closeCreateModal();
         this.loadGroups(); // Recharger la liste des groupes
         this.loading = false;
       },
       error: error => {
-        console.error('Erreur complète:', error);
+        // console.error('Erreur complète:', error);
         // Afficher l'erreur détaillée pour comprendre le problème
         if (error.error && error.error.message) {
-          console.error("Message d'erreur API:", error.error.message);
+          // console.error("Message d'erreur API:", error.error.message);
         }
         if (error.status) {
-          console.error('Statut HTTP:', error.status);
+          // console.error('Statut HTTP:', error.status);
         }
         this.error = error?.error?.message || error?.message || 'Une erreur est survenue';
         this.loading = false;
@@ -404,15 +406,15 @@ export class GroupListComponent implements OnInit {
     });
   }
 
-  // Vérifie si le champ a été touché et est invalide
   isFieldInvalid(fieldName: string): boolean {
     const control = this.groupForm.get(fieldName);
     return !!(control && control.invalid && (control.dirty || control.touched || this.submitted));
   }
 
-  // Réinitialise le formulaire
-  resetForm() {
-    this.groupForm.reset();
+  resetForm(): void {
+    if (this.groupForm) {
+      this.groupForm.reset();
+    }
     this.submitted = false;
     this.error = '';
   }
