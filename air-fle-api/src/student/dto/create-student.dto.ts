@@ -204,4 +204,14 @@ export class CreateStudentDto {
   @IsUUID(4)
   @IsOptional()
   exit_reason_uuid?: string;
+
+  @ApiProperty({
+    description: 'UUIDs des handicaps',
+    example: ['da2fa9b7-388e-4873-a542-1a22f95a27af'],
+    required: false,
+    type: [String],
+  })
+  @IsUUID(4, { each: true })
+  @IsOptional()
+  disability_uuids?: string[];
 }
