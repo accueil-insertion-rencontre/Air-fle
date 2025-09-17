@@ -89,7 +89,7 @@ describe('AuthService', () => {
 
       service.login('wrong@example.com', 'wrongpassword').subscribe({
         next: () => fail('should have failed'),
-        error: (error) => {
+        error: () => {
           expect(error.message).toBe('Invalid credentials');
         }
       });
