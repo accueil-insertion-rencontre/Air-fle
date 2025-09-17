@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, Gender } from '@prisma/client';
 
@@ -49,15 +54,39 @@ export class GenderService {
   }
 
   async delete(id: string): Promise<Gender> {
-    const gender = await this.prisma.gender.delete({
+    // Vérifier d'abord si le genre existe
+    const gender = await this.prisma.gender.findUnique({
+      where: { gender_uuid: id },
+      include: {
+        students: {
+          select: { student_uuid: true },
+        },
+      },
+    });
+
+    if (!gender) {
+      throw new NotFoundException('Genre non trouvé');
+    }
+
+    // Vérifier s'il est utilisé par des étudiants
+    if (gender.students && gender.students.length > 0) {
+      throw new BadRequestException(
+        `Ce genre ne peut pas être supprimé car il est attribué à ${gender.students.length} étudiant(s)`,
+      );
+    }
+
+    // Si tout est OK, supprimer le genre
+    const deletedGender = await this.prisma.gender.delete({
       where: { gender_uuid: id },
     });
+
     this.logger.log(
       JSON.stringify({
         event: 'gender_deleted',
-        gender_uuid: gender.gender_uuid,
+        gender_uuid: deletedGender.gender_uuid,
       }),
     );
-    return gender;
+
+    return deletedGender;
   }
 }
