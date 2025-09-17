@@ -2,7 +2,7 @@ import {
   Controller,
   Get,
   Post,
-  Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -68,7 +68,7 @@ export class NationalityController {
     return this.nationalityService.create(prismaData);
   }
 
-  @Put(':nationality_uuid')
+  @Patch(':nationality_uuid')
   @ApiOperation({ summary: 'Mettre à jour une nationalité' })
   @ApiResponse({
     status: 200,
