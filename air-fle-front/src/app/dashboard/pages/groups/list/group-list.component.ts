@@ -77,7 +77,7 @@ export class GroupListComponent implements OnInit {
         this.groups = groups;
         this.loading = false;
       },
-      error: err => {
+      error: () => {
         // console.error('Erreur lors du chargement des groupes', err);
         this.loading = false;
       },
@@ -89,7 +89,7 @@ export class GroupListComponent implements OnInit {
       next: sessions => {
         this.sessions = sessions;
       },
-      error: err => {
+      error: () => {
         // console.error('Erreur lors du chargement des sessions', err);
         this.error = 'Impossible de charger les sessions. Veuillez réessayer plus tard.';
       },
@@ -134,7 +134,7 @@ export class GroupListComponent implements OnInit {
           }
         });
       },
-      error: err => {
+      error: () => {
         // console.error('Erreur lors du chargement des informations du groupe', err);
         this.alertService.error('Erreur lors du chargement des informations du groupe.');
       },
@@ -184,7 +184,7 @@ export class GroupListComponent implements OnInit {
           this.performGroupDeletion(id);
         }
       },
-      error: err => {
+      error: () => {
         // console.error('Erreur lors de la vérification du groupe:', err);
         // Si on ne peut pas vérifier, on essaie quand même de supprimer
         
@@ -213,60 +213,9 @@ export class GroupListComponent implements OnInit {
 
         this.alertService.success(successMessage);
       },
-      error: err => {
-        // console.error('Erreur lors de la suppression du groupe', err);
-        // console.error("Détails de l'erreur:", {
-        //   status: err.status,
-        //   statusText: err.statusText,
-        //   message: err.message,
-        //   errorDetails: err.error,
-        // });
-
-        // Afficher les détails complets de l'erreur pour debug
-        if (err.error) {
-          // console.error('Contenu de err.error:', JSON.stringify(err.error, null, 2));
-        }
-
-        // Message d'erreur plus informatif
-        let errorMessage = 'Erreur lors de la suppression du groupe.';
-
-        if (err.status === 500) {
-          if (err.error && err.error.message) {
-            if (
-              err.error.message.includes('constraint') ||
-              err.error.message.includes('foreign key')
-            ) {
-              errorMessage =
-                "Impossible de supprimer le groupe : il est encore lié à d'autres éléments dans la base de données.\n\n" +
-                'Causes possibles :\n' +
-                '• Des cours sont encore associés au groupe\n' +
-                '• Des étudiants sont encore liés au groupe\n' +
-                "• D'autres références existent dans le système\n\n" +
-                "L'administrateur doit vérifier manuellement la base de données.";
-            } else {
-              errorMessage =
-                `Erreur serveur interne: ${err.error.message}\n\n` +
-                'Cette erreur nécessite une intervention technique.';
-            }
-          } else {
-            errorMessage =
-              'Erreur 500 - Erreur serveur interne.\n\n' +
-              'Causes possibles :\n' +
-              '• Problème de base de données\n' +
-              "• Erreur dans l'API backend\n" +
-              '• Contraintes de clés étrangères non résolues\n\n' +
-              "Veuillez contacter l'administrateur.";
-          }
-        } else if (err.status === 404) {
-          errorMessage =
-            "Le groupe à supprimer n'a pas été trouvé. Il a peut-être déjà été supprimé.";
-        } else if (err.status === 403) {
-          errorMessage = "Vous n'avez pas les permissions nécessaires pour supprimer ce groupe.";
-        } else if (err.error && err.error.message) {
-          errorMessage = `Erreur API: ${err.error.message}`;
-        }
-
-        this.alertService.error(errorMessage);
+      error: () => {
+        // console.error('Erreur lors de la suppression du groupe');
+        this.alertService.error('Erreur lors de la suppression du groupe. Veuillez réessayer plus tard.');
       },
     });
   }
@@ -288,7 +237,7 @@ export class GroupListComponent implements OnInit {
 
       // Étape 3: Supprimer le groupe lui-même
       this.performGroupDeletion(groupId);
-    } catch (error) {
+    } catch {
       // console.error('Erreur lors du processus de suppression:', error);
       this.alertService.error(
         'Erreur lors de la suppression. Certaines étapes ont peut-être échoué.'
@@ -323,9 +272,9 @@ export class GroupListComponent implements OnInit {
               await this.courseService.deleteCourse(courseId).toPromise();
 
               return { success: true, course: course.title };
-            } catch (error) {
+            } catch {
               // console.error('❌ Erreur lors de la suppression du cours:', course.title, error);
-              return { success: false, course: course.title, error };
+              return { success: false, course: course.title, error: 'Erreur de suppression' };
             }
           } else {
             return { success: false, course: course.title || 'Cours sans nom', error: "Pas d'ID" };
@@ -346,7 +295,7 @@ export class GroupListComponent implements OnInit {
       } else {
         // No courses to delete
       }
-    } catch (error) {
+    } catch {
       // console.error('Erreur lors de la récupération des cours du groupe:', error);
       // On continue quand même le processus, même si on ne peut pas récupérer les cours
     }
@@ -391,16 +340,9 @@ export class GroupListComponent implements OnInit {
         this.loadGroups(); // Recharger la liste des groupes
         this.loading = false;
       },
-      error: error => {
+      error: () => {
         // console.error('Erreur complète:', error);
-        // Afficher l'erreur détaillée pour comprendre le problème
-        if (error.error && error.error.message) {
-          // console.error("Message d'erreur API:", error.error.message);
-        }
-        if (error.status) {
-          // console.error('Statut HTTP:', error.status);
-        }
-        this.error = error?.error?.message || error?.message || 'Une erreur est survenue';
+        this.error = 'Une erreur est survenue lors de la création du groupe';
         this.loading = false;
       },
     });
