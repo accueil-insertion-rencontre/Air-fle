@@ -7,6 +7,6 @@ import localeFr from '@angular/common/locales/fr';
 // Enregistrer les locales françaises
 registerLocaleData(localeFr);
 
-bootstrapApplication(AppComponent, appConfig).catch(err => {
+bootstrapApplication(AppComponent, appConfig).catch(() => {
   // console.error(err);
 });
