@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -53,9 +54,9 @@ export class GendersComponent implements OnInit {
         this.genders = genders;
         this.isLoading = false;
       },
-      error: () => {
-        console.error('Erreur lors du chargement des genres:');
-        this.error = 'Erreur lors du chargement des genres';
+      error: (error: HttpErrorResponse) => {
+        // console.error('Erreur lors du chargement des genres:', error);
+        this.error = error?.error?.message || error?.message || 'Erreur lors du chargement des genres';
         this.isLoading = false;
       },
     });
@@ -104,7 +105,7 @@ export class GendersComponent implements OnInit {
     if (this.createForm.invalid) return;
 
     const genderData: CreateGenderDto = {
-      label: this.createForm.value.label,
+      gender_label: this.createForm.value.label,
     };
 
     this.referenceDataService.createGender(genderData).subscribe({
@@ -112,9 +113,9 @@ export class GendersComponent implements OnInit {
         this.genders.push(newGender);
         this.closeCreateModal();
       },
-      error: () => {
-        console.error('Erreur lors de la création du genre:');
-        this.error = 'Erreur lors de la création du genre';
+      error: (error: HttpErrorResponse) => {
+        // console.error('Erreur lors de la création du genre:', error);
+        this.error = error?.error?.message || error?.message || 'Erreur lors de la création du genre';
       },
     });
   }
@@ -123,7 +124,7 @@ export class GendersComponent implements OnInit {
     if (this.editForm.invalid || !this.selectedGender) return;
 
     const genderData: CreateGenderDto = {
-      label: this.editForm.value.label,
+      gender_label: this.editForm.value.label,
     };
 
     this.referenceDataService.updateGender(this.selectedGender.id, genderData).subscribe({
@@ -134,9 +135,9 @@ export class GendersComponent implements OnInit {
         }
         this.closeEditModal();
       },
-      error: () => {
-        console.error('Erreur lors de la mise à jour du genre:');
-        this.error = 'Erreur lors de la mise à jour du genre';
+      error: (error: HttpErrorResponse) => {
+        // console.error('Erreur lors de la mise à jour du genre:', error);
+        this.error = error?.error?.message || error?.message || 'Erreur lors de la mise à jour du genre';
       },
     });
   }
@@ -147,9 +148,10 @@ export class GendersComponent implements OnInit {
         next: () => {
           this.genders = this.genders.filter(g => g.id !== gender.id);
         },
-        error: () => {
-          console.error('Erreur lors de la suppression du genre:');
-          this.error = 'Erreur lors de la suppression du genre';
+        error: (error: HttpErrorResponse) => {
+          // console.error('Erreur lors de la suppression du genre:', error);
+          // Le backend retourne { success: false, data: null, message: "...", statusCode: 400, timestamp: "..." }
+          this.error = error?.error?.message || error?.message || 'Erreur lors de la suppression du genre';
         },
       });
     }
