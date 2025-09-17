@@ -69,7 +69,7 @@ export class GroupDetailsComponent implements OnInit {
         
         this.loading = false;
       },
-      error: (error) => {
+      error: () => {
         // console.error('❌ GROUP-DETAILS - Erreur lors du chargement:', error);
         this.error = 'Erreur lors du chargement du groupe';
         this.loading = false;
@@ -135,7 +135,7 @@ export class GroupDetailsComponent implements OnInit {
 
       // Étape 3: Supprimer le groupe lui-même
       this.performGroupDeletion();
-    } catch (error) {
+    } catch {
       // console.error('Erreur lors du processus de suppression:', error);
       this.alertService.error(
         'Erreur lors de la suppression. Certaines étapes ont peut-être échoué.'
@@ -173,9 +173,9 @@ export class GroupDetailsComponent implements OnInit {
               await this.courseService.deleteCourse(courseId).toPromise();
               
               return { success: true, course: course.title };
-            } catch (error) {
+            } catch {
               // console.error('❌ Erreur lors de la suppression du cours:', course.title, error);
-              return { success: false, course: course.title, error };
+              return { success: false, course: course.title, error: 'Erreur de suppression' };
             }
           } else {
             return { success: false, course: course.title || 'Cours sans nom', error: "Pas d'ID" };
@@ -198,7 +198,7 @@ export class GroupDetailsComponent implements OnInit {
       } else {
         // No courses to delete
       }
-    } catch (error) {
+    } catch {
       // console.error('Erreur lors de la récupération des cours du groupe:', error);
       // On continue quand même le processus, même si on ne peut pas récupérer les cours
     }
@@ -242,7 +242,7 @@ export class GroupDetailsComponent implements OnInit {
           this.router.navigate(['/dashboard/groups']);
         });
       },
-      error: err => {
+      error: () => {
         // console.error('Erreur lors de la suppression du groupe', err);
         // console.error("Détails de l'erreur:", {
         //   status: err.status,
@@ -252,19 +252,7 @@ export class GroupDetailsComponent implements OnInit {
         // });
 
         // Message d'erreur plus informatif
-        let errorMessage = 'Erreur lors de la suppression du groupe.';
-
-        if (err.error && err.error.message) {
-          if (err.error.message.includes('constraint')) {
-            errorMessage =
-              "Impossible de supprimer le groupe : il est encore lié à d'autres éléments. " +
-              'Les cours et étudiants ont été traités, mais le groupe lui-même ne peut être supprimé. ' +
-              "Contactez l'administrateur.";
-          } else {
-            errorMessage = `Erreur API: ${err.error.message}`;
-          }
-        }
-
+        const errorMessage = 'Erreur lors de la suppression du groupe. Veuillez réessayer plus tard.';
         this.alertService.error(errorMessage);
       },
     });
@@ -310,7 +298,7 @@ export class GroupDetailsComponent implements OnInit {
 
         
       },
-      error: error => {
+      error: () => {
         // console.error('Erreur lors du chargement des étudiants:', error);
         this.loadingStudents = false;
         this.alertService.error('Erreur lors du chargement des étudiants');
@@ -423,7 +411,7 @@ export class GroupDetailsComponent implements OnInit {
         this.closeAddStudentModal();
         this.loadGroup(); // Recharger les données du groupe
       })
-      .catch(error => {
+      .catch(() => {
         // console.error("Erreur lors de l'ajout des étudiants:", error);
         this.alertService.error("Erreur lors de l'ajout des étudiants");
       });
@@ -468,7 +456,7 @@ export class GroupDetailsComponent implements OnInit {
             this.alertService.success('Étudiant retiré du groupe avec succès');
             this.loadGroup(); // Recharger les données du groupe
           },
-          error: error => {
+          error: () => {
             // console.error("Erreur lors de la suppression de l'étudiant:", error);
             this.alertService.error("Erreur lors de la suppression de l'étudiant");
           },
