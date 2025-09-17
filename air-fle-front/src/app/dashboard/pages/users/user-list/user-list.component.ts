@@ -74,7 +74,7 @@ export class UserListComponent implements OnInit {
     this.loadRoles();
 
     // Utiliser emailFilter pour la recherche
-    this.emailFilter.valueChanges.pipe(debounceTime(500)).subscribe(value => {
+    this.emailFilter.valueChanges.pipe(debounceTime(500)).subscribe((value) => {
       this.filterForm.get('email')?.setValue(value);
       this.currentPage = 0;
       this.loadUsers();
@@ -92,10 +92,10 @@ export class UserListComponent implements OnInit {
   // Chargement des rôles
   loadRoles(): void {
     this.userService.getRoles().subscribe({
-      next: roles => {
+      next: (roles: Role[]) => {
         this.roles = roles;
       },
-      error: error => {
+      error: () => {
         // Gestion silencieuse
       },
     });
@@ -145,12 +145,12 @@ export class UserListComponent implements OnInit {
     }
 
     this.userService.createUser(userData).subscribe({
-      next: user => {
+      next: () => {
         this.isSubmitting = false;
         this.hideCreateUserModal();
         this.loadUsers(); // Recharger la liste des utilisateurs
       },
-      error: error => {
+      error: (error) => {
         this.isSubmitting = false;
 
         // Gérer spécifiquement l'erreur 409 (Conflict)
@@ -189,11 +189,11 @@ export class UserListComponent implements OnInit {
         role_uuid: filters.role || undefined,
       })
       .subscribe({
-        next: (response: any) => {
+        next: (response: Record<string, unknown>) => {
           // Gestion de différentes structures de réponse possibles
-          if (response.data && Array.isArray(response.data)) {
-            this.users = response.data;
-            this.totalUsers = response.total || response.data.length;
+          if (response['data'] && Array.isArray(response['data'])) {
+            this.users = response['data'];
+            this.totalUsers = (response['total'] as number) || (response['data'] as unknown[]).length;
           } else if (Array.isArray(response)) {
             this.users = response;
             this.totalUsers = response.length;
@@ -205,7 +205,7 @@ export class UserListComponent implements OnInit {
 
           this.loading = false;
         },
-        error: error => {
+        error: (error) => {
           this.error = `Erreur: ${error.status} ${error.statusText}`;
           this.loading = false;
           this.users = [];
@@ -229,7 +229,7 @@ export class UserListComponent implements OnInit {
           this.users = this.users.filter(user => user.user_uuid !== id);
           this.loadUsers();
         },
-        error: error => {
+        error: (error) => {
           this.error = `Erreur lors de la suppression: ${error.status || ''} ${error.statusText || error.message || 'Erreur inconnue'}`;
         },
       });
