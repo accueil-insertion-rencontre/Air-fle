@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import {
   FormsModule,
@@ -60,7 +61,7 @@ export class NationalitiesComponent implements OnInit {
         this.nationalities = data;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: () => {
         this.error = 'Erreur lors du chargement des nationalités';
         this.isLoading = false;
       }
@@ -82,7 +83,9 @@ export class NationalitiesComponent implements OnInit {
   // Créer une nationalité
   createNationality(): void {
     if (this.createForm.valid) {
-      const formData: CreateNationalityDto = this.createForm.value;
+      const formData: CreateNationalityDto = {
+        nationality_label: this.createForm.value.label
+      };
 
       this.referenceDataService.createNationality(formData).subscribe({
         next: () => {
@@ -90,7 +93,7 @@ export class NationalitiesComponent implements OnInit {
           this.closeCreateModal();
         },
         error: () => {
-          console.error('Erreur lors de la création');
+          // console.error('Erreur lors de la création');
           this.error = 'Erreur lors de la création de la nationalité';
         },
       });
@@ -116,7 +119,9 @@ export class NationalitiesComponent implements OnInit {
   // Modifier une nationalité
   updateNationality(): void {
     if (this.editForm.valid && this.editingNationality) {
-      const formData: CreateNationalityDto = this.editForm.value;
+      const formData: CreateNationalityDto = {
+        nationality_label: this.editForm.value.label
+      };
 
       this.referenceDataService.updateNationality(this.editingNationality.id, formData).subscribe({
         next: () => {
@@ -124,7 +129,7 @@ export class NationalitiesComponent implements OnInit {
           this.closeEditModal();
         },
         error: () => {
-          console.error('Erreur lors de la modification');
+          // console.error('Erreur lors de la modification');
           this.error = 'Erreur lors de la modification de la nationalité';
         },
       });
@@ -138,9 +143,9 @@ export class NationalitiesComponent implements OnInit {
         next: () => {
           this.loadNationalities(); // Recharger la liste
         },
-        error: () => {
-          console.error('Erreur lors de la suppression');
-          this.error = 'Erreur lors de la suppression de la nationalité';
+        error: (error: HttpErrorResponse) => {
+          // console.error('Erreur lors de la suppression:', error);
+          this.error = error?.error?.message || error?.message || 'Erreur lors de la suppression de la nationalité';
         },
       });
     }
