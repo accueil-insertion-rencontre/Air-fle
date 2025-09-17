@@ -45,7 +45,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
   detailsPage = 1;
   detailsPageSize = 10;
   detailsTotal = 0;
-  detailsStudents: any[] = [];
+  detailsStudents: Record<string, unknown>[] = [];
   detailsEditable = false;
   // édition inline d'une note
   editingStudentUuid: string | null = null;
@@ -57,7 +57,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
   editInlineExamId: string | null = null;
   currentAddMode: 'students' | 'group' | null = null;
   selectedExam: Exam | null = null;
-  selectedStudent: any = null;
+  selectedStudent: Record<string, unknown> | null = null;
   examToDelete: ExamDisplayInfo | null = null;
   searchTerm = '';
   studentSearchTerm = '';
@@ -118,22 +118,21 @@ export class ExamensComponent implements OnInit, OnDestroy {
       next: (response) => {
 
         // L'API peut retourner un objet avec une propriété contenant le tableau
-        const responseData = response as any; // Assertion de type pour éviter les erreurs TypeScript
+        const responseData = response as unknown as Record<string, unknown> | Exam[];
         
         if (Array.isArray(responseData)) {
           this.exams = responseData; 
-        } else if (responseData && Array.isArray(responseData.data)) {
-          this.exams = responseData.data;
-        } else if (responseData && Array.isArray(responseData.exams)) {
-          this.exams = responseData.exams;
+        } else if (responseData && Array.isArray(responseData['data'])) {
+          this.exams = responseData['data'] as Exam[];
+        } else if (responseData && Array.isArray(responseData['exams'])) {
+          this.exams = responseData['exams'] as Exam[];
         } else {
-          console.warn('Format de réponse inattendu pour les examens:', responseData);
           this.exams = [];
         }
         this.updateFilteredExams();
       },
       error: (error) => {
-        console.error('❌ ExamensComponent: Erreur lors du chargement des examens:', error);
+        // console.error('❌ ExamensComponent: Erreur lors du chargement des examens:', error);
         this.error = 'Impossible de charger les examens. ' + error.message;
         this.isLoading = false;
       }
@@ -146,7 +145,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('❌ ExamensComponent: Erreur lors du chargement des étudiants:', error);
+        // console.error('❌ ExamensComponent: Erreur lors du chargement des étudiants:', error);
         this.alertService.error('Impossible de charger la liste des étudiants');
         this.isLoading = false;
       }
@@ -154,11 +153,10 @@ export class ExamensComponent implements OnInit, OnDestroy {
 
     const groupsSub = this.groupService.getGroups().subscribe({
       next: (groups: Group[]) => {
-        console.log('📋 ExamensComponent: Groupes chargés:', groups);
         this.groups = groups;
       },
-      error: (error: any) => {
-        console.error('❌ ExamensComponent: Erreur lors du chargement des groupes:', error);
+      error: (error: Record<string, unknown>) => {
+        // console.error('❌ ExamensComponent: Erreur lors du chargement des groupes:', error);
         this.alertService.error('Impossible de charger la liste des groupes');
       }
     });
@@ -171,7 +169,6 @@ export class ExamensComponent implements OnInit, OnDestroy {
    */
   private updateFilteredExams(): void {
     if (!Array.isArray(this.exams)) {
-      console.warn('Les examens ne sont pas un tableau:', this.exams);
       this.filteredExams = [];
       return;
     }
@@ -328,11 +325,11 @@ export class ExamensComponent implements OnInit, OnDestroy {
     const display: ExamDisplayInfo = {
       id: this.selectedExam.exam_uuid,
       label: this.selectedExam.exam_label,
-      date: this.selectedExam.exam_taked_at as any,
+      date: this.selectedExam.exam_taked_at as string | Date,
       studentName: '',
       score: '',
       type: this.selectedExam.exam_type
-    } as any;
+    } as ExamDisplayInfo;
     this.detailsEditable = true;
     this.editingStudentUuid = null;
     // ouvre le panneau détails sur l'examen ciblé
@@ -346,12 +343,12 @@ export class ExamensComponent implements OnInit, OnDestroy {
   }
 
   // Début édition inline d'une note
-  startInlineEdit(student: any): void {
-    this.editingStudentUuid = student.student_uuid;
+  startInlineEdit(student: Record<string, unknown>): void {
+    this.editingStudentUuid = student['student_uuid'] as string;
     this.inlineEdit = {
-      score: student.score || '',
-      status: (student.status || 'pending') as any,
-      notes: student.notes || ''
+      score: (student['score'] as string) || '',
+      status: ((student['status'] as string) || 'pending') as 'pending' | 'passed' | 'failed' | 'absent',
+      notes: (student['notes'] as string) || ''
     };
   }
 
@@ -359,7 +356,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
     this.editingStudentUuid = null;
   }
 
-  saveInlineEdit(student: any): void {
+  saveInlineEdit(student: Record<string, unknown>): void {
     if (!this.selectedExam) return;
     const payload = {
       exam_score: this.inlineEdit.score || undefined,
@@ -367,13 +364,13 @@ export class ExamensComponent implements OnInit, OnDestroy {
       exam_notes: this.inlineEdit.notes || undefined
     };
     this.examService.updateStudentExamScore(
-      student.student_uuid,
+      student['student_uuid'] as string,
       this.selectedExam.exam_uuid,
       payload
     ).subscribe({
       next: () => {
         // mettre à jour localement pour feedback instantané
-        const idx = this.detailsStudents.findIndex(d => d.student_uuid === student.student_uuid);
+        const idx = this.detailsStudents.findIndex(d => d['student_uuid'] === student['student_uuid']);
         if (idx > -1) {
           this.detailsStudents[idx] = {
             ...this.detailsStudents[idx],
@@ -386,27 +383,27 @@ export class ExamensComponent implements OnInit, OnDestroy {
         this.editingStudentUuid = null;
       },
       error: () => {
-        console.error('❌ Erreur maj note');
+        // console.error('❌ Erreur maj note');
         this.alertService.error('Impossible de mettre à jour la note');
       }
     });
   }
 
-  removeStudentInline(student: any): void {
+  removeStudentInline(student: Record<string, unknown>): void {
     if (!this.selectedExam) return;
-    this.examService.removeStudentFromExam(student.student_uuid, this.selectedExam.exam_uuid)
+    this.examService.removeStudentFromExam(student['student_uuid'] as string, this.selectedExam.exam_uuid)
       .subscribe({
         next: () => {
-          this.detailsStudents = this.detailsStudents.filter(d => d.student_uuid !== student.student_uuid);
+          this.detailsStudents = this.detailsStudents.filter(d => d['student_uuid'] !== student['student_uuid']);
           this.detailsTotal = Math.max(0, this.detailsTotal - 1);
           // Mettre à jour la source de vérité locale pour l'examen courant
-          if ((this.selectedExam as any).students) {
-            (this.selectedExam as any).students = (this.selectedExam as any).students.filter((se: any) => se.student_uuid !== student.student_uuid);
+          if ((this.selectedExam as unknown as Record<string, unknown>)['students']) {
+            (this.selectedExam as unknown as Record<string, unknown>)['students'] = ((this.selectedExam as unknown as Record<string, unknown>)['students'] as Record<string, unknown>[]).filter((se: Record<string, unknown>) => se['student_uuid'] !== student['student_uuid']);
           }
           this.alertService.success('Étudiant retiré de l\'examen');
         },
         error: () => {
-          console.error('❌ Erreur suppression étudiant');
+          // console.error('❌ Erreur suppression étudiant');
           this.alertService.error('Impossible de retirer l\'étudiant de l\'examen');
         }
       });
@@ -429,18 +426,18 @@ export class ExamensComponent implements OnInit, OnDestroy {
     this.examService.getExamStudentsPaginated(this.selectedExam.exam_uuid, this.detailsPage, this.detailsPageSize)
       .subscribe({
         next: res => {
-          const mapped = (res.data || []).map((s: any) => ({
-            student_uuid: s.student_uuid,
-            name: (s.student?.student_firstname || '') + ' ' + (s.student?.student_lastname || ''),
-            email: s.student?.student_mail,
-            score: s.exam_score,
-            status: s.exam_status,
-            notes: s.exam_notes,
+          const mapped = (res.data || []).map((s: Record<string, unknown>) => ({
+            student_uuid: s['student_uuid'],
+            name: ((s['student'] as Record<string, unknown>)?.['student_firstname'] || '') + ' ' + ((s['student'] as Record<string, unknown>)?.['student_lastname'] || ''),
+            email: (s['student'] as Record<string, unknown>)?.['student_mail'],
+            score: s['exam_score'],
+            status: s['exam_status'],
+            notes: s['exam_notes'],
           }));
           this.detailsStudents = mapped;
-          this.detailsTotal = res.meta?.total ?? mapped.length;
-          this.detailsPage = res.meta?.page || this.detailsPage;
-          this.detailsPageSize = res.meta?.pageSize || this.detailsPageSize;
+          this.detailsTotal = Number(res.meta?.['total']) || mapped.length;
+          this.detailsPage = Number(res.meta?.['page']) || this.detailsPage;
+          this.detailsPageSize = Number(res.meta?.['pageSize']) || this.detailsPageSize;
         },
         error: () => {
           // En cas d'erreur API, on affiche une liste vide mais sans fallback local
@@ -627,13 +624,6 @@ export class ExamensComponent implements OnInit, OnDestroy {
     if (this.addGroupForm.valid && this.selectedExam) {
       const formValue = this.addGroupForm.value;
       
-      console.log('🔍 ExamensComponent: Ajout groupe à l\'examen:', {
-        examUuid: this.selectedExam.exam_uuid,
-        groupUuid: formValue.group_uuid,
-        defaultScore: formValue.default_score,
-        defaultStatus: formValue.default_status
-      });
-      
       this.examService.addGroupToExam(
         this.selectedExam.exam_uuid,
         formValue.group_uuid,
@@ -641,13 +631,12 @@ export class ExamensComponent implements OnInit, OnDestroy {
         formValue.default_status || undefined
       ).subscribe({
         next: () => {
-          console.log('✅ ExamensComponent: Groupe ajouté avec succès');
           this.alertService.success('Groupe ajouté à l\'examen avec succès !');
           this.hideAddGroupForm();
           this.loadInitialData(); // Recharger les données
         },
         error: (error) => {
-          console.error('❌ Erreur lors de l\'ajout du groupe:', error);
+          // console.error('❌ Erreur lors de l\'ajout du groupe:', error);
           this.alertService.error('Erreur lors de l\'ajout du groupe à l\'examen');
         }
       });
@@ -656,7 +645,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
     }
   }
 
-  showEditStudentScoreForm(student: any): void {
+  showEditStudentScoreForm(student: Record<string, unknown>): void {
     this.selectedStudent = student;
     this.showEditStudentScore = true;
     this.showManageStudents = false;
@@ -667,9 +656,9 @@ export class ExamensComponent implements OnInit, OnDestroy {
     
     // Pré-remplir le formulaire avec les valeurs actuelles
     this.editStudentScoreForm.patchValue({
-      exam_score: student.exam_score || '',
-      exam_status: student.exam_status || 'pending',
-      exam_notes: student.exam_notes || ''
+      exam_score: student['exam_score'] || '',
+      exam_status: student['exam_status'] || 'pending',
+      exam_notes: student['exam_notes'] || ''
     });
   }
 
@@ -684,16 +673,8 @@ export class ExamensComponent implements OnInit, OnDestroy {
     if (this.editStudentScoreForm.valid && this.selectedExam && this.selectedStudent) {
       const formValue = this.editStudentScoreForm.value;
       
-      console.log('🔍 ExamensComponent: Mise à jour note étudiant:', {
-        examUuid: this.selectedExam.exam_uuid,
-        studentUuid: this.selectedStudent.student_uuid,
-        score: formValue.exam_score,
-        status: formValue.exam_status,
-        notes: formValue.exam_notes
-      });
-      
       this.examService.updateStudentExamScore(
-        this.selectedStudent.student_uuid,
+        this.selectedStudent['student_uuid'] as string,
         this.selectedExam.exam_uuid,
         {
           exam_score: formValue.exam_score || undefined,
@@ -702,13 +683,12 @@ export class ExamensComponent implements OnInit, OnDestroy {
         }
       ).subscribe({
         next: () => {
-          console.log('✅ ExamensComponent: Note mise à jour avec succès');
           this.alertService.success('Note de l\'étudiant mise à jour avec succès !');
           this.hideEditStudentScoreForm();
           this.loadInitialData(); // Recharger les données
         },
         error: (error) => {
-          console.error('❌ Erreur lors de la mise à jour de la note:', error);
+          // console.error('❌ Erreur lors de la mise à jour de la note:', error);
           this.alertService.error('Erreur lors de la mise à jour de la note');
         }
       });
@@ -733,13 +713,10 @@ export class ExamensComponent implements OnInit, OnDestroy {
   }
 
   openAddOptionsModal(examUuid: string): void {
-    console.log('🔍 openAddOptionsModal appelé avec examUuid:', examUuid);
-    console.log('📋 this.exams:', this.exams);
     
     // Trouver l'examen par son UUID
     const exam = this.exams.find(e => e.exam_uuid === examUuid);
     if (exam) {
-      console.log('✅ Examen trouvé:', exam);
       this.selectedExam = exam;
       this.showAddOptionsModal = true;
       this.showCreateForm = false;
@@ -749,8 +726,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
       this.showEditStudentScore = false;
       this.error = null;
     } else {
-      console.error('❌ Examen non trouvé avec UUID:', examUuid);
-      console.log('🔍 UUIDs disponibles dans this.exams:', this.exams.map(e => e.exam_uuid));
+      // console.error('❌ Examen non trouvé avec UUID:', examUuid);
       this.alertService.error('Examen non trouvé');
     }
   }
@@ -782,12 +758,11 @@ export class ExamensComponent implements OnInit, OnDestroy {
     
     // S'assurer que selectedExam est défini
     if (!this.selectedExam) {
-      console.error('❌ selectedExam est null dans addStudentToExamFromModal');
+      // console.error('❌ selectedExam est null dans addStudentToExamFromModal');
       this.alertService.error('Erreur: aucun examen sélectionné');
       return;
     }
     
-    console.log('✅ selectedExam restauré:', this.selectedExam);
     this.loadStudentsForExam();
   }
 
@@ -812,11 +787,11 @@ export class ExamensComponent implements OnInit, OnDestroy {
 
   loadStudentsForExam(): void {
     // Créer les filtres pour la recherche
-    const filters: any = {};
+    const filters: Record<string, unknown> = {};
     if (this.studentSearchTerm.trim()) {
-      filters.student_firstname = this.studentSearchTerm;
-      filters.student_lastname = this.studentSearchTerm;
-      filters.student_mail = this.studentSearchTerm;
+      filters['student_firstname'] = this.studentSearchTerm;
+      filters['student_lastname'] = this.studentSearchTerm;
+      filters['student_mail'] = this.studentSearchTerm;
     }
 
     // Créer la configuration pour l'API
@@ -828,20 +803,13 @@ export class ExamensComponent implements OnInit, OnDestroy {
     };
 
     this.studentService.getStudents(config).subscribe({
-      next: (result: any) => {
-        console.log('🔍 Réponse API étudiants:', result);
-        this.students = result.students || [];
+      next: (result: {students?: Student[]; total?: number; totalItems?: number}) => {
+        this.students = result['students'] || [];
         this.totalStudentItems = result.total || result.totalItems || 0;
         this.totalStudentPages = Math.ceil(this.totalStudentItems / this.studentsPerPage);
-        console.log('📊 Pagination étudiants:', {
-          totalItems: this.totalStudentItems,
-          totalPages: this.totalStudentPages,
-          currentPage: this.currentStudentPage,
-          studentsPerPage: this.studentsPerPage
-        });
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des étudiants:', error);
+        // console.error('❌ Erreur lors du chargement des étudiants:', error);
         this.alertService.error('Erreur lors du chargement des étudiants');
         // Initialiser avec des valeurs par défaut en cas d'erreur
         this.totalStudentItems = 0;
@@ -857,13 +825,13 @@ export class ExamensComponent implements OnInit, OnDestroy {
   // Vérifie si un étudiant est déjà inscrit à l'examen sélectionné
   isStudentAlreadyInExam(studentUuid: string): boolean {
     if (!this.selectedExam) return false;
-    const participantsFromExam: any[] = Array.isArray((this.selectedExam as any).students)
-      ? (this.selectedExam as any).students
+    const participantsFromExam: Record<string, unknown>[] = Array.isArray((this.selectedExam as unknown as Record<string, unknown>)['students'])
+      ? (this.selectedExam as unknown as Record<string, unknown>)['students'] as Record<string, unknown>[]
       : [];
-    const participantsFromDetails: any[] = Array.isArray(this.detailsStudents) ? this.detailsStudents : [];
+    const participantsFromDetails: Record<string, unknown>[] = Array.isArray(this.detailsStudents) ? this.detailsStudents : [];
     return (
-      participantsFromExam.some((se: any) => se.student_uuid === studentUuid) ||
-      participantsFromDetails.some((se: any) => se.student_uuid === studentUuid)
+      participantsFromExam.some((se: Record<string, unknown>) => se['student_uuid'] === studentUuid) ||
+      participantsFromDetails.some((se: Record<string, unknown>) => se['student_uuid'] === studentUuid)
     );
   }
 
@@ -1036,7 +1004,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
       this.hideAddStudentForm();
       this.loadInitialData();
     }).catch(error => {
-      console.error('❌ Erreur lors de l\'ajout des étudiants:', error);
+      // console.error('❌ Erreur lors de l\'ajout des étudiants:', error);
       this.alertService.error('Erreur lors de l\'ajout des étudiants');
     });
   }
@@ -1064,7 +1032,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
           this.loadInitialData();
         },
         error: (error) => {
-          console.error('❌ Erreur lors de l\'ajout de l\'étudiant:', error);
+          // console.error('❌ Erreur lors de l\'ajout de l\'étudiant:', error);
           this.error = error.message;
         }
       });
@@ -1098,7 +1066,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
           this.isCreating = false;
         },
         error: (error) => {
-          console.error('❌ ExamensComponent: Erreur lors de la création:', error);
+          // console.error('❌ ExamensComponent: Erreur lors de la création:', error);
           this.error = error.message;
           this.isCreating = false;
         }
@@ -1137,7 +1105,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
           this.isUpdating = false;
         },
         error: (error) => {
-          console.error('❌ ExamensComponent: Erreur lors de la mise à jour:', error);
+          // console.error('❌ ExamensComponent: Erreur lors de la mise à jour:', error);
           this.error = error.message;
           this.isUpdating = false;
         }
@@ -1175,7 +1143,7 @@ export class ExamensComponent implements OnInit, OnDestroy {
           this.showDeleteConfirm = false;
         },
         error: (error) => {
-          console.error('❌ ExamensComponent: Erreur lors de la suppression:', error);
+          // console.error('❌ ExamensComponent: Erreur lors de la suppression:', error);
           this.alertService.error('Erreur lors de la suppression : ' + error.message);
           this.isDeleting = false;
           this.examToDelete = null;
@@ -1253,6 +1221,20 @@ export class ExamensComponent implements OnInit, OnDestroy {
     }
     
     return 'Aucun étudiant associé';
+  }
+
+  /**
+   * Obtient le nom de l'étudiant sélectionné pour l'édition de note
+   */
+  getSelectedStudentName(): string {
+    if (!this.selectedStudent) return 'Étudiant inconnu';
+    
+    const student = (this.selectedStudent as Record<string, unknown>)?.['student'] as Record<string, unknown>;
+    if (student) {
+      return `${student?.['student_firstname'] || ''} ${student?.['student_lastname'] || ''}`.trim();
+    }
+    
+    return 'Étudiant inconnu';
   }
 
   /**
