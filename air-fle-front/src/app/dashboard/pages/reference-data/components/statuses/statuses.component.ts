@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -48,7 +49,7 @@ export class StatusesComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        console.error('Erreur lors du chargement des statuts:');
+        // console.error('Erreur lors du chargement des statuts:');
         this.error = 'Erreur lors du chargement des statuts';
         this.isLoading = false;
       },
@@ -90,14 +91,14 @@ export class StatusesComponent implements OnInit {
 
   createStatus(): void {
     if (this.createForm.invalid) return;
-    const statusData: CreateStatusDto = { label: this.createForm.value.label };
+    const statusData: CreateStatusDto = { status_label: this.createForm.value.label };
     this.referenceDataService.createStatus(statusData).subscribe({
       next: (newStatus: Status) => {
         this.statuses.push(newStatus);
         this.closeCreateModal();
       },
       error: () => {
-        console.error('Erreur lors de la création du statut:');
+        // console.error('Erreur lors de la création du statut:');
         this.error = 'Erreur lors de la création du statut';
       },
     });
@@ -105,7 +106,7 @@ export class StatusesComponent implements OnInit {
 
   updateStatus(): void {
     if (this.editForm.invalid || !this.selectedStatus) return;
-    const statusData: CreateStatusDto = { label: this.editForm.value.label };
+    const statusData: CreateStatusDto = { status_label: this.editForm.value.label };
     this.referenceDataService.updateStatus(this.selectedStatus.id, statusData).subscribe({
       next: (updatedStatus: Status) => {
         const index = this.statuses.findIndex(s => s.id === updatedStatus.id);
@@ -115,7 +116,7 @@ export class StatusesComponent implements OnInit {
         this.closeEditModal();
       },
       error: () => {
-        console.error('Erreur lors de la mise à jour du statut:');
+        // console.error('Erreur lors de la mise à jour du statut:');
         this.error = 'Erreur lors de la mise à jour du statut';
       },
     });
@@ -127,9 +128,9 @@ export class StatusesComponent implements OnInit {
         next: () => {
           this.statuses = this.statuses.filter(s => s.id !== status.id);
         },
-        error: () => {
-          console.error('Erreur lors de la suppression du statut:');
-          this.error = 'Erreur lors de la suppression du statut';
+        error: (error: HttpErrorResponse) => {
+          // console.error('Erreur lors de la suppression du statut:', error);
+          this.error = error?.error?.message || error?.message || 'Erreur lors de la suppression du statut';
         },
       });
     }
