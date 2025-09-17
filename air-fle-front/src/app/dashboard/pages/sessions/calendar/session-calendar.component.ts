@@ -5,7 +5,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import {
-  Calendar,
   CalendarOptions,
   EventApi,
   EventClickArg,
@@ -88,8 +87,8 @@ export class SessionCalendarComponent implements OnInit {
         this.calendarOptions.events = this.events;
         this.loading = false;
       },
-      error: err => {
-        console.error('Erreur lors du chargement des événements du calendrier', err);
+      error: (err: Error) => {
+        // console.error('Erreur lors du chargement des événements du calendrier', err);
         this.loading = false;
       },
     });
@@ -128,7 +127,7 @@ export class SessionCalendarComponent implements OnInit {
       this.events.map(
         e =>
           ({
-            id: parseInt(e.id as string),
+            id: parseInt(e.id as string) || 0,
             title: e.title as string,
             start: e.start as Date,
             end: e.end as Date,
@@ -151,8 +150,8 @@ export class SessionCalendarComponent implements OnInit {
       next: () => {
 
       },
-      error: err => {
-        console.error("Erreur lors de la mise à jour de l'événement", err);
+      error: (err: Error) => {
+        // console.error("Erreur lors de la mise à jour de l'événement", err);
         dropInfo.revert();
       },
     });
