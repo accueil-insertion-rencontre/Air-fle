@@ -118,7 +118,7 @@ export class SessionListComponent implements OnInit {
         this.sessions = sessions;
         this.loading = false;
       },
-      error: (err: Error) => {
+      error: () => {
         // console.error('Erreur lors du chargement des sessions', err);
         this.loading = false;
       },
@@ -264,7 +264,7 @@ export class SessionListComponent implements OnInit {
               this.sessions = this.sessions.filter(s => s.session_uuid !== id);
               this.alertService.success('Session supprimée avec succès !');
             },
-            error: err => {
+            error: () => {
               // console.error('Erreur lors de la suppression de la session', err);
               this.alertService.error('Erreur lors de la suppression. Veuillez réessayer.');
             },
