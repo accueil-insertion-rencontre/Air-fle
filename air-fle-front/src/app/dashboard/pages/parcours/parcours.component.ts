@@ -15,6 +15,7 @@ import {
   StudentService,
   AlertService
 } from '@core/services';
+import { Student, StudentListResponse } from '@core/models';
 
 @Component({
   selector: 'app-parcours',
@@ -32,7 +33,7 @@ export class ParcoursComponent implements OnInit, OnDestroy {
   continuationStats: ContinuationStats | null = null;
 
   // Reference data
-  students: any[] = [];
+  students: Student[] = [];
 
   // UI state
   viewMode: 'cards' | 'list' = 'cards';
@@ -106,21 +107,20 @@ export class ParcoursComponent implements OnInit, OnDestroy {
 
   private loadStudents(): void {
     this.studentService.getStudents().subscribe({
-      next: (response: any) => {
+      next: (response: StudentListResponse | Student[]) => {
         // S'assurer que students est toujours un tableau
         if (Array.isArray(response)) {
           this.students = response;
         } else if (response && Array.isArray(response.students)) {
           this.students = response.students;
-        } else if (response && Array.isArray(response.data)) {
-          this.students = response.data;
+        } else if (response && 'data' in response && Array.isArray((response as Record<string, unknown>)['data'])) {
+          this.students = (response as Record<string, unknown>)['data'] as Student[];
         } else {
           this.students = [];
-          console.warn('Format de réponse inattendu pour les étudiants:', response);
         }
       },
-      error: (error: any) => {
-        console.error('Erreur lors du chargement des étudiants:', error);
+      error: (error: Error) => {
+        // console.error('Erreur lors du chargement des étudiants:', error);
         this.students = []; // Toujours un tableau même en cas d'erreur
       }
     });
@@ -137,24 +137,23 @@ export class ParcoursComponent implements OnInit, OnDestroy {
     
 
     this.continuationService.getAllContinuations().subscribe({
-      next: (response: any) => {
+      next: (response) => {
+        const responseUnknown = response as unknown as Record<string, unknown>;
         
         
         // S'assurer que nous avons un tableau
-        let rawData = [];
-        if (Array.isArray(response)) {
-          rawData = response;
-        } else if (response && response.data && Array.isArray(response.data.data)) {
+        let rawData: Continuation[] = [];
+        if (Array.isArray(responseUnknown)) {
+          rawData = responseUnknown;
+        } else if (responseUnknown && responseUnknown['data'] && Array.isArray((responseUnknown['data'] as Record<string, unknown>)['data'])) {
           // Structure: { data: { data: [...], meta: {...} } }
-          rawData = response.data.data;
-        } else if (response && Array.isArray(response.data)) {
+          rawData = (responseUnknown['data'] as Record<string, unknown>)['data'] as Continuation[];
+        } else if (responseUnknown && Array.isArray(responseUnknown['data'])) {
           // Structure: { data: [...] }
-          rawData = response.data;
-        } else if (response && Array.isArray(response.continuations)) {
-          rawData = response.continuations;
+          rawData = responseUnknown['data'] as Continuation[];
+        } else if (responseUnknown && Array.isArray(responseUnknown['continuations'])) {
+          rawData = responseUnknown['continuations'] as Continuation[];
         } else {
-          console.warn('⚠️ Format de réponse inattendu:', response);
-          console.warn('⚠️ Propriétés disponibles:', Object.keys(response || {}));
           this.continuations = [];
           this.applyFilters();
           this.loadStats();
@@ -163,10 +162,10 @@ export class ParcoursComponent implements OnInit, OnDestroy {
         }
 
         // 🔧 FIX: Nettoyer le tableau mixte - éliminer les réponses d'API wrappées
-        this.continuations = rawData.filter((item: any) => {
+        this.continuations = rawData.filter((item) => {
           // Garder seulement les objets qui ont directement un continuation_uuid
           // Éliminer les réponses d'API wrappées qui ont data: {continuation...}
-          return item && item.continuation_uuid && !item.data;
+          return item && item.continuation_uuid && !(item as unknown as Record<string, unknown>)['data'];
         });
 
         
@@ -176,11 +175,11 @@ export class ParcoursComponent implements OnInit, OnDestroy {
         this.loadStats();
         this.isLoading = false;
       },
-      error: (error) => {
-        console.error('❌ Erreur lors du chargement des continuations:', error);
-        console.error('❌ Status:', error.status);
-        console.error('❌ Message:', error.message);
-        console.error('❌ Response body:', error.error);
+      error: (error: Error & { status?: number; message?: string; error?: unknown }) => {
+        // console.error('❌ Erreur lors du chargement des continuations:', error);
+        // console.error('❌ Status:', error.status);
+        // console.error('❌ Message:', error.message);
+        // console.error('❌ Response body:', error.error);
         
         this.error = 'Erreur lors du chargement des continuations';
         this.continuations = []; // TOUJOURS un tableau en cas d'erreur
@@ -198,8 +197,8 @@ export class ParcoursComponent implements OnInit, OnDestroy {
         this.continuationStats = stats;
         this.isLoadingStats = false;
       },
-      error: (error) => {
-        console.error('Erreur lors du chargement des statistiques:', error);
+      error: (error: Error & { status?: number; message?: string; error?: unknown }) => {
+        // console.error('Erreur lors du chargement des statistiques:', error);
         this.continuationStats = null;
         this.isLoadingStats = false;
       }
@@ -208,7 +207,6 @@ export class ParcoursComponent implements OnInit, OnDestroy {
 
   private applyFilters(): void {
     if (!Array.isArray(this.continuations)) {
-      console.warn('⚠️ this.continuations n\'est pas un tableau:', this.continuations);
       this.continuations = [];
       this.filteredContinuations = [];
       return;
@@ -275,17 +273,17 @@ export class ParcoursComponent implements OnInit, OnDestroy {
       };
 
       this.continuationService.createContinuation(formData).subscribe({
-        next: (newContinuation) => {
+        next: () => {
           // ✅ FIX: Recharger la liste complète au lieu de manipuler le tableau
           this.loadContinuations();
           this.hideCreateForm();
           this.alertService.success('Continuation créée avec succès');
           this.isCreating = false;
         },
-        error: (error) => {
+        error: (error: Error & { status?: number; message?: string; error?: unknown }) => {
           this.alertService.error('Erreur lors de la création de la continuation');
           this.isCreating = false;
-          console.error('Erreur:', error);
+          // console.error('Erreur:', error);
         }
       });
     }
@@ -301,17 +299,17 @@ export class ParcoursComponent implements OnInit, OnDestroy {
 
       this.continuationService.updateContinuation(this.selectedContinuation.continuation_uuid, 
 updateData).subscribe({
-        next: (updatedContinuation) => {
+        next: () => {
           // ✅ FIX: Recharger la liste complète au lieu de manipuler le tableau
           this.loadContinuations();
           this.hideEditForm();
           this.alertService.success('Continuation mise à jour avec succès');
           this.isEditing = false;
         },
-        error: (error) => {
+        error: (error: Error & { status?: number; message?: string; error?: unknown }) => {
           this.alertService.error('Erreur lors de la mise à jour');
           this.isEditing = false;
-          console.error('Erreur:', error);
+          // console.error('Erreur:', error);
         }
       });
     }
@@ -325,9 +323,9 @@ updateData).subscribe({
           this.loadContinuations();
           this.alertService.success('Continuation supprimée');
         },
-        error: (error) => {
+        error: (error: Error & { status?: number; message?: string; error?: unknown }) => {
           this.alertService.error('Erreur lors de la suppression');
-          console.error('Erreur:', error);
+          // console.error('Erreur:', error);
         }
       });
     }
