@@ -10,7 +10,7 @@ export class AutoSanitizeDirective implements OnInit, OnDestroy {
   @Input() strictMode: boolean = true;
   @Input() showWarnings: boolean = true;
 
-  private debounceTimer?: any;
+  private debounceTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private el: ElementRef,
