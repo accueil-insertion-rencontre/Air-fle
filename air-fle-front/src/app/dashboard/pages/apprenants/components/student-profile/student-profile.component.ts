@@ -333,7 +333,7 @@ export class StudentProfileComponent implements OnInit {
     this.showDeleteConfirmModal = false;
     
     this.studentService.deleteStudent(this.student.student_uuid).subscribe({
-      next: (response) => {
+      next: () => {
         this.router.navigate(['/dashboard/apprenants']);
       },
       error: () => {
