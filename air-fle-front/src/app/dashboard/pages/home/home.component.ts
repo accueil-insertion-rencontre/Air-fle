@@ -156,7 +156,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
           feather.replace();
         });
       }
-    } catch (error) {
+    } catch {
       // Gestion silencieuse de l'erreur
     }
   }
@@ -434,7 +434,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.isLoadingWeekCourses = false;
       },
-      error: (error) => {
+      error: () => {
         // console.error('Erreur lors du chargement des cours:', error);
         this.weekCoursesError = 'Impossible de charger les cours de la semaine';
         this.isLoadingWeekCourses = false;
@@ -515,7 +515,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.isLoadingTodayModules = false;
       },
-      error: (error) => {
+      error: () => {
         // console.error('Erreur lors du chargement des modules:', error);
         this.todayModulesError = 'Impossible de charger les modules du jour';
         this.isLoadingTodayModules = false;
