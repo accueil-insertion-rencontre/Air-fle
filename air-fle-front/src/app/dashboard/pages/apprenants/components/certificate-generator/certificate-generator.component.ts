@@ -40,7 +40,7 @@ export class CertificateGeneratorComponent implements OnInit {
       error: (err) => {
         this.error = 'Erreur lors du chargement des données du certificat';
         this.isLoading = false;
-        console.error('Erreur:', err);
+        // console.error('Erreur:', err);
       }
     });
   }
@@ -61,7 +61,7 @@ export class CertificateGeneratorComponent implements OnInit {
       error: (err) => {
         this.error = 'Erreur lors du téléchargement du certificat';
         this.isLoading = false;
-        console.error('Erreur:', err);
+        // console.error('Erreur:', err);
       }
     });
   }
