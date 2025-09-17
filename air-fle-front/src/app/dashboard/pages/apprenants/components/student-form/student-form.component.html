@@ -173,16 +173,6 @@
           <small class="field-help">Niveau déterminé par le test de positionnement</small>
         </div>
 
-        <div class="form-group">
-          <label for="current_level_id">Niveau actuel</label>
-          <select id="current_level_id" formControlName="current_level_id">
-            <option value="">Sélectionnez un niveau</option>
-            <option *ngFor="let level of frenchLevels" [value]="level.id">
-              {{ level.code }} - {{ level.description }}
-            </option>
-          </select>
-          <small class="field-help">Niveau actuel en cours de formation</small>
-        </div>
       </div>
 
       <div class="form-row">
