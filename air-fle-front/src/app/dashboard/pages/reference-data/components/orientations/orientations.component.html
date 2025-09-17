@@ -55,8 +55,8 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="isCreateModalOpen" (click)="closeCreateModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="isCreateModalOpen" (click)="closeCreateModal()" (keyup.escape)="closeCreateModal()" tabindex="0">
+  <div class="modal-content" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
     <div class="modal-header">
       <h2>Ajouter une orientation</h2>
       <button class="close-btn" (click)="closeCreateModal()">×</button>
@@ -97,8 +97,8 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="isEditModalOpen" (click)="closeEditModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="isEditModalOpen" (click)="closeEditModal()" (keyup.escape)="closeEditModal()" tabindex="0">
+  <div class="modal-content" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
     <div class="modal-header">
       <h2>Modifier l'orientation</h2>
       <button class="close-btn" (click)="closeEditModal()">×</button>
