@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, Inject, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Inject,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, Financing } from '@prisma/client';
 
@@ -60,18 +66,38 @@ export class FinancingService {
   }
 
   async delete(id: string): Promise<Financing> {
-    // Vérifier que le financement existe
-    await this.findOne(id);
+    // Vérifier d'abord si le financement existe et ses dépendances
+    const financing = await this.prisma.financing.findUnique({
+      where: { financing_uuid: id },
+      include: {
+        students: {
+          select: { student_uuid: true },
+        },
+      },
+    });
 
-    const financing = await this.prisma.financing.delete({
+    if (!financing) {
+      throw new NotFoundException('Financement non trouvé');
+    }
+
+    // Vérifier s'il est utilisé par des étudiants
+    if (financing.students && financing.students.length > 0) {
+      throw new BadRequestException(
+        `Ce financement ne peut pas être supprimé car il est attribué à ${financing.students.length} étudiant(s)`,
+      );
+    }
+
+    // Si tout est OK, supprimer le financement
+    const deletedFinancing = await this.prisma.financing.delete({
       where: { financing_uuid: id },
     });
+
     this.logger.log(
       JSON.stringify({
         event: 'financing_deleted',
-        financing_uuid: financing.financing_uuid,
+        financing_uuid: deletedFinancing.financing_uuid,
       }),
     );
-    return financing;
+    return deletedFinancing;
   }
 }
