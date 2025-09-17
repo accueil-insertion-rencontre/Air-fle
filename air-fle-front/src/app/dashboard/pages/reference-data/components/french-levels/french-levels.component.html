@@ -54,8 +54,8 @@
 </div>
 
 <!-- Modal de création -->
-<div class="modal-overlay" *ngIf="isCreateModalOpen" (click)="closeCreateModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="isCreateModalOpen" (click)="closeCreateModal()" (keyup.escape)="closeCreateModal()" tabindex="0">
+  <div class="modal-content" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="-1">
     <div class="modal-header">
       <h2>Ajouter un niveau de français</h2>
       <button class="close-btn" (click)="closeCreateModal()">×</button>
@@ -104,8 +104,8 @@
 </div>
 
 <!-- Modal d'édition -->
-<div class="modal-overlay" *ngIf="isEditModalOpen" (click)="closeEditModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+<div class="modal-overlay" *ngIf="isEditModalOpen" (click)="closeEditModal()" (keyup.escape)="closeEditModal()" tabindex="0" role="button" aria-label="Fermer la modal">
+  <div class="modal-content" (click)="$event.stopPropagation()" (keyup)="$event.stopPropagation()" tabindex="-1">
     <div class="modal-header">
       <h2>Modifier le niveau de français</h2>
       <button class="close-btn" (click)="closeEditModal()">×</button>
