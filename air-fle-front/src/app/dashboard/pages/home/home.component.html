@@ -76,13 +76,10 @@
               [style.background-color]="getCourseColor(course)"
             >
               <div class="course-time">
-                {{ formatTime(course.course_start_hour || course.start_hour) }} - {{ formatTime(course.course_end_hour || course.end_hour) }}
+                {{ formatTime(course.course_start_hour || course.start_hour || '') }} - {{ formatTime(course.course_end_hour || course.end_hour || '') }}
               </div>
               <div class="course-name">
                 {{ course.course_name || course.name }}
-              </div>
-              <div class="course-room" *ngIf="course.course_room || course.room">
-                {{ course.course_room || course.room }}
               </div>
             </div>
             <div class="no-courses" *ngIf="getCoursesForDay(day).length === 0">
@@ -255,9 +252,6 @@
             <div class="module-info">
               <div class="module-time">{{ formatModuleTime(currentModule) }}</div>
               <div class="module-name">{{ currentModule.course_name || currentModule.name }}</div>
-              <div class="module-room" *ngIf="currentModule.course_room || currentModule.room">
-                {{ currentModule.course_room || currentModule.room }}
-              </div>
             </div>
             <div class="module-actions">
               <button 
@@ -284,9 +278,6 @@
             <div class="module-info">
               <div class="module-time">{{ formatModuleTime(nextModule) }}</div>
               <div class="module-name">{{ nextModule.course_name || nextModule.name }}</div>
-              <div class="module-room" *ngIf="nextModule.course_room || nextModule.room">
-                {{ nextModule.course_room || nextModule.room }}
-              </div>
               <div class="module-date">{{ formatModuleDate(nextModule) }}</div>
             </div>
           </div>
@@ -306,14 +297,14 @@
   [isOpen]="isCreateModalOpen"
   [parentTasks]="parentTasks"
   (close)="closeCreateModal()"
-  (submit)="onCreateTodo($event)"
+  (submit)="onCreateTodo($any($event))"
 >
 </app-create-todo-modal>
 
 <!-- Ancienne modale d'appels supprimée -->
 <!-- Modale de prise d'appel (intégrée) -->
 <div class="modal-overlay" *ngIf="showAttendanceModal" (click)="closeAttendanceModal()" (keyup.escape)="closeAttendanceModal()" tabindex="0"></div>
-<div class="modal-content-custom" *ngIf="showAttendanceModal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+<div class="modal-content-custom" *ngIf="showAttendanceModal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
   <div class="modal-header-custom">
     <h5 class="modal-title">Prise d'appel</h5>
     <button class="icon-btn" (click)="closeAttendanceModal()" aria-label="Fermer">×</button>
@@ -330,8 +321,8 @@
         <div class="list">
           <div class="row" *ngFor="let s of attendanceForm; index as i">
             <div class="cell name">
-              <div class="avatar">{{ (attendanceData?.students[i]?.firstname || ' ')[0] }}</div>
-              <div class="fullname">{{attendanceData?.students[i]?.firstname}} {{attendanceData?.students[i]?.lastname}}</div>
+              <div class="avatar">{{ (s && attendanceData && attendanceData.students[i] ? (attendanceData.students[i].student_firstname || ' ')[0] : ' ') }}</div>
+              <div class="fullname">{{ s && attendanceData && attendanceData.students[i] ? attendanceData.students[i].student_firstname : '' }} {{ s && attendanceData && attendanceData.students[i] ? attendanceData.students[i].student_lastname : '' }}</div>
             </div>
             <div class="cell status">
               <div class="segmented hide-sm">
