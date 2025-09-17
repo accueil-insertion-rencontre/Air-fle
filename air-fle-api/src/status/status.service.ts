@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, Status } from '@prisma/client';
 
@@ -49,15 +54,38 @@ export class StatusService {
   }
 
   async delete(id: string): Promise<Status> {
-    const status = await this.prisma.status.delete({
+    // Vérifier d'abord si le statut existe et ses dépendances
+    const status = await this.prisma.status.findUnique({
+      where: { status_uuid: id },
+      include: {
+        students: {
+          select: { student_uuid: true },
+        },
+      },
+    });
+
+    if (!status) {
+      throw new NotFoundException('Statut non trouvé');
+    }
+
+    // Vérifier s'il est utilisé par des étudiants
+    if (status.students && status.students.length > 0) {
+      throw new BadRequestException(
+        `Ce statut ne peut pas être supprimé car il est attribué à ${status.students.length} étudiant(s)`,
+      );
+    }
+
+    // Si tout est OK, supprimer le statut
+    const deletedStatus = await this.prisma.status.delete({
       where: { status_uuid: id },
     });
+
     this.logger.log(
       JSON.stringify({
         event: 'status_deleted',
-        status_uuid: status.status_uuid,
+        status_uuid: deletedStatus.status_uuid,
       }),
     );
-    return status;
+    return deletedStatus;
   }
 }
