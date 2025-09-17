@@ -57,7 +57,7 @@ export class AuthService {
               this.currentUserSubject.next(response.data.user);
             }
           }
-        } catch (error) {
+        } catch {
           // console.error('🔐 LOGIN - Erreur lors du traitement de la réponse:', error);
         }
       })
