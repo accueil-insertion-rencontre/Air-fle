@@ -39,10 +39,12 @@
         </div>
 
         <div *ngIf="!isLoading" class="document-grid">
-          <div *ngFor="let docType of documentTypes" 
+          <button *ngFor="let docType of documentTypes" 
                class="document-card"
                [class.disabled]="!docType.available"
-               (click)="generateDocument(docType)">
+               (click)="generateDocument(docType)"
+               (keyup.enter)="generateDocument(docType)"
+               type="button">
             <div class="card-header">
               <i [class]="docType.icon"></i>
               <span class="availability-badge" *ngIf="!docType.available">Bientôt</span>
@@ -57,7 +59,7 @@
                 Télécharger
               </button>
             </div>
-          </div>
+          </button>
         </div>
       </div>
 
