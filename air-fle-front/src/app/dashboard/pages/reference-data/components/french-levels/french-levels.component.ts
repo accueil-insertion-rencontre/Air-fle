@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -122,7 +123,7 @@ export class FrenchLevelsComponent implements OnInit {
         this.closeCreateModal();
       },
       error: () => {
-        console.error('Erreur lors de la création du niveau:');
+        // console.error('Erreur lors de la création du niveau:');
         this.error = 'Erreur lors de la création du niveau de français';
       },
     });
@@ -144,9 +145,9 @@ export class FrenchLevelsComponent implements OnInit {
         }
         this.closeEditModal();
       },
-      error: () => {
-        console.error('Erreur lors de la mise à jour du niveau:');
-        this.error = 'Erreur lors de la mise à jour du niveau de français';
+      error: (error: HttpErrorResponse) => {
+        // console.error('Erreur lors de la mise à jour du niveau:', error);
+        this.error = error?.error?.message || error?.message || 'Erreur lors de la mise à jour du niveau de français';
       },
     });
   }
@@ -157,9 +158,9 @@ export class FrenchLevelsComponent implements OnInit {
         next: () => {
           this.frenchLevels = this.frenchLevels.filter(l => l.id !== level.id);
         },
-        error: () => {
-          console.error('Erreur lors de la suppression du niveau:');
-          this.error = 'Erreur lors de la suppression du niveau de français';
+        error: (error: HttpErrorResponse) => {
+          // console.error('Erreur lors de la suppression du niveau:', error);
+          this.error = error?.error?.message || error?.message || 'Erreur lors de la suppression du niveau de français';
         },
       });
     }
