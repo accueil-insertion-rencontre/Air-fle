@@ -146,7 +146,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         this.userRole = payload.role;
-      } catch (error) {
+      } catch {
         // Gestion silencieuse de l'erreur
       }
     }
