@@ -4,6 +4,10 @@
   id="confirmationModal"
   *ngIf="config && visible"
   (click)="onBackdropClick($event)"
+  (keyup.escape)="onCancel()"
+  tabindex="0"
+  role="button"
+  aria-label="Fermer la modal"
   aria-modal="true"
 >
   <div class="modal-dialog-custom" role="dialog" aria-labelledby="confirmationModalLabel">
