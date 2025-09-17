@@ -9,9 +9,13 @@ import { User } from '../models';
 
 export interface AuthResponse {
   success: boolean;
-  access_token: string;
-  user: User;
+  access_token?: string;
+  user?: User;
   message?: string;
+  data?: {
+    access_token: string;
+    user: User;
+  };
 }
 
 @Injectable({
@@ -28,14 +32,14 @@ export class AuthService {
     private cookieService: CookieService
   ) {}
 
-  login(email: string, password: string): Observable<any> {
+  login(email: string, password: string): Observable<AuthResponse> {
     const url = `${this.apiUrl}/auth/login`;
     const payload = { email, password };
 
     
 
-    return this.http.post(url, payload).pipe(
-      tap((response: any) => {
+    return this.http.post<AuthResponse>(url, payload).pipe(
+      tap((response: AuthResponse) => {
 
         
         try {
@@ -54,7 +58,7 @@ export class AuthService {
             }
           }
         } catch (error) {
-          console.error('🔐 LOGIN - Erreur lors du traitement de la réponse:', error);
+          // console.error('🔐 LOGIN - Erreur lors du traitement de la réponse:', error);
         }
       })
     );
@@ -108,7 +112,7 @@ export class AuthService {
   }
 
   // Décoder le JWT pour récupérer les informations minimales (sans appel API)
-  getDecodedToken(): any | null {
+  getDecodedToken(): Record<string, unknown> | null {
     const token = this.getToken();
     if (!token) return null;
     try {
@@ -124,7 +128,7 @@ export class AuthService {
   getUserIdFromToken(): string | null {
     const payload = this.getDecodedToken();
     if (!payload) return null;
-    const id = payload.user_uuid || payload.id || payload.sub;
+    const id = payload['user_uuid'] || payload['id'] || payload['sub'];
     return id ? String(id) : null;
   }
 
