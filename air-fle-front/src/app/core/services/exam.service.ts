@@ -34,11 +34,11 @@ export class ExamService {
    */
   getAllExams(): Observable<Exam[]> {
     
-    return this.http.get<any>(this.apiUrl).pipe(
-      map((response: ApiListResponse<Exam> | Paginated<Exam> | any) => {
-        if (response && Array.isArray(response.data)) return response.data as Exam[];
-        if (response && response.data && Array.isArray(response.data.data)) return response.data.data as Exam[];
-        if (response && Array.isArray(response.exams)) return response.exams as Exam[];
+    return this.http.get<ApiListResponse<Exam> | Paginated<Exam> | Exam[] | Record<string, unknown>>(this.apiUrl).pipe(
+      map((response: ApiListResponse<Exam> | Paginated<Exam> | Exam[] | Record<string, unknown>) => {
+        if (response && Array.isArray((response as Record<string, unknown>)['data'])) return (response as Record<string, unknown>)['data'] as Exam[];
+        if (response && (response as Record<string, unknown>)['data'] && Array.isArray(((response as Record<string, unknown>)['data'] as Record<string, unknown>)['data'])) return ((response as Record<string, unknown>)['data'] as Record<string, unknown>)['data'] as Exam[];
+        if (response && Array.isArray((response as Record<string, unknown>)['exams'])) return (response as Record<string, unknown>)['exams'] as Exam[];
         if (Array.isArray(response)) return response as Exam[];
         return [];
       }),
@@ -51,18 +51,17 @@ export class ExamService {
    */
   getExamById(id: string): Observable<Exam> {
     
-    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.get<{data: Exam} | Exam>(`${this.apiUrl}/${id}`).pipe(
       map(response => {
         
         
         // Extraire les données de l'examen depuis response.data
-        if (response && response.data) {
+        if (response && 'data' in response) {
           return response.data;
-        } else if (response && response.exam_uuid) {
-          return response;
+        } else if (response && 'exam_uuid' in response) {
+          return response as Exam;
         } else {
-          console.warn('⚠️ Format de réponse inattendu pour getExamById:', response);
-          return response;
+          return response as Exam;
         }
       }),
       catchError(this.handleError)
@@ -73,14 +72,13 @@ export class ExamService {
    * Récupère les examens d'un étudiant spécifique
    */
   getExamsByStudent(studentId: string): Observable<Exam[]> {
-    return this.http.get<any>(`${this.apiUrl}/student/${studentId}`).pipe(
+    return this.http.get<{data: Exam[]} | Exam[]>(`${this.apiUrl}/student/${studentId}`).pipe(
       map(response => {
-        if (response && response.data) {
+        if (response && 'data' in response) {
           return response.data;
         } else if (Array.isArray(response)) {
           return response;
         } else {
-          console.warn('⚠️ Format de réponse inattendu pour getExamsByStudent:', response);
           return [];
         }
       }),
@@ -93,19 +91,18 @@ export class ExamService {
    */
   createExam(examData: CreateExamDto): Observable<Exam> {
     
-    return this.http.post<any>(this.apiUrl, examData).pipe(
+    return this.http.post<{data: Exam} | Exam>(this.apiUrl, examData).pipe(
       map(response => {
         
         
         // L'API retourne { data: {...}, success: true, ... }
         // On doit extraire les données de l'examen depuis response.data
-        if (response && response.data) {
+        if (response && 'data' in response) {
           return response.data; // Retourner directement les données de l'examen
-        } else if (response && response.exam_uuid) {
-          return response; // Si les données sont directement dans response
+        } else if (response && 'exam_uuid' in response) {
+          return response as Exam; // Si les données sont directement dans response
         } else {
-          console.warn('⚠️ Format de réponse inattendu pour createExam:', response);
-          return response;
+          return response as Exam;
         }
       }),
       catchError(this.handleError)
@@ -117,18 +114,17 @@ export class ExamService {
    */
   updateExam(id: string, examData: UpdateExamDto): Observable<Exam> {
     
-    return this.http.patch<any>(`${this.apiUrl}/${id}`, examData).pipe(
+    return this.http.patch<{data: Exam} | Exam>(`${this.apiUrl}/${id}`, examData).pipe(
       map(response => {
         
         
         // Extraire les données de l'examen depuis response.data
-        if (response && response.data) {
+        if (response && 'data' in response) {
           return response.data;
-        } else if (response && response.exam_uuid) {
-          return response;
+        } else if (response && 'exam_uuid' in response) {
+          return response as Exam;
         } else {
-          console.warn('⚠️ Format de réponse inattendu pour updateExam:', response);
-          return response;
+          return response as Exam;
         }
       }),
       catchError(this.handleError)
@@ -140,18 +136,17 @@ export class ExamService {
    */
   deleteExam(id: string): Observable<Exam> {
     
-    return this.http.delete<any>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.delete<{data: Exam} | Exam>(`${this.apiUrl}/${id}`).pipe(
       map(response => {
         
         
         // Extraire les données de l'examen depuis response.data si disponible
-        if (response && response.data) {
+        if (response && 'data' in response) {
           return response.data;
-        } else if (response && response.exam_uuid) {
-          return response;
+        } else if (response && 'exam_uuid' in response) {
+          return response as Exam;
         } else {
-          console.warn('⚠️ Format de réponse inattendu pour deleteExam:', response);
-          return response;
+          return response as Exam;
         }
       }),
       catchError(this.handleError)
@@ -160,25 +155,24 @@ export class ExamService {
 
   // getExamStudents supprimé au profit de la version paginée
 
-  getExamStudentsPaginated(examId: string, page: number, pageSize: number): Observable<{data:any[]; meta:any}> {
+  getExamStudentsPaginated(examId: string, page: number, pageSize: number): Observable<{data:Record<string, unknown>[]; meta:Record<string, unknown>}> {
     const params = new HttpParams().set('page', String(page)).set('pageSize', String(pageSize));
-    return this.http.get<any>(`${this.apiUrl}/${examId}/students`, { params }).pipe(
+    return this.http.get<{data: {data: ExamStudentDto[]; meta: Record<string, unknown>}} | {data: ExamStudentDto[]; meta: Record<string, unknown>} | ExamStudentDto[]>(`${this.apiUrl}/${examId}/students`, { params }).pipe(
       map(response => {
         // Cas 1: wrapper global { data: { data: [...], meta: {...} } }
-        if (response && response.data && Array.isArray(response.data.data)) {
-          return { data: response.data.data, meta: response.data.meta || {} };
+        if (response && 'data' in response && 'data' in response.data && Array.isArray((response.data as Record<string, unknown>)['data'])) {
+          return { data: (response.data as Record<string, unknown>)['data'] as Record<string, unknown>[], meta: ((response.data as Record<string, unknown>)['meta'] || {}) as Record<string, unknown> };
         }
         // Cas 2: sans wrapper { data: [...], meta: {...} }
-        if (response && Array.isArray(response.data) && response.meta) {
-          return { data: response.data, meta: response.meta };
+        if (response && 'data' in response && Array.isArray(response.data) && 'meta' in response) {
+          return { data: response.data as unknown as Record<string, unknown>[], meta: response.meta as Record<string, unknown> };
         }
         // Cas 3: tableau brut
         if (Array.isArray(response)) {
-          return { data: response, meta: { total: response.length, page, pageSize, totalPages: 1 } };
+          return { data: response as unknown as Record<string, unknown>[], meta: { total: response.length, page, pageSize, totalPages: 1 } as Record<string, unknown> };
         }
         // Fallback
-        console.warn('⚠️ Format de réponse inattendu pour getExamStudentsPaginated:', response);
-        return { data: [], meta: { total: 0, page, pageSize, totalPages: 1 } };
+        return { data: [], meta: { total: 0, page, pageSize, totalPages: 1 } as Record<string, unknown> };
       }),
       catchError(this.handleError)
     );
@@ -187,10 +181,10 @@ export class ExamService {
   /**
    * Ajoute un étudiant à un examen
    */
-  addStudentToExam(examStudentData: ExamStudentDto): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/student`, examStudentData).pipe(
+  addStudentToExam(examStudentData: ExamStudentDto): Observable<ExamStudentDto> {
+    return this.http.post<{data: ExamStudentDto} | ExamStudentDto>(`${this.apiUrl}/student`, examStudentData).pipe(
       map(response => {
-        if (response && response.data) {
+        if (response && 'data' in response) {
           return response.data;
         } else {
           return response;
@@ -203,10 +197,10 @@ export class ExamService {
   /**
    * Met à jour le score d'un étudiant pour un examen
    */
-  updateStudentExamScore(studentUuid: string, examUuid: string, updateData: UpdateExamStudentDto): Observable<any> {
-    return this.http.patch<any>(`${this.apiUrl}/student/${studentUuid}/${examUuid}`, updateData).pipe(
+  updateStudentExamScore(studentUuid: string, examUuid: string, updateData: UpdateExamStudentDto): Observable<ExamStudentDto> {
+    return this.http.patch<{data: ExamStudentDto} | ExamStudentDto>(`${this.apiUrl}/student/${studentUuid}/${examUuid}`, updateData).pipe(
       map(response => {
-        if (response && response.data) {
+        if (response && 'data' in response) {
           return response.data;
         } else {
           return response;
@@ -219,10 +213,10 @@ export class ExamService {
   /**
    * Retire un étudiant d'un examen
    */
-  removeStudentFromExam(studentUuid: string, examUuid: string): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/student/${studentUuid}/${examUuid}`).pipe(
+  removeStudentFromExam(studentUuid: string, examUuid: string): Observable<void> {
+    return this.http.delete<{data: void} | void>(`${this.apiUrl}/student/${studentUuid}/${examUuid}`).pipe(
       map(response => {
-        if (response && response.data) {
+        if (response && 'data' in response) {
           return response.data;
         } else {
           return response;
@@ -235,7 +229,7 @@ export class ExamService {
   /**
    * Ajoute tous les étudiants d'un groupe à un examen
    */
-  addGroupToExam(examUuid: string, groupUuid: string, defaultScore?: string, defaultStatus?: string): Observable<any> {
+  addGroupToExam(examUuid: string, groupUuid: string, defaultScore?: string, defaultStatus?: string): Observable<{added: number; students: ExamStudentDto[]}> {
     let params = new HttpParams();
     
     if (defaultScore) {
@@ -247,19 +241,15 @@ export class ExamService {
     }
     
     const url = `${this.apiUrl}/group/${examUuid}/${groupUuid}`;
-    console.log('🔍 ExamService: URL appelée:', url);
-    console.log('🔍 ExamService: Paramètres:', { examUuid, groupUuid, defaultScore, defaultStatus });
-    console.log('🔍 ExamService: Paramètres HTTP:', params.toString());
     
-    return this.http.post<any>(url, {}, { params }).pipe(
-      tap((response: any) => {
-        console.log('✅ ExamService: Réponse API brute:', response);
+    return this.http.post<{data: {added: number; students: ExamStudentDto[]}} | {added: number; students: ExamStudentDto[]}>(url, {}, { params }).pipe(
+      tap((response) => {
       }),
-      map((response: any) => {
-        if (response && response.data) {
-          return response.data;
+      map((response) => {
+        if (response && 'data' in response) {
+          return (response as {data: {added: number; students: ExamStudentDto[]}}).data;
         } else {
-          return response;
+          return response as {added: number; students: ExamStudentDto[]};
         }
       }),
       catchError(this.handleError)
@@ -271,63 +261,63 @@ export class ExamService {
    */
   getExamDisplayInfo(exam: Exam): ExamDisplayInfo {
     // Conversion pour accès flexible aux propriétés
-    const examData = exam as any;
+    const examData = exam as unknown as Record<string, unknown>;
     
     // Extraction flexible du libellé
-    const label = examData.exam_label || examData.label || examData.title || 'Examen sans titre';
+    const label = (examData['exam_label'] || examData['label'] || examData['title'] || 'Examen sans titre') as string;
     
     // Pour la nouvelle structure, on peut avoir plusieurs étudiants
     let studentName = 'Examen sans étudiants';
     let studentEmail = '';
     
-    if (examData.students && examData.students.length > 0) {
+    if (examData['students'] && (examData['students'] as unknown[]).length > 0) {
       // Nouvelle structure avec plusieurs étudiants
-      const firstStudent = examData.students[0];
-      const student = firstStudent.student || firstStudent;
+      const firstStudent = (examData['students'] as Record<string, unknown>[])[0];
+      const student = (firstStudent['student'] || firstStudent) as Record<string, unknown>;
       
-      const firstName = student.student_firstname || student.firstname || student.first_name || student.prenom || '';
-      const lastName = student.student_lastname || student.lastname || student.last_name || student.nom || '';
+      const firstName = student['student_firstname'] || student['firstname'] || student['first_name'] || student['prenom'] || '';
+      const lastName = student['student_lastname'] || student['lastname'] || student['last_name'] || student['nom'] || '';
       
       if (firstName || lastName) {
         studentName = `${firstName} ${lastName}`.trim();
       } else {
-        studentName = `Étudiant (ID: ${firstStudent.student_uuid})`;
+        studentName = `Étudiant (ID: ${firstStudent['student_uuid']})`;
       }
       
-      studentEmail = student.student_mail || student.email || student.mail || '';
+      studentEmail = (student['student_mail'] || student['email'] || student['mail'] || '') as string;
       
       // Si il y a plusieurs étudiants, indiquer le nombre
-      if (examData.students.length > 1) {
-        studentName += ` (+${examData.students.length - 1} autres)`;
+      if ((examData['students'] as unknown[]).length > 1) {
+        studentName += ` (+${(examData['students'] as unknown[]).length - 1} autres)`;
       }
-    } else if (examData.student) {
+    } else if (examData['student']) {
       // Ancienne structure avec un seul étudiant
-      const student = examData.student as any;
+      const student = examData['student'] as Record<string, unknown>;
       
-      const firstName = student.student_firstname || student.firstname || student.first_name || student.prenom || '';
-      const lastName = student.student_lastname || student.lastname || student.last_name || student.nom || '';
+      const firstName = student['student_firstname'] || student['firstname'] || student['first_name'] || student['prenom'] || '';
+      const lastName = student['student_lastname'] || student['lastname'] || student['last_name'] || student['nom'] || '';
       
       if (firstName || lastName) {
         studentName = `${firstName} ${lastName}`.trim();
       } else {
-        studentName = `Étudiant (ID: ${examData.student_uuid})`;
+        studentName = `Étudiant (ID: ${examData['student_uuid']})`;
       }
       
-      studentEmail = student.student_mail || student.email || student.mail || '';
+      studentEmail = (student['student_mail'] || student['email'] || student['mail'] || '') as string;
     }
     
     // Extraction flexible de la note (pour compatibilité)
-    const score = examData.exam_score || examData.score || undefined;
-    const type = examData.exam_type || examData.type || undefined;
-    const createdAt = examData.exam_created_at || examData.created_at || undefined;
+    const score = examData['exam_score'] || examData['score'] || undefined;
+    const type = examData['exam_type'] || examData['type'] || undefined;
+    const createdAt = examData['exam_created_at'] || examData['created_at'] || undefined;
     
     return {
-      id: examData.exam_uuid || examData.id || '',
+      id: (examData['exam_uuid'] || examData['id'] || '') as string,
       label: label,
-      date: this.formatDate(examData.exam_taked_at || examData.date || examData.taken_at),
-      type: type,
-      createdAt: createdAt ? this.formatDate(createdAt) : undefined,
-      score: score,
+      date: this.formatDate((examData['exam_taked_at'] || examData['date'] || examData['taken_at']) as string | Date),
+      type: type as string | undefined,
+      createdAt: createdAt ? this.formatDate(createdAt as string | Date) : undefined,
+      score: score as string | undefined,
       studentName: studentName, 
       studentEmail: studentEmail
     };
@@ -338,7 +328,6 @@ export class ExamService {
    */
   getExamsDisplayInfo(exams: Exam[]): ExamDisplayInfo[] {
     if (!Array.isArray(exams)) {
-      console.warn('getExamsDisplayInfo: exams n\'est pas un tableau:', exams);
       return [];
     }
     return exams.map(exam => this.getExamDisplayInfo(exam));
@@ -361,7 +350,7 @@ export class ExamService {
    * Gestion des erreurs HTTP
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
-    console.error('❌ ExamService: Erreur HTTP:', error);
+    // console.error('❌ ExamService: Erreur HTTP:', error);
     
     let errorMessage = 'Une erreur inconnue s\'est produite';
     
