@@ -89,12 +89,12 @@
           </div>
         </div>
         <div class="column level">
-          <div class="level-badge" [attr.data-level]="student.currentLevel?.code || student.level?.code">
+          <div class="level-badge" [attr.data-level]="student.frenchLevel?.french_level_code">
             {{ getStudentLevel(student) }}
           </div>
         </div>
         <div class="column status">
-          <div class="status-badge" [attr.data-status]="student.status?.code">
+          <div class="status-badge" [attr.data-status]="student.status?.status_label">
             {{ getStudentStatus(student) }}
           </div>
         </div>
@@ -183,7 +183,7 @@
 
   <!-- Modal de choix de création -->
   <div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()" (keyup.escape)="closeCreateModal()" tabindex="0">
-    <div class="modal-content" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+    <div class="modal-content" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
       <div class="modal-header">
         <h2>Comment souhaitez-vous ajouter des étudiants ?</h2>
         <button class="close-btn" (click)="closeCreateModal()">×</button>
@@ -191,19 +191,19 @@
 
       <div class="modal-body">
         <div class="option-cards">
-          <div class="option-card" (click)="createSingleStudent()">
+          <button class="option-card" (click)="createSingleStudent()" (keyup.enter)="createSingleStudent()" type="button">
             <div class="option-icon">👤</div>
             <h3>Créer un étudiant</h3>
             <p>Ajouter un nouvel étudiant individuellement avec le formulaire complet</p>
             <div class="option-badge individual">Individuel</div>
-          </div>
+          </button>
 
-          <div class="option-card" (click)="importFromExcel()">
+          <button class="option-card" (click)="importFromExcel()" (keyup.enter)="importFromExcel()" type="button">
             <div class="option-icon">📊</div>
             <h3>Importer depuis Excel</h3>
             <p>Ajouter plusieurs étudiants en une fois depuis un fichier Excel existant</p>
             <div class="option-badge bulk">En masse</div>
-          </div>
+          </button>
         </div>
       </div>
     </div>
