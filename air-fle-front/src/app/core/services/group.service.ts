@@ -21,7 +21,7 @@ export class GroupService {
   getGroups(): Observable<Group[]> {
     // En production, utiliser l'API réelle
     return this.http.get<ApiListResponse<Group> | {data: {data: Group[]}} | Group[] | Record<string, unknown>>(this.apiUrl).pipe(
-      tap((response: ApiListResponse<Group> | {data: {data: Group[]}} | Group[] | Record<string, unknown>) => {
+      tap(() => {
       }),
       map((response: ApiListResponse<Group> | {data: {data: Group[]}} | Group[] | Record<string, unknown>) => {
         if (response && Array.isArray((response as Record<string, unknown>)['data'])) return ((response as Record<string, unknown>)['data'] as Record<string, unknown>[]).map(g => this.convertToFrontendModel(g));
