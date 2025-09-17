@@ -56,7 +56,7 @@ export class CourseFormComponent implements OnInit {
       next: data => {
         this.groups = data;
       },
-      error: err => {
+      error: () => {
         // console.error('Erreur lors du chargement des groupes', err);
       },
     });
@@ -81,7 +81,7 @@ export class CourseFormComponent implements OnInit {
 
         this.loading = false;
       },
-      error: err => {
+      error: () => {
         // console.error('Erreur lors du chargement du cours', err);
         this.loading = false;
       },
@@ -124,7 +124,7 @@ export class CourseFormComponent implements OnInit {
           this.loading = false;
           this.router.navigate(['/dashboard/courses']);
         },
-        error: err => {
+        error: () => {
           // console.error('Erreur lors de la mise à jour du cours', err);
           this.loading = false;
         },
@@ -135,7 +135,7 @@ export class CourseFormComponent implements OnInit {
           this.loading = false;
           this.router.navigate(['/dashboard/courses']);
         },
-        error: err => {
+        error: () => {
           // console.error('Erreur lors de la création du cours', err);
           this.loading = false;
         },
