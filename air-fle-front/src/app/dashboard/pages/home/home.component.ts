@@ -15,11 +15,12 @@ import {
   SessionService,
   GroupService,
 } from '@core/services';
+import { Course, Student } from '@core/models';
 import { CreateTodoModalComponent } from '../../components/create-todo-modal/create-todo-modal.component';
 import { TodoItemComponent } from '../../components/todo-item/todo-item.component';
 import { Subscription } from 'rxjs';
 
-declare let feather: any;
+declare let feather: { replace: () => void };
 
 interface StatCard {
   title: string;
@@ -75,16 +76,16 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   showFilters = false;
 
   // Modules de la journée
-  todayModules: any[] = [];
-  currentModule: any = null;
-  nextModule: any = null;
+  todayModules: Course[] = [];
+  currentModule: Course | null = null;
+  nextModule: Course | null = null;
   isLoadingTodayModules = false;
   todayModulesError: string | null = null;
   // Modale de prise d'appel (intégrée)
   showAttendanceModal = false;
   attendanceState: 'loading'|'ready'|'error' = 'loading';
   attendanceError = '';
-  attendanceData: any = null;
+  attendanceData: { course_uuid: string; students: Student[]; attendance_taken?: boolean } | null = null;
   attendanceForm: { student_uuid: string; status: 'present'|'absent'|'justified' }[] = [];
   
   // Gestion des présences du module actuel
@@ -92,8 +93,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Semaine d'enseignement
   currentWeek: Date = new Date();
-  weekDays: any[] = [];
-  weekCourses: any[] = [];
+  weekDays: { date: Date; dayName: string; dayNumber: number; isToday: boolean }[] = [];
+  weekCourses: Course[] = [];
   isLoadingWeekCourses = false;
   weekCoursesError: string | null = null;
 
@@ -171,7 +172,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.todoStats = this.todolistService.calculateStats(this.todoItems);
         this.isLoadingTodos = false;
       },
-      error: error => {
+      error: () => {
         this.todoError = 'Erreur lors du chargement des tâches';
         this.todoItems = [];
         this.isLoadingTodos = false;
@@ -190,17 +191,17 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Nettoie les données brutes pour créer un objet sûr à envoyer à l'API
    */
-  private sanitizeTodoData(rawData: any): CreateTodoWithSubtasksRequest {
+  private sanitizeTodoData(rawData: { title?: string; description?: string; subtasks?: { title?: string; description?: string }[] }): CreateTodoWithSubtasksRequest {
     return {
       title: String(rawData?.title || '').trim(),
       description: rawData?.description ? String(rawData.description).trim() : undefined,
       subtasks: Array.isArray(rawData?.subtasks)
         ? rawData.subtasks
-            .map((subtask: any) => ({
-              title: String(subtask?.title || '').trim(),
-              description: subtask?.description ? String(subtask.description).trim() : undefined,
+            .map((subtask: Record<string, unknown>) => ({
+              title: String(subtask?.['title'] || '').trim(),
+              description: subtask?.['description'] ? String(subtask['description']).trim() : undefined,
             }))
-            .filter((subtask: any) => subtask.title.length > 0)
+            .filter((subtask: Record<string, unknown>) => Boolean(subtask['title'] && (subtask['title'] as string).length > 0))
         : [],
     };
   }
@@ -212,7 +213,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     return !!(data.title && data.subtasks.length > 0);
   }
 
-  onCreateTodo(todoData: any) {
+  onCreateTodo(todoData: { title?: string; description?: string; subtasks?: { title?: string; description?: string }[] }) {
     const cleanData = this.sanitizeTodoData(todoData);
 
     if (!this.validateTodoData(cleanData)) {
@@ -224,11 +225,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.todoError = null;
 
     this.todolistService.createTodoWithSubtasks(cleanData).subscribe({
-      next: newTask => {
+      next: () => {
         this.loadTodos();
         this.closeCreateModal();
       },
-      error: error => {
+      error: () => {
         this.todoError = 'Erreur lors de la création de la tâche';
         this.isCreatingTodo = false;
       },
@@ -242,7 +243,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         const subtaskIndex = parentTask.subtasks.findIndex(st => st.id === event.subtaskId);
         if (subtaskIndex !== -1) {
           // Mettre à jour la sous-tâche
-          parentTask.subtasks[subtaskIndex] = event.updatedSubtask as any;
+          parentTask.subtasks[subtaskIndex] = event.updatedSubtask as Subtask;
 
           // Recalculer les stats localement
           this.updateParentTaskStats(parentTask);
@@ -421,8 +422,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Trier par jour puis par heure
         this.weekCourses.sort((a, b) => {
-          const dateA = new Date(a.course_day || a.day);
-          const dateB = new Date(b.course_day || b.day);
+          const dateA = new Date(a.course_day || a.day || '');
+          const dateB = new Date(b.course_day || b.day || '');
           
           if (dateA.getTime() !== dateB.getTime()) {
             return dateA.getTime() - dateB.getTime();
@@ -434,14 +435,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isLoadingWeekCourses = false;
       },
       error: (error) => {
-        console.error('Erreur lors du chargement des cours:', error);
+        // console.error('Erreur lors du chargement des cours:', error);
         this.weekCoursesError = 'Impossible de charger les cours de la semaine';
         this.isLoadingWeekCourses = false;
       }
     });
   }
 
-  getCoursesForDay(day: any): any[] {
+  getCoursesForDay(day: { date: Date }): Course[] {
     return this.weekCourses.filter(course => {
       const courseDay = course.course_day || course.day;
       if (!courseDay) return false;
@@ -456,7 +457,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     return time.substring(0, 5); // Afficher seulement HH:MM
   }
 
-  getCourseColor(course: any): string {
+  getCourseColor(course: Course): string {
     return course.course_color || '#4fc3f7';
   }
 
@@ -515,7 +516,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isLoadingTodayModules = false;
       },
       error: (error) => {
-        console.error('Erreur lors du chargement des modules:', error);
+        // console.error('Erreur lors du chargement des modules:', error);
         this.todayModulesError = 'Impossible de charger les modules du jour';
         this.isLoadingTodayModules = false;
       }
@@ -530,8 +531,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.nextModule = null;
 
     for (const module of this.todayModules) {
-      const startTime = this.timeToMinutes(module.course_start_hour || module.start_hour);
-      const endTime = this.timeToMinutes(module.course_end_hour || module.end_hour);
+      const startTime = this.timeToMinutes(module.course_start_hour || module.start_hour || '');
+      const endTime = this.timeToMinutes(module.course_end_hour || module.end_hour || '');
 
       if (currentTime >= startTime && currentTime <= endTime) {
         this.currentModule = module;
@@ -551,25 +552,25 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     return hours * 60 + minutes;
   }
 
-  isModuleAttendanceDone(module: any): boolean {
+  isModuleAttendanceDone(module: Course): boolean {
     // Pris si le backend a marqué attendance_taken, ou fallback sur ancien flag
-    return Boolean(module?.attendance_taken || module?.attendance_done);
+    return Boolean(module?.attendance_taken || (module as unknown as Record<string, unknown>)['attendance_done']);
   }
 
-  openAttendanceModal(module: any): void {
+  openAttendanceModal(module: Course): void {
     if (!module) return;
     const courseId = module.course_uuid || module.course_id || module.id;
     if (!courseId) return;
     this.showAttendanceModal = true;
     this.attendanceState = 'loading';
     this.attendanceError = '';
-    this.attendanceService.getCourseAttendanceNew(courseId as any).subscribe({
-      next: (res: any) => {
-        this.attendanceData = res;
-        this.attendanceForm = (res.students||[]).map((s: any)=>({student_uuid: s.student_uuid, status: (s.status||'present')}));
+    this.attendanceService.getCourseAttendanceNew(courseId as string).subscribe({
+      next: (res) => {
+        this.attendanceData = res as { course_uuid: string; students: Student[]; attendance_taken?: boolean };
+        this.attendanceForm = (((res as unknown as Record<string, unknown>)['students'] as Student[])||[]).map((s: Student)=>({student_uuid: s.student_uuid, status: ((s as unknown as Record<string, unknown>)['status'] as 'present'|'absent'|'justified') || 'present'}));
         this.attendanceState = 'ready';
       },
-      error: (err: any) => { this.attendanceState='error'; this.attendanceError = err?.error?.message || 'Erreur de chargement'; }
+      error: (err: Error & { error?: { message?: string } }) => { this.attendanceState='error'; this.attendanceError = err?.error?.message || 'Erreur de chargement'; }
     });
   }
 
@@ -586,28 +587,28 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   submitAttendance(){
     if(!this.attendanceData) return;
-    const body = { students: this.attendanceForm } as any;
+    const body = { students: this.attendanceForm };
     this.isSavingAttendance = true;
     this.attendanceService.submitCourseAttendance(this.attendanceData.course_uuid, body).subscribe({
-      next: (_resp: any) => { this.isSavingAttendance=false; this.closeAttendanceModal(); this.loadTodayModules(); },
-      error: (err: any) => { this.isSavingAttendance=false; this.attendanceError = err?.error?.message || 'Erreur lors de la validation'; }
+      next: () => { this.isSavingAttendance=false; this.closeAttendanceModal(); this.loadTodayModules(); },
+      error: (err: Error & { error?: { message?: string } }) => { this.isSavingAttendance=false; this.attendanceError = err?.error?.message || 'Erreur lors de la validation'; }
     });
   }
 
   // Hooks liés à l’ancienne modale retirés
 
-  formatModuleTime(module: any): string {
+  formatModuleTime(module: Course): string {
     if (!module) return '';
     
-    const startTime = this.formatTime(module.course_start_hour || module.start_hour);
-    const endTime = this.formatTime(module.course_end_hour || module.end_hour);
+    const startTime = this.formatTime(module.course_start_hour || module.start_hour || '');
+    const endTime = this.formatTime(module.course_end_hour || module.end_hour || '');
     return `${startTime} - ${endTime}`;
   }
 
-  formatModuleDate(module: any): string {
+  formatModuleDate(module: Course): string {
     if (!module) return '';
     
-    const date = new Date(module.course_day || module.day);
+    const date = new Date(module.course_day || module.day || '');
     return date.toLocaleDateString('fr-FR', { 
       weekday: 'long', 
       year: 'numeric', 
