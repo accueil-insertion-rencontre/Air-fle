@@ -23,11 +23,11 @@ export class StudentService {
    * Récupère tous les étudiants (pour sélection dans les groupes)
    */
   getAllStudents(): Observable<Student[]> {
-    return this.http.get<any>(this.apiUrl).pipe(
-      map((response: ApiListResponse<Student> | any) => {
-        if (response && Array.isArray(response.data)) return response.data as Student[];
-        if (response && response.data && Array.isArray(response.data.students)) return response.data.students as Student[];
-        if (Array.isArray(response)) return response as Student[];
+    return this.http.get<ApiListResponse<Student> | Student[]>(this.apiUrl).pipe(
+      map((response) => {
+        if (response && 'data' in response && Array.isArray(response.data)) return response.data;
+        if (response && 'data' in response && response.data && 'students' in response.data && Array.isArray((response.data as unknown as Record<string, unknown>)['students'])) return (response.data as unknown as Record<string, unknown>)['students'] as Student[];
+        if (Array.isArray(response)) return response;
         return [];
       }),
       catchError(() => of([]))
@@ -52,11 +52,11 @@ export class StudentService {
       }
     }
 
-    return this.http.get<any>(this.apiUrl, { params }).pipe(
-      map((response: ApiListResponse<Student> | any) => {
-        if (response && Array.isArray(response.data)) return response.data as Student[];
-        if (response && response.data && Array.isArray(response.data.students)) return response.data.students as Student[];
-        if (Array.isArray(response)) return response as Student[];
+    return this.http.get<ApiListResponse<Student> | Student[]>(this.apiUrl, { params }).pipe(
+      map((response) => {
+        if (response && 'data' in response && Array.isArray(response.data)) return response.data;
+        if (response && 'data' in response && response.data && 'students' in (response.data as unknown as Record<string, unknown>) && Array.isArray((response.data as unknown as Record<string, unknown>)['students'])) return (response.data as unknown as Record<string, unknown>)['students'] as Student[];
+        if (Array.isArray(response)) return response;
         return [];
       }),
       catchError(() => of([]))
@@ -67,12 +67,12 @@ export class StudentService {
    * Récupère un étudiant par son ID
    */
   getStudentById(id: string | number): Observable<Student> {
-    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+    return this.http.get<{ success?: boolean; data?: Student } | Student>(`${this.apiUrl}/${id}`).pipe(
       map(response => {
-        if (response.success && response.data) {
+        if ('success' in response && response.success && response.data) {
           return response.data;
         } else {
-          return response;
+          return response as Student;
         }
       }),
       catchError(error => {
@@ -99,13 +99,14 @@ export class StudentService {
       params = params.set('search', search);
     }
 
-    return this.http.get<any>(this.apiUrl, { params }).pipe(
-      map((response: Paginated<Student> | ApiListResponse<Student> | any) => {
-        if (response && Array.isArray(response.data) && response.meta) {
-          return { students: response.data as Student[], total: response.meta.total ?? response.data.length };
+    return this.http.get<Paginated<Student> | ApiListResponse<Student> | {data: {students: Student[]; total?: number}} | Student[]>(this.apiUrl, { params }).pipe(
+      map((response) => {
+        if (response && 'data' in response && Array.isArray(response.data) && 'meta' in response) {
+          return { students: response.data as Student[], total: response.meta?.total ?? response.data.length };
         }
-        if (response && response.data && Array.isArray(response.data.students)) {
-          return { students: response.data.students as Student[], total: response.data.total ?? (response.data.students as Student[]).length };
+        if (response && 'data' in response && response.data && 'students' in response.data && Array.isArray((response.data as unknown as Record<string, unknown>)['students'])) {
+          const data = response.data as Record<string, unknown>;
+          return { students: data['students'] as Student[], total: (data['total'] ?? (data['students'] as Student[]).length) as number };
         }
         if (Array.isArray(response)) {
           return { students: response as Student[], total: (response as Student[]).length };
@@ -122,10 +123,10 @@ export class StudentService {
   getStudentCount(): Observable<number> {
     // Appeler l'API pour obtenir le vrai total d'étudiants
     const params = new HttpParams().set('skip', '0').set('take', '1');
-    return this.http.get<any>(this.apiUrl, { params }).pipe(
+    return this.http.get<{success: boolean; data: {total: number}} | Paginated<Student>>(this.apiUrl, { params }).pipe(
       map(response => {
-        if (response.success && response.data && typeof response.data.total === 'number') {
-          return response.data.total;
+        if ('success' in response && response.success && 'data' in response && response.data && typeof (response.data as Record<string, unknown>)['total'] === 'number') {
+          return (response.data as Record<string, unknown>)['total'] as number;
         }
         return 0;
       }),
@@ -169,8 +170,8 @@ export class StudentService {
     if (config?.sort) {
       params = params.set('orderBy', JSON.stringify({ [config.sort.field]: config.sort.direction }));
     }
-    return this.http.get<any>(this.apiUrl, { params }).pipe(
-      map((response: Paginated<Student> | ApiListResponse<Student> | any) => {
+    return this.http.get<Paginated<Student> | ApiListResponse<Student> | {data: Student[]; meta?: {total?: number}}>(this.apiUrl, { params }).pipe(
+      map((response) => {
         const page = config?.page || 1;
         const pageSize = config?.pageSize || 20;
         if (response && Array.isArray(response.data) && response.meta) {
@@ -178,14 +179,14 @@ export class StudentService {
           return {
             students: response.data as Student[],
             total,
-            page: response.meta.page ?? page,
-            pageSize: response.meta.pageSize ?? pageSize,
-            totalPages: response.meta.totalPages ?? Math.ceil(total / pageSize),
+            page: (response.meta as Record<string, unknown>)?.['page'] as number ?? page,
+            pageSize: (response.meta as Record<string, unknown>)?.['pageSize'] as number ?? pageSize,
+            totalPages: (response.meta as Record<string, unknown>)?.['totalPages'] as number ?? Math.ceil(total / pageSize),
           };
         }
-        if (response && response.data && Array.isArray(response.data.students)) {
-          const list = response.data.students as Student[];
-          const total = response.data.total ?? list.length;
+        if (response && response.data && Array.isArray((response.data as unknown as Record<string, unknown>)['students'])) {
+          const list = (response.data as unknown as Record<string, unknown>)['students'] as Student[];
+          const total = ((response.data as unknown as Record<string, unknown>)['total'] as number) ?? list.length;
           return { students: list, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
         }
         if (Array.isArray(response)) {
@@ -202,16 +203,13 @@ export class StudentService {
   /**
    * Supprime un étudiant
    */
-  deleteStudent(id: string): Observable<any> {
-    console.log('🗑️ StudentService - URL de suppression:', `${this.apiUrl}/${id}`);
-    console.log('🗑️ StudentService - ID à supprimer:', id);
+  deleteStudent(id: string): Observable<void> {
     
-    return this.http.delete(`${this.apiUrl}/${id}`).pipe(
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       tap(response => {
-        console.log('✅ StudentService - Suppression réussie:', response);
       }),
       catchError(error => {
-        console.error('❌ StudentService - Erreur suppression:', error);
+        // console.error('❌ StudentService - Erreur suppression:', error);
         throw error;
       })
     );
@@ -220,7 +218,7 @@ export class StudentService {
   /**
    * Associe des handicaps à un étudiant
    */
-  assignDisabilities(studentId: string, disabilityIds: string[]): Observable<any> {
+  assignDisabilities(studentId: string, disabilityIds: string[]): Observable<unknown> {
     const data = {
       disability_ids: disabilityIds,
     };
