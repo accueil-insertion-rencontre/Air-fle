@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { StudentService, ReferenceDataService, SanitizationService, ValidationService } from '@core/services';
 import { AutoSanitizeDirective } from '@shared/directives';
+import { tap } from 'rxjs/operators';
 import {
   CreateStudentRequest,
   Gender,
@@ -70,12 +71,21 @@ export class StudentFormComponent implements OnInit {
     this.studentId = this.route.snapshot.paramMap.get('id');
     this.isEditMode = !!this.studentId;
     
-    this.loadReferenceData();
-    
-    // Si mode édition, charger les données de l'apprenant
-    if (this.isEditMode && this.studentId) {
-      this.loadStudentData(this.studentId);
-    }
+    // Charger d'abord les données de référence, puis les données de l'étudiant
+    this.loadReferenceData().subscribe({
+      next: () => {
+        // Une fois les données de référence chargées, charger les données de l'étudiant si en mode édition
+        if (this.isEditMode && this.studentId) {
+          this.loadStudentData(this.studentId);
+        } else {
+          this.isLoading = false;
+        }
+      },
+      error: () => {
+        this.error = 'Erreur lors du chargement des données de référence';
+        this.isLoading = false;
+      }
+    });
   }
 
   private createForm(): FormGroup {
@@ -121,7 +131,6 @@ export class StudentFormComponent implements OnInit {
       status_id: ['', [Validators.required]],
 
       // IDS OPTIONNELS
-      current_level_id: [''], // Niveau actuel en cours de formation
       orientation_id: [''],
       exit_reason_id: [''],
 
@@ -131,32 +140,34 @@ export class StudentFormComponent implements OnInit {
     });
   }
 
-  private loadReferenceData(): void {
+  private loadReferenceData() {
     // Charger toutes les données de référence
-    this.referenceDataService.getAllReferenceData().subscribe({
-      next: (data) => {
-        this.genders = data.genders;
-        this.nationalities = data.nationalities;
-        this.frenchLevels = data.frenchLevels;
-        this.financings = data.financings;
-        this.statuses = data.statuses;
-        this.orientations = data.orientations;
-        this.exitReasons = data.exitReasons;
-        this.disabilities = data.disabilities;
-        if (!this.isEditMode) {
-          this.isLoading = false;
+    return this.referenceDataService.getAllReferenceData().pipe(
+      tap({
+        next: (data) => {
+          this.genders = data.genders;
+          this.nationalities = data.nationalities;
+          this.frenchLevels = data.frenchLevels;
+          this.financings = data.financings;
+          this.statuses = data.statuses;
+          this.orientations = data.orientations;
+          this.exitReasons = data.exitReasons;
+          this.disabilities = data.disabilities;
         }
-      },
-      error: () => {
-        this.error = 'Erreur lors du chargement des données de référence';
-        this.isLoading = false;
-      }
-    });
+      })
+    );
   }
 
   private loadStudentData(studentId: string): void {
     this.studentService.getStudentById(studentId).subscribe({
       next: (student) => {
+        // Mapper les handicaps - LA STRUCTURE EST: disabilities[0].disability_uuid directement !
+        const mappedDisabilities = student.disabilities ? student.disabilities.map((d: { disability_uuid?: string }) => {
+          // La structure retournée par l'API est { student_uuid, disability_uuid, disability: {...} }
+          const uuid = d.disability_uuid || '';
+          return uuid;
+        }).filter(id => id !== '') : [];
+        
         // Préremplir le formulaire avec les données de l'apprenant
         this.studentForm.patchValue({
           // INFORMATIONS PERSONNELLES
@@ -184,13 +195,12 @@ export class StudentFormComponent implements OnInit {
           status_id: student.status_uuid,
           
           // IDS OPTIONNELS
-          current_level_id: student.current_level_uuid,
           orientation_id: student.orientation_uuid,
           exit_reason_id: student.exit_reason_uuid,
           
           // HANDICAPS
           hasDisability: student.disabilities && student.disabilities.length > 0,
-          selectedDisabilities: student.disabilities ? student.disabilities.map((d: any) => d.disability_uuid) : []
+          selectedDisabilities: mappedDisabilities
         });
         
         this.isLoading = false;
@@ -302,6 +312,9 @@ export class StudentFormComponent implements OnInit {
       status_uuid: sanitizedFormData.status_uuid,
       orientation_uuid: sanitizedFormData.orientation_uuid,
       exit_reason_uuid: sanitizedFormData.exit_reason_uuid,
+      
+      // Handicaps
+      disability_uuids: formValue.hasDisability ? formValue.selectedDisabilities : [],
     };
 
     // ÉTAPE 3: Envoi à l'API - création ou mise à jour selon le mode
