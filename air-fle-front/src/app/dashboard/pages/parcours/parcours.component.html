@@ -441,4 +441,4 @@
 </div>
 
 <!-- Modal backdrop -->
-<div *ngIf="showCreateForm || showEditForm" class="modal-backdrop fade show" (click)="hideCreateForm(); hideEditForm()"></div> 
+<div *ngIf="showCreateForm || showEditForm" class="modal-backdrop fade show" (click)="hideCreateForm(); hideEditForm()" (keyup.escape)="hideCreateForm(); hideEditForm()" tabindex="0"></div> 
