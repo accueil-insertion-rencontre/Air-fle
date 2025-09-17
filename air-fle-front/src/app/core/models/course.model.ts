@@ -3,10 +3,10 @@ export interface Course {
   // ✅ NOUVEAUX CHAMPS API
   course_uuid?: string;
   course_name: string;
-  course_day: string; // Format YYYY-MM-DD
-  course_start_hour: string; // Format HH:MM
-  course_end_hour: string; // Format HH:MM
-  group_uuid: string;
+  course_day?: string; // Format YYYY-MM-DD
+  course_start_hour?: string; // Format HH:MM
+  course_end_hour?: string; // Format HH:MM
+  group_uuid?: string;
   course_color?: string;
   course_created_at?: Date;
 
@@ -33,6 +33,7 @@ export interface Course {
   user_id?: number | string; 
   user_uuid?: string;
   color?: string;
+  name?: string; // Pour compatibilité
 
   // Relations enrichies
   session?: {
