@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
@@ -104,29 +109,47 @@ export class DisabilityService {
   }
 
   async delete(id: string): Promise<DisabilityWithRelations> {
-    try {
-      const disability = await this.prisma.disability.delete({
-        where: { disability_uuid: id },
-        include: {
-          students: {
-            include: {
-              student: true,
-            },
+    // Vérifier d'abord si le handicap existe et ses dépendances
+    const disability = await this.prisma.disability.findUnique({
+      where: { disability_uuid: id },
+      include: {
+        students: {
+          include: {
+            student: true,
           },
         },
-      });
-      this.logger.log(
-        JSON.stringify({
-          event: 'disability_deleted',
-          disability_uuid: disability.disability_uuid,
-        }),
-      );
-      return disability;
-    } catch (error) {
-      if ((error as { code?: string }).code === 'P2025') {
-        throw new NotFoundException(`Handicap avec l'ID ${id} non trouvé`);
-      }
-      throw error;
+      },
+    });
+
+    if (!disability) {
+      throw new NotFoundException(`Handicap avec l'ID ${id} non trouvé`);
     }
+
+    // Vérifier s'il est utilisé par des étudiants
+    if (disability.students && disability.students.length > 0) {
+      throw new BadRequestException(
+        `Ce handicap ne peut pas être supprimé car il est attribué à ${disability.students.length} étudiant(s)`,
+      );
+    }
+
+    // Si tout est OK, supprimer le handicap
+    const deletedDisability = await this.prisma.disability.delete({
+      where: { disability_uuid: id },
+      include: {
+        students: {
+          include: {
+            student: true,
+          },
+        },
+      },
+    });
+
+    this.logger.log(
+      JSON.stringify({
+        event: 'disability_deleted',
+        disability_uuid: deletedDisability.disability_uuid,
+      }),
+    );
+    return deletedDisability;
   }
 }
