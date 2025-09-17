@@ -150,15 +150,9 @@ export class UserListComponent implements OnInit {
         this.hideCreateUserModal();
         this.loadUsers(); // Recharger la liste des utilisateurs
       },
-      error: (error) => {
+      error: () => {
         this.isSubmitting = false;
-
-        // Gérer spécifiquement l'erreur 409 (Conflict)
-        if (error.status === 409) {
-          this.errorMessage = 'Un utilisateur avec cette adresse email existe déjà.';
-        } else {
-          this.errorMessage = `Erreur lors de la création de l'utilisateur: ${error.message || 'Veuillez réessayer plus tard.'}`;
-        }
+        this.errorMessage = `Erreur lors de la création de l'utilisateur. Veuillez réessayer plus tard.`;
       },
     });
   }
@@ -170,7 +164,7 @@ export class UserListComponent implements OnInit {
         // Décoder le token JWT (format: header.payload.signature)
         const payload = JSON.parse(atob(token.split('.')[1]));
         this.currentUserId = payload.sub; // 'sub' contient l'ID de l'utilisateur
-      } catch (error) {
+      } catch {
         // Gestion silencieuse
       }
     }
@@ -205,8 +199,8 @@ export class UserListComponent implements OnInit {
 
           this.loading = false;
         },
-        error: (error) => {
-          this.error = `Erreur: ${error.status} ${error.statusText}`;
+        error: () => {
+          this.error = `Erreur lors du chargement des utilisateurs`;
           this.loading = false;
           this.users = [];
         },
@@ -229,8 +223,8 @@ export class UserListComponent implements OnInit {
           this.users = this.users.filter(user => user.user_uuid !== id);
           this.loadUsers();
         },
-        error: (error) => {
-          this.error = `Erreur lors de la suppression: ${error.status || ''} ${error.statusText || error.message || 'Erreur inconnue'}`;
+        error: () => {
+          this.error = `Erreur lors de la suppression`;
         },
       });
     }
