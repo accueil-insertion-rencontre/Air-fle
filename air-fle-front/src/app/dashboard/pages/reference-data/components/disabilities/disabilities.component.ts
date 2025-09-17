@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -50,7 +51,7 @@ export class DisabilitiesComponent implements OnInit {
         this.isLoading = false;
       },
       error: () => {
-        console.error('Erreur lors du chargement des handicaps:');
+        // console.error('Erreur lors du chargement des handicaps:');
         this.error = 'Erreur lors du chargement des handicaps';
         this.isLoading = false;
       },
@@ -102,8 +103,8 @@ export class DisabilitiesComponent implements OnInit {
   createDisability(): void {
     if (this.createForm.invalid) return;
     const disabilityData: CreateDisabilityDto = {
-      label: this.createForm.value.label,
-      description: this.createForm.value.description || undefined,
+      disability_label: this.createForm.value.label,
+      disability_description: this.createForm.value.description || undefined,
     };
     this.referenceDataService.createDisability(disabilityData).subscribe({
       next: (newDisability: Disability) => {
@@ -111,7 +112,7 @@ export class DisabilitiesComponent implements OnInit {
         this.closeCreateModal();
       },
       error: () => {
-        console.error('Erreur lors de la création du handicap:');
+        // console.error('Erreur lors de la création du handicap:');
         this.error = 'Erreur lors de la création du handicap';
       },
     });
@@ -120,8 +121,8 @@ export class DisabilitiesComponent implements OnInit {
   updateDisability(): void {
     if (this.editForm.invalid || !this.selectedDisability) return;
     const disabilityData: CreateDisabilityDto = {
-      label: this.editForm.value.label,
-      description: this.editForm.value.description || undefined,
+      disability_label: this.editForm.value.label,
+      disability_description: this.editForm.value.description || undefined,
     };
     this.referenceDataService
       .updateDisability(this.selectedDisability.id, disabilityData)
@@ -134,7 +135,7 @@ export class DisabilitiesComponent implements OnInit {
           this.closeEditModal();
         },
         error: () => {
-          console.error('Erreur lors de la mise à jour du handicap:');
+          // console.error('Erreur lors de la mise à jour du handicap:');
           this.error = 'Erreur lors de la mise à jour du handicap';
         },
       });
@@ -146,9 +147,9 @@ export class DisabilitiesComponent implements OnInit {
         next: () => {
           this.disabilities = this.disabilities.filter(d => d.id !== disability.id);
         },
-        error: () => {
-          console.error('Erreur lors de la suppression du handicap:');
-          this.error = 'Erreur lors de la suppression du handicap';
+        error: (error: HttpErrorResponse) => {
+          // console.error('Erreur lors de la suppression du handicap:', error);
+          this.error = error?.error?.message || error?.message || 'Erreur lors de la suppression du handicap';
         },
       });
     }
