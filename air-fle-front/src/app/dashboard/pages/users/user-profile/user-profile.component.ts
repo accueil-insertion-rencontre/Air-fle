@@ -87,14 +87,14 @@ export class UserProfileComponent implements OnInit {
       next: user => {
         this.user = user;
         if (this.user.user_birthdate) {
-          (this.user as any).age = this.calculateAge(this.user.user_birthdate);
+          (this.user as unknown as Record<string, unknown>)['age'] = this.calculateAge(this.user.user_birthdate);
         }
         this.loading = false;
         this.initForm();
         this.initPasswordForm();
       },
-      error: error => {
-        this.error = `Erreur: ${error.message || "Impossible de charger les détails de l'utilisateur"}`;
+      error: () => {
+        this.error = `Erreur: Impossible de charger les détails de l'utilisateur`;
         this.loading = false;
       },
     });
@@ -105,8 +105,8 @@ export class UserProfileComponent implements OnInit {
       next: roles => {
         this.roles = roles;
       },
-      error: error => {
-        this.error = `Erreur: ${error.message || 'Impossible de charger les rôles'}`;
+      error: () => {
+        this.error = `Erreur: Impossible de charger les rôles`;
       },
     });
   }
@@ -195,7 +195,7 @@ export class UserProfileComponent implements OnInit {
           this.authService.logout();
         }, 3000);
       },
-      error: error => {
+      error: () => {
         this.isSubmittingPassword = false;
         this.passwordError = 'Erreur lors de la mise à jour du mot de passe';
       },
@@ -270,7 +270,7 @@ export class UserProfileComponent implements OnInit {
       next: updatedUser => {
         this.user = updatedUser;
         if (this.user.user_birthdate) {
-          (this.user as any).age = this.calculateAge(this.user.user_birthdate);
+          (this.user as unknown as Record<string, unknown>)['age'] = this.calculateAge(this.user.user_birthdate);
         }
         this.editMode = false;
         this.isSubmitting = false;
@@ -281,7 +281,7 @@ export class UserProfileComponent implements OnInit {
           this.successMessage = null;
         }, 3000);
       },
-      error: error => {
+      error: () => {
         this.isSubmitting = false;
         this.error = "Erreur lors de la mise à jour de l'utilisateur";
       },
@@ -333,8 +333,8 @@ export class UserProfileComponent implements OnInit {
           this.router.navigate(['dashboard', 'users']);
         }, 1500);
       },
-      error: error => {
-        this.deleteError = `Erreur: ${error.message || "Impossible de supprimer l'utilisateur"}`;
+      error: () => {
+        this.deleteError = `Erreur: Impossible de supprimer l'utilisateur`;
       },
     });
   }
