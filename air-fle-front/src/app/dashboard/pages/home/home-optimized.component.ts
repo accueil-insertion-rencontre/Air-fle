@@ -21,7 +21,7 @@ import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map, startWith, catchError } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-declare let feather: any;
+declare let feather: Record<string, unknown>;
 
 interface StatCard {
   title: string;
@@ -146,7 +146,6 @@ export class HomeOptimizedComponent implements OnInit, AfterViewInit {
         });
       }
     } catch (error) {
-      console.warn('Feather icons initialization failed:', error);
     }
   }
 
@@ -164,7 +163,7 @@ export class HomeOptimizedComponent implements OnInit, AfterViewInit {
   }
 
   // 🔥 Sanitisation améliorée
-  private sanitizeTodoData(data: any): CreateTodoWithSubtasksRequest {
+  private sanitizeTodoData(data: Record<string, unknown>): CreateTodoWithSubtasksRequest {
     return {
       title: data.title?.trim() || '',
       description: data.description?.trim() || '',
@@ -172,8 +171,8 @@ export class HomeOptimizedComponent implements OnInit, AfterViewInit {
       priority: data.priority || 'medium',
       subtasks: Array.isArray(data.subtasks)
         ? data.subtasks
-            .filter((subtask: any) => subtask.title?.trim())
-            .map((subtask: any) => ({
+            .filter((subtask: Record<string, unknown>) => subtask.title?.toString().trim())
+            .map((subtask: Record<string, unknown>) => ({
               title: subtask.title.trim(),
               description: subtask.description?.trim() || '',
             }))
@@ -181,7 +180,7 @@ export class HomeOptimizedComponent implements OnInit, AfterViewInit {
     };
   }
 
-  onCreateTodo(todoData: any) {
+  onCreateTodo(todoData: Record<string, unknown>) {
     const cleanData = this.sanitizeTodoData(todoData);
 
     if (!this.validateTodoData(cleanData)) {
@@ -204,7 +203,7 @@ export class HomeOptimizedComponent implements OnInit, AfterViewInit {
         error: error => {
           this.todoErrorSubject.next('Erreur lors de la création de la tâche');
           this.isCreatingTodoSubject.next(false);
-          console.error('Create todo error:', error);
+          // console.error('Create todo error:', error);
         },
       });
   }
